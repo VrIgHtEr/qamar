@@ -13,7 +13,7 @@ ExternalProject_Add(project_luajit
 )
 ExternalProject_Get_Property(project_luajit install_dir)
 add_library(luajit STATIC IMPORTED)
-set_property(TARGET luajit PROPERTY IMPORTED_LOCATION ${install_dir}/lib/libluajit-5.1.so)
+set_property(TARGET luajit PROPERTY IMPORTED_LOCATION ${install_dir}/lib/libluajit-5.1.a)
 add_dependencies(luajit project_luajit)
 
 
@@ -27,6 +27,7 @@ add_executable(qamar qamar.c)
 add_dependencies(qamar luajit)
 
 target_include_directories (qamar PUBLIC "${PROJECT_BINARY_DIR}" "${install_dir}/include/luajit-2.1")
+target_link_options (qamar PRIVATE -static-libgcc -static-libstdc++ -lm )
 target_link_libraries(qamar luajit)
 
 add_custom_command(
