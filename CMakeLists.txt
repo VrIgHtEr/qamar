@@ -21,3 +21,8 @@ add_dependencies(qamar luajit)
 target_include_directories (qamar PUBLIC "${PROJECT_BINARY_DIR}" "${PROJECT_BINARY_DIR}/luajit-prefix/src/luajit/src")
 target_link_libraries(qamar PUBLIC "${PROJECT_BINARY_DIR}/luajit-prefix/src/luajit/src/libluajit.so")
 
+add_custom_command(
+        TARGET qamar POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+                ${CMAKE_SOURCE_DIR}/lua/script.lua
+                ${CMAKE_CURRENT_BINARY_DIR}/main.lua)
