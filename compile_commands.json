@@ -1,0 +1,7 @@
+[
+{
+  "directory": "/home/cedric/code/c/qamar/build/linux-debug",
+  "command": "/usr/bin/cc   -g -o CMakeFiles/qamar.dir/qamar.c.o -c /home/cedric/code/c/qamar/qamar.c",
+  "file": "/home/cedric/code/c/qamar/qamar.c"
+}
+]
