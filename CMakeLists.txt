@@ -13,7 +13,7 @@ ExternalProject_Add(project_luajit
 )
 ExternalProject_Get_Property(project_luajit install_dir)
 add_library(luajit STATIC IMPORTED)
-set_property(TARGET luajit PROPERTY IMPORTED_LOCATION ${install_dir}/lib/libluajit-5.1.a)
+set_property(TARGET luajit PROPERTY IMPORTED_LOCATION ${install_dir}/lib/libluajit-5.1.so)
 add_dependencies(luajit project_luajit)
 
 
