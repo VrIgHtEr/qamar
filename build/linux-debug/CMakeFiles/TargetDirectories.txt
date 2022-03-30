@@ -1,3 +1,0 @@
-/home/cedric/code/c/qamar/build/linux-debug/CMakeFiles/qamar.dir
-/home/cedric/code/c/qamar/build/linux-debug/CMakeFiles/edit_cache.dir
-/home/cedric/code/c/qamar/build/linux-debug/CMakeFiles/rebuild_cache.dir

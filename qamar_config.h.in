@@ -1,0 +1,2 @@
+#define qamar_VERSION_MAJOR @qamar_VERSION_MAJOR@
+#define qamar_VERSION_MINOR @qamar_VERSION_MINOR@
