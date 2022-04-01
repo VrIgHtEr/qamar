@@ -23,7 +23,8 @@ set (CMAKE_CXX_STANDARD_REQUIRED true)
 
 configure_file(qamar_config.h.in qamar_config.h)
 
-add_executable(qamar qamar.c)
+FILE(GLOB_RECURSE sourcefiles src/*.c)
+add_executable(qamar ${sourcefiles})
 add_dependencies(qamar luajit)
 
 target_include_directories (qamar PUBLIC "${PROJECT_BINARY_DIR}" "${install_dir}/include/luajit-2.1")
@@ -32,6 +33,6 @@ target_link_libraries(qamar luajit)
 
 add_custom_command(
         TARGET qamar POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy
-                ${CMAKE_SOURCE_DIR}/lua/script.lua
-                ${CMAKE_CURRENT_BINARY_DIR}/main.lua)
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+                ${CMAKE_SOURCE_DIR}/lua
+                ${CMAKE_CURRENT_BINARY_DIR}/lua)
