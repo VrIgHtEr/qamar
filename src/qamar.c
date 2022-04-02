@@ -15,6 +15,7 @@
 #include <string.h>
 
 void prepend_lua_path(lua_State *L, const char *prefix) {
+
   lua_getglobal(L, "package");
   lua_pushstring(L, "path");
   lua_gettable(L, -2);
@@ -43,7 +44,8 @@ void initialize_environment(lua_State *L) {
 }
 
 int main(void) {
-  queue_ts q = queue_ts_new();
+  queue_ts q;
+  queue_ts_new(sizeof(size_t), &q);
   queue_ts_destroy(q);
 
   lua_State *L = luaL_newstate();
@@ -71,10 +73,8 @@ int main(void) {
       if (lua_pcall(L, 0, 0, 0)) {
         fprintf(stderr, "Failed to execute main function: %s\n",
                 lua_tostring(L, -1));
-        lua_pop(L, -1);
       }
     }
-    lua_pop(L, -1);
   }
   lua_pop(L, -1);
 

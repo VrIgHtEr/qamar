@@ -5,9 +5,13 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-typedef int32_t queue_ts;
+typedef void *queue_ts;
 
-queue_ts queue_ts_new(void);
+bool queue_ts_new(size_t, queue_ts *);
 bool queue_ts_destroy(queue_ts);
+bool queue_ts_push_back(queue_ts, const void *);
+bool queue_ts_pop_front(queue_ts, void *);
+bool queue_ts_push_front(queue_ts, const void *);
+bool queue_ts_pop_back(queue_ts, void *);
 
 #endif
