@@ -18,7 +18,7 @@ add_dependencies(luajit project_luajit)
 
 ##############################################################
 
-set(LIBUV_DEPS_DIR ${CMAKE_SOURCE_DIR}/deps/libuv)
+set(LIBUV_DEPS_DIR ${CMAKE_BINARY_DIR}/deps/libuv)
 ExternalProject_Add(
     libuv
     GIT_REPOSITORY https://github.com/libuv/libuv.git
@@ -55,9 +55,11 @@ find_package(Threads REQUIRED)
 
 target_include_directories (qamar PUBLIC "${PROJECT_BINARY_DIR}" "${install_dir}/include/luajit-2.1")
 target_link_options (qamar PRIVATE -static-libgcc -static-libstdc++ -lm )
-target_link_libraries(qamar luajit 
+target_link_libraries(qamar
+    luajit 
     Threads::Threads 
-    ${LIBUV_STATIC_LIBRARY})
+    ${LIBUV_STATIC_LIBRARY}
+    )
 
 add_custom_command(
         TARGET qamar POST_BUILD
