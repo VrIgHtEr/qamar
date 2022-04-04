@@ -14,6 +14,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <uv.h>
+#include "loop/loop.h"
+
 void prepend_lua_path(lua_State *L, const char *prefix) {
 
   lua_getglobal(L, "package");
@@ -37,6 +40,8 @@ void prepend_lua_path(lua_State *L, const char *prefix) {
     lua_pop(L, 2);
 }
 
+lua_State *L;
+
 void initialize_environment(lua_State *L) {
   prepend_lua_path(L, "./lua/?.lua;./lua/?/init.lua;");
   lua_pushnil(L);
@@ -44,12 +49,15 @@ void initialize_environment(lua_State *L) {
 }
 
 int main(void) {
+
+
   queue_ts q;
   queue_ts_new(sizeof(size_t), &q);
   queue_ts_destroy(q);
 
-  lua_State *L = luaL_newstate();
+  L = luaL_newstate();
   luaL_openlibs(L);
+
 
   int status = luaL_loadfile(L, "lua/main.lua");
   if (status) {
@@ -63,6 +71,7 @@ int main(void) {
   int result = lua_pcall(L, 0, LUA_MULTRET, 0);
   if (result) {
     fprintf(stderr, "Failed to run script: %s\n", lua_tostring(L, -1));
+    lua_pop(L, -1);
     exit(1);
   }
 
@@ -78,6 +87,16 @@ int main(void) {
   }
   lua_pop(L, -1);
 
+  uv_idle_t idler;
+  uv_idle_init(uv_default_loop(), &idler);
+  idler.data = L;
+  uv_idle_start(&idler, qamar_loop);
+
+  uv_run(uv_default_loop(), UV_RUN_DEFAULT);
+
+  uv_loop_close(uv_default_loop());
+
   lua_close(L);
+
   return 0;
 }
