@@ -14,11 +14,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <uv.h>
 #include "loop/loop.h"
+#include "parser/char_stream.h"
+#include <uv.h>
 
 void prepend_lua_path(lua_State *L, const char *prefix) {
-
   lua_getglobal(L, "package");
   lua_pushstring(L, "path");
   lua_gettable(L, -2);
@@ -46,20 +46,20 @@ void initialize_environment(lua_State *L) {
   prepend_lua_path(L, "./lua/?.lua;./lua/?/init.lua;");
   lua_pushnil(L);
   lua_setglobal(L, "package");
+  qamar_char_stream_init(L);
 }
 
 int main(void) {
 
-
-  queue_ts q;
-  queue_ts_new(sizeof(size_t), &q);
-  queue_ts_destroy(q);
+  //  queue_ts q;
+  //  queue_ts_new(sizeof(size_t), &q);
+  //  queue_ts_destroy(q);
 
   L = luaL_newstate();
   luaL_openlibs(L);
 
-
-  int status = luaL_loadfile(L, "lua/main.lua");
+  int status = luaL_loadstring(L, "require'qamar'.run()");
+  // int status =luaL_loadfile(L, "lua/main.lua");
   if (status) {
     fprintf(stderr, "Couldn't load file: %s\n", lua_tostring(L, -1));
     lua_pop(L, -1);
@@ -75,22 +75,10 @@ int main(void) {
     exit(1);
   }
 
-  if (lua_istable(L, -1)) {
-    lua_pushstring(L, "main");
-    lua_gettable(L, -2);
-    if (lua_isfunction(L, -1)) {
-      if (lua_pcall(L, 0, 0, 0)) {
-        fprintf(stderr, "Failed to execute main function: %s\n",
-                lua_tostring(L, -1));
-      }
-    }
-  }
-  lua_pop(L, -1);
-
-  uv_idle_t idler;
-  uv_idle_init(uv_default_loop(), &idler);
-  idler.data = L;
-  uv_idle_start(&idler, qamar_loop);
+  //  uv_idle_t idler;
+  //  uv_idle_init(uv_default_loop(), &idler);
+  //  idler.data = L;
+  //  uv_idle_start(&idler, qamar_loop);
 
   uv_run(uv_default_loop(), UV_RUN_DEFAULT);
 
