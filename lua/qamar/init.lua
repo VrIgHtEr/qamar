@@ -17,7 +17,7 @@ local dpath = "/home/cedric/qamar"
 local logpath = dpath
 local odir = dpath
 --odir = '/mnt/c/luaparse'
-local idir = "/home/cedric/.local/share/nvim/site/pack/vrighter"
+local idir = "/home/cedric/.local/share/nvim/site/pack/vrighter/opt/qamar.nvim"
 local cfg = require("qamar.config")
 local print = cfg.print
 local dbg = require("qdbg")
@@ -180,6 +180,14 @@ function qamar.run()
 	parse_everything()
 	local str = char_stream.new("return function() print 'Hello World!' end")
 	print("LEN: " .. char_stream.len(str))
+	print(str)
+	for x in
+		function()
+			return str:take()
+		end
+	do
+		print(x)
+	end
 end
 
 return qamar
