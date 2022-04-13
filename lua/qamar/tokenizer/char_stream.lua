@@ -1,5 +1,5 @@
 do
-	return char_stream
+	return _G["char_stream"]
 end
 
 local string, deque = require("qamar.util.string"), require("qamar.util.deque")
@@ -70,9 +70,10 @@ end
 ---@return char_stream|nil
 ---@return string|nil
 function M.new(input)
-	if type(input) ~= "function" then
-		return nil, "expected a function as input"
+	if type(input) ~= "string" then
+		return nil, "expected a string as input"
 	end
+	input = sutf8(input)
 	do
 		local _input = input
 		input = function()

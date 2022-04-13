@@ -1,9 +1,11 @@
 #include "char_stream.h"
-#include "../util/queue_ts.h"
 #include <lauxlib.h>
 #include <lua.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+
+//#define QAMAR_TRACE
 
 const char *QAMAR_TYPE_CHAR_STREAM = "__QAMAR_CHAR_STREAM";
 
@@ -19,31 +21,38 @@ typedef struct {
 typedef struct {
   size_t skip_ws_ctr;
   size_t len;
-  queue_ts ts;
-  size_t tc;
+  transaction *transactions;
+  size_t transactions_capacity;
+  size_t transactions_index;
   transaction t;
   const char data[];
 } char_stream_t;
 
 static int char_stream_new(lua_State *L) {
+#ifdef QAMAR_TRACE
+  printf("NEW\n");
+  fflush(stdout);
+#endif
   if (!lua_isstring(L, 1))
     return 0;
   size_t len;
   const char *str = lua_tolstring(L, 1, &len);
-  char_stream_t *char_stream = lua_newuserdata(L, sizeof(char_stream_t) + len);
-  if (char_stream == NULL)
+  char_stream_t *c = lua_newuserdata(L, sizeof(char_stream_t) + len);
+  if (c == NULL)
     return 0;
-  memcpy((void *)char_stream->data, str, len);
-  char_stream->skip_ws_ctr = 0;
-  char_stream->len = len;
-  char_stream->tc = 0;
-  char_stream->t.file_byte = 0;
-  char_stream->t.byte = 0;
-  char_stream->t.file_char = 0;
-  char_stream->t.col = 1;
-  char_stream->t.index = 0;
-  char_stream->t.row = 1;
-  if (queue_ts_new(sizeof(transaction), &char_stream->ts))
+  memcpy((void *)c->data, str, len);
+  c->skip_ws_ctr = 0;
+  c->len = len;
+  c->t.file_byte = 0;
+  c->t.byte = 0;
+  c->t.file_char = 0;
+  c->t.col = 1;
+  c->t.index = 0;
+  c->t.row = 1;
+  c->transactions_capacity = 1;
+  c->transactions_index = 0;
+  c->transactions = malloc(sizeof(transaction) * c->transactions_capacity);
+  if (c->transactions == NULL)
     return 0;
   luaL_getmetatable(L, QAMAR_TYPE_CHAR_STREAM);
   lua_setmetatable(L, -2);
@@ -55,8 +64,13 @@ static int char_stream_destroy(lua_State *L) {
   if (lua_gettop(L) < 1 ||
       (s = luaL_checkudata(L, 1, QAMAR_TYPE_CHAR_STREAM)) == 0)
     return 0;
-  // queue_ts_destroy(s->ts);
-  s->ts = 0;
+#ifdef QAMAR_TRACE
+  printf("DESTROY\n");
+  fflush(stdout);
+#endif
+  if (s->transactions != NULL)
+    free(s->transactions);
+  s->transactions = NULL;
   return 0;
 }
 
@@ -65,11 +79,17 @@ static int char_stream_tostring(lua_State *L) {
   if (lua_gettop(L) < 1 ||
       (s = luaL_checkudata(L, 1, QAMAR_TYPE_CHAR_STREAM)) == 0)
     return 0;
-  int amt = snprintf(0, 0, "<char_stream>:%ld:%ld", s->len, s->t.index);
+#ifdef QAMAR_TRACE
+  //  printf("TOSTRING\n");
+  fflush(stdout);
+#endif
+  int amt = snprintf(0, 0, "<char_stream>:%ld:%ld:%ld", s->len, s->t.index,
+                     s->transactions_index);
   if (amt < 0)
     return 0;
   char t[amt + 1];
-  snprintf(t, amt + 1, "<char_stream>:%ld:%ld", s->len, s->t.index);
+  snprintf(t, amt + 1, "<char_stream>:%ld:%ld:%ld", s->len, s->t.index,
+           s->transactions_index);
   lua_pushlstring(L, t, amt);
   return 1;
 }
@@ -80,6 +100,10 @@ static int char_stream_peek(lua_State *L) {
   if (top < 1 || (s = luaL_checkudata(L, 1, QAMAR_TYPE_CHAR_STREAM)) == 0 ||
       s->t.index >= s->len)
     return 0;
+#ifdef QAMAR_TRACE
+  printf("PEEK\n");
+  fflush(stdout);
+#endif
   size_t skip = 0;
   if (top >= 2) {
     if (lua_isnumber(L, 2)) {
@@ -103,6 +127,10 @@ static int char_stream_take(lua_State *L) {
   if (top < 1 || (s = luaL_checkudata(L, 1, QAMAR_TYPE_CHAR_STREAM)) == 0 ||
       s->t.index >= s->len)
     return 0;
+#ifdef QAMAR_TRACE
+  printf("TAKE\n");
+  fflush(stdout);
+#endif
   size_t amt = 1;
   if (top >= 2) {
     if (lua_isnumber(L, 2)) {
@@ -139,8 +167,24 @@ static int char_stream_begin(lua_State *L) {
   if (lua_gettop(L) < 1 ||
       (s = luaL_checkudata(L, 1, QAMAR_TYPE_CHAR_STREAM)) == 0)
     return 0;
-  ++s->tc;
-  queue_ts_push_back(s->ts, &s->t);
+#ifdef QAMAR_TRACE
+  printf("BEGIN\n");
+  fflush(stdout);
+#endif
+  if (s->transactions_index == s->transactions_capacity) {
+#ifdef QAMAR_TRACE
+    printf("GROW\n");
+    fflush(stdout);
+#endif
+    size_t newcapacity = s->transactions_capacity * 2;
+    transaction *newbuf =
+        realloc(s->transactions, sizeof(transaction) * newcapacity);
+    if (newbuf == 0)
+      exit(-1);
+    s->transactions_capacity = newcapacity;
+    s->transactions = newbuf;
+  }
+  s->transactions[s->transactions_index++] = s->t;
   return 0;
 }
 
@@ -149,10 +193,13 @@ static int char_stream_undo(lua_State *L) {
   if (lua_gettop(L) < 1 ||
       (s = luaL_checkudata(L, 1, QAMAR_TYPE_CHAR_STREAM)) == 0)
     return 0;
-  if (s->tc == 0)
+#ifdef QAMAR_TRACE
+  printf("UNDO\n");
+  fflush(stdout);
+#endif
+  if (s->transactions_index == 0)
     return 0;
-  --s->tc;
-  queue_ts_pop_back(s->ts, &s->t);
+  s->t = s->transactions[--s->transactions_index];
   return 0;
 }
 
@@ -161,11 +208,13 @@ static int char_stream_commit(lua_State *L) {
   if (lua_gettop(L) < 1 ||
       (s = luaL_checkudata(L, 1, QAMAR_TYPE_CHAR_STREAM)) == 0)
     return 0;
-  if (s->tc == 0)
+#ifdef QAMAR_TRACE
+  printf("COMMIT\n");
+  fflush(stdout);
+#endif
+  if (s->transactions_index == 0)
     return 0;
-  --s->tc;
-  transaction _;
-  queue_ts_pop_back(s->ts, &_);
+  --s->transactions_index;
   return 0;
 }
 
@@ -174,6 +223,10 @@ static int char_stream_pos(lua_State *L) {
   if (lua_gettop(L) < 1 ||
       (s = luaL_checkudata(L, 1, QAMAR_TYPE_CHAR_STREAM)) == 0)
     return 0;
+#ifdef QAMAR_TRACE
+  printf("POS\n");
+  fflush(stdout);
+#endif
   lua_newtable(L);
 
   lua_pushstring(L, "col");
@@ -205,6 +258,10 @@ static int char_stream_try_consume_string(lua_State *L) {
       (s = luaL_checkudata(L, 1, QAMAR_TYPE_CHAR_STREAM)) == 0 ||
       !lua_isstring(L, 2))
     return 0;
+#ifdef QAMAR_TRACE
+  printf("TRY_CONSUME_STRING\n");
+  fflush(stdout);
+#endif
   size_t len;
   const char *str = lua_tolstring(L, 2, &len);
   if (s->t.index + len > s->len)
@@ -222,6 +279,10 @@ static int char_stream_skipws(lua_State *L) {
   if (lua_gettop(L) < 1 ||
       (s = luaL_checkudata(L, 1, QAMAR_TYPE_CHAR_STREAM)) == 0)
     return 0;
+#ifdef QAMAR_TRACE
+  printf("SKIPWS\n");
+  fflush(stdout);
+#endif
   if (s->skip_ws_ctr == 0) {
     for (; s->t.index < s->len; ++s->t.index) {
       char x = s->data[s->t.index];
@@ -238,6 +299,10 @@ static int char_stream_suspend_skip_ws(lua_State *L) {
   if (lua_gettop(L) < 1 ||
       (s = luaL_checkudata(L, 1, QAMAR_TYPE_CHAR_STREAM)) == 0)
     return 0;
+#ifdef QAMAR_TRACE
+  printf("SUSPEND_SKIP_WS\n");
+  fflush(stdout);
+#endif
   ++s->skip_ws_ctr;
   return 0;
 }
@@ -248,6 +313,10 @@ static int char_stream_resume_skip_ws(lua_State *L) {
       (s = luaL_checkudata(L, 1, QAMAR_TYPE_CHAR_STREAM)) == 0 ||
       s->skip_ws_ctr == 0)
     return 0;
+#ifdef QAMAR_TRACE
+  printf("RESUME_SKIP_WS\n");
+  fflush(stdout);
+#endif
   --s->skip_ws_ctr;
   return 0;
 }
@@ -258,6 +327,10 @@ static int char_stream_alpha(lua_State *L) {
       (s = luaL_checkudata(L, 1, QAMAR_TYPE_CHAR_STREAM)) == 0 ||
       s->t.index >= s->len)
     return 0;
+#ifdef QAMAR_TRACE
+  printf("ALPHA\n");
+  fflush(stdout);
+#endif
   char x = s->data[s->t.index];
   if ((x >= 97 && x <= 122) || (x >= 65 && x <= 90) || x == 95) {
     lua_pushlstring(L, &s->data[s->t.index], 1);
@@ -273,6 +346,10 @@ static int char_stream_numeric(lua_State *L) {
       (s = luaL_checkudata(L, 1, QAMAR_TYPE_CHAR_STREAM)) == 0 ||
       s->t.index >= s->len)
     return 0;
+#ifdef QAMAR_TRACE
+  printf("NUMERIC\n");
+  fflush(stdout);
+#endif
   char x = s->data[s->t.index];
   if (x >= 48 && x <= 57) {
     lua_pushlstring(L, &s->data[s->t.index], 1);
@@ -288,6 +365,10 @@ static int char_stream_alphanumeric(lua_State *L) {
       (s = luaL_checkudata(L, 1, QAMAR_TYPE_CHAR_STREAM)) == 0 ||
       s->t.index >= s->len)
     return 0;
+#ifdef QAMAR_TRACE
+  printf("ALPHANUMERIC\n");
+  fflush(stdout);
+#endif
   char x = s->data[s->t.index];
   if ((x >= 97 && x <= 122) || (x >= 65 && x <= 90) || (x >= 48 && x <= 57) ||
       x == 95) {

@@ -14,13 +14,18 @@ local function scandir(directory)
 end
 
 local dpath = "/home/cedric/qamar"
-local logpath = dpath
 local odir = dpath
 --odir = '/mnt/c/luaparse'
 local idir = "/home/cedric/.local/share/nvim/site/pack"
 local cfg = require("qamar.config")
-local print = cfg.print
-local dbg = require("qdbg")
+local function stdout(str)
+	io.stdout:write((tostring(str or "")) .. "\n")
+	io.stdout:flush()
+end
+local function stderr(str)
+	io.stderr:write((tostring(str or "")) .. "\n")
+	io.stderr:flush()
+end
 
 local function shuffle(tbl)
 	for i = #tbl, 2, -1 do
@@ -49,26 +54,24 @@ local function tostring_tree(tree)
 end
 ]]
 
+local dstats
 local function parse_everything()
 	os.execute("rm -rf '" .. odir .. "'")
 	local files = scandir(idir)
 	shuffle(files)
 	os.execute("mkdir -p '" .. odir .. "'")
-	cfg.set_path(logpath .. "/out")
-	local ofile = assert(dbg.create_fifo(logpath .. "/err"))
-	ofile:write("\n")
-	ofile:flush()
+	stderr()
 	cfg.print("\n")
 
 	local starttime = os.clock()
 	local co = coroutine.create(function()
-		dbg.stats = {}
+		dstats = {}
 		local counter = 0
 		local tlen = 0
 		for _, filename in ipairs(files) do
 			if true or filename:match("^.*/test.lua") then
-				print("-----------------------------------------------------------------------------------")
-				print("PARSING FILE " .. (counter + 1) .. ": " .. filename)
+				stdout("-----------------------------------------------------------------------------------")
+				stdout("PARSING FILE " .. (counter + 1) .. ": " .. filename)
 				local txt = util.read_file(filename)
 				coroutine.yield()
 				if txt then
@@ -81,11 +84,10 @@ local function parse_everything()
 							ok, str = true, nil
 						end
 						if not ok then
-							ofile:write("TOSTRING: " .. filename .. "\n")
+							stderr("TOSTRING: " .. filename)
 							if str ~= nil then
-								ofile:write(tostring(str) .. "\n")
+								stderr(tostring(str))
 							end
-							ofile:flush()
 						else
 							counter = counter + 1
 							if cfg.debug_to_string then
@@ -107,42 +109,40 @@ local function parse_everything()
 								end
                                 ]]
 								tlen = tlen + string.len(str)
-								print(str)
+								stdout(str)
 							end
 						end
 					else
-						ofile:write(filename .. "\n")
+						stderr(filename)
 						if tree ~= nil then
 							local str = tostring(tree)
 							local idx = str:find(": ")
 							if idx then
 								str = str:sub(idx + 2)
 							end
-							ofile:write(str .. "\n")
+							stderr(str)
 						end
-						ofile:flush()
 					end
 				end
 			end
 		end
 
-		ofile:write("total length: " .. tlen .. "\n")
-		ofile:flush()
+		stderr("total length: " .. tlen)
 		local total = 0
-		for _, v in pairs(dbg.stats) do
+		for _, v in pairs(dstats) do
 			total = total + v
 		end
 		if total > 0 then
 			local stats = {}
-			for k, v in pairs(dbg.stats) do
+			for k, v in pairs(dstats) do
 				table.insert(stats, { name = k, frequency = v / total })
 			end
 			table.sort(stats, function(a, b)
 				return a.frequency > b.frequency
 			end)
-			print("")
+			stdout("")
 			for _, x in ipairs(stats) do
-				print(x.name .. ": " .. (x.frequency * 100) .. "%")
+				stdout(x.name .. ": " .. (x.frequency * 100) .. "%")
 			end
 		end
 		return counter, #files
@@ -160,16 +160,14 @@ local function parse_everything()
 					.. " FILES IN "
 					.. tostring(time)
 					.. " seconds"
-				print(message)
-				ofile:write(message .. "\n")
-				ofile:flush()
+				stdout(message)
+				stderr(message)
 			else
 				return step()
 			end
 		else
-			print("ERROR: " .. tostring(parsed))
-			ofile:write("ERROR: " .. tostring(parsed) .. "\n")
-			ofile:flush()
+			stdout("ERROR: " .. tostring(parsed))
+			stderr("ERROR: " .. tostring(parsed))
 		end
 	end
 	step()
@@ -178,16 +176,33 @@ end
 function qamar.run()
 	math.randomseed(os.time())
 	parse_everything()
-	local str = char_stream.new("return function() print 'Hello World!' end")
-	print("LEN: " .. char_stream.len(str))
-	print(str)
-	for x in
-		function()
-			return str:take()
-		end
-	do
-		print(x)
+
+	local s = _G.char_stream
+
+	local str = s.new("return function() print 'Hello World!' end")
+	stdout(str)
+
+	str:begin()
+	for _ = 1, 6 do
+		stdout(str:take())
+		print(str)
 	end
+	str:commit()
+	print(str)
+	str:begin()
+	print(str)
+	str:skipws()
+	print(str)
+	str:begin()
+	print(str)
+	stdout(str:try_consume_string("function"))
+	print(str)
+	str:undo()
+	print(str)
+	stdout(str:take(99999))
+	print(str)
+	str:commit()
+	print(str)
 end
 
 return qamar
