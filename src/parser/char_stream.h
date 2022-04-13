@@ -2,6 +2,7 @@
 #define __QAMAR_PARSER_CHAR_STREAM__
 
 #include "lua.h"
+#include <stdbool.h>
 
 extern const char *QAMAR_TYPE_CHAR_STREAM;
 
@@ -12,6 +13,18 @@ typedef struct {
   size_t byte;
   size_t file_byte;
 } qamar_position_t;
+
+typedef struct {
+  qamar_position_t left;
+  qamar_position_t right;
+} qamar_range_t;
+
+typedef struct {
+  int type;
+  qamar_range_t pos;
+  const char *value;
+  size_t len;
+} qamar_token_t;
 
 typedef struct {
   size_t index;
@@ -49,5 +62,6 @@ void char_stream_resume_skip_ws(char_stream_t *);
 const char *char_stream_alpha(char_stream_t *);
 const char *char_stream_numeric(char_stream_t *);
 const char *char_stream_alphanumeric(char_stream_t *);
+bool char_stream_keyword(char_stream_t *, qamar_token_t *);
 
 #endif

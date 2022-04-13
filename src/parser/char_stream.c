@@ -1,6 +1,7 @@
 #include "char_stream.h"
 #include <lauxlib.h>
 #include <lua.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -445,6 +446,501 @@ static int lua_char_stream_alphanumeric(lua_State *L) {
   return 1;
 }
 
+static inline bool is_alphanum(const char x) {
+  return (x >= 97 && x <= 122) || (x >= 65 && x <= 90) ||
+         (x >= 48 && x <= 57) || x == 95;
+}
+
+#define QAMAR_TOKEN_AND 1
+#define QAMAR_TOKEN_BREAK 2
+#define QAMAR_TOKEN_DO 3
+#define QAMAR_TOKEN_ELSE 4
+#define QAMAR_TOKEN_ELSEIF 5
+#define QAMAR_TOKEN_END 6
+#define QAMAR_TOKEN_FALSE 7
+#define QAMAR_TOKEN_FOR 8
+#define QAMAR_TOKEN_FUNCTION 9
+#define QAMAR_TOKEN_GOTO 10
+#define QAMAR_TOKEN_IF 11
+#define QAMAR_TOKEN_IN 12
+#define QAMAR_TOKEN_LOCAL 13
+#define QAMAR_TOKEN_NIL 14
+#define QAMAR_TOKEN_NOT 15
+#define QAMAR_TOKEN_OR 16
+#define QAMAR_TOKEN_REPEAT 17
+#define QAMAR_TOKEN_RETURN 18
+#define QAMAR_TOKEN_THEN 19
+#define QAMAR_TOKEN_TRUE 20
+#define QAMAR_TOKEN_UNTIL 21
+#define QAMAR_TOKEN_WHILE 22
+#define QAMAR_TOKEN_COMMENT 23
+#define QAMAR_TOKEN_NAME 24
+#define QAMAR_TOKEN_STRING 25
+#define QAMAR_TOKEN_NUMBER 26
+#define QAMAR_TOKEN_PLUS 27
+#define QAMAR_TOKEN_DASH 28
+#define QAMAR_TOKEN_ASTERISK 29
+#define QAMAR_TOKEN_SLASH 30
+#define QAMAR_TOKEN_PERCENT 31
+#define QAMAR_TOKEN_CARET 32
+#define QAMAR_TOKEN_HASH 33
+#define QAMAR_TOKEN_AMPERSAND 34
+#define QAMAR_TOKEN_TILDE 35
+#define QAMAR_TOKEN_PIPE 36
+#define QAMAR_TOKEN_LSHIFT 37
+#define QAMAR_TOKEN_RSHIFT 38
+#define QAMAR_TOKEN_DOUBLESLASH 39
+#define QAMAR_TOKEN_EQUAL 40
+#define QAMAR_TOKEN_NOTEQUAL 41
+#define QAMAR_TOKEN_LESSEQUAL 42
+#define QAMAR_TOKEN_GREATEREQUAL 43
+#define QAMAR_TOKEN_LESS 44
+#define QAMAR_TOKEN_GREATER 45
+#define QAMAR_TOKEN_ASSIGNMENT 46
+#define QAMAR_TOKEN_LPAREN 47
+#define QAMAR_TOKEN_RPAREN 48
+#define QAMAR_TOKEN_LBRACE 49
+#define QAMAR_TOKEN_RBRACE 50
+#define QAMAR_TOKEN_LBRACKET 51
+#define QAMAR_TOKEN_RBRACKET 52
+#define QAMAR_TOKEN_DOUBLECOLON 53
+#define QAMAR_TOKEN_SEMICOLON 54
+#define QAMAR_TOKEN_COLON 55
+#define QAMAR_TOKEN_COMMA 56
+#define QAMAR_TOKEN_DOT 57
+#define QAMAR_TOKEN_DOUBLEDOT 58
+#define QAMAR_TOKEN_TRIPLEDOT 59
+
+static void lua_create_token_type_table(lua_State *L) {
+  lua_newtable(L);
+  lua_pushstring(L, "kw_and");
+  lua_rawseti(L, -2, 1);
+  lua_pushstring(L, "kw_break");
+  lua_rawseti(L, -2, 2);
+  lua_pushstring(L, "kw_do");
+  lua_rawseti(L, -2, 3);
+  lua_pushstring(L, "kw_else");
+  lua_rawseti(L, -2, 4);
+  lua_pushstring(L, "kw_elseif");
+  lua_rawseti(L, -2, 5);
+  lua_pushstring(L, "kw_end");
+  lua_rawseti(L, -2, 6);
+  lua_pushstring(L, "kw_false");
+  lua_rawseti(L, -2, 7);
+  lua_pushstring(L, "kw_for");
+  lua_rawseti(L, -2, 8);
+  lua_pushstring(L, "kw_function");
+  lua_rawseti(L, -2, 9);
+  lua_pushstring(L, "kw_goto");
+  lua_rawseti(L, -2, 10);
+  lua_pushstring(L, "kw_if");
+  lua_rawseti(L, -2, 11);
+  lua_pushstring(L, "kw_in");
+  lua_rawseti(L, -2, 12);
+  lua_pushstring(L, "kw_local");
+  lua_rawseti(L, -2, 13);
+  lua_pushstring(L, "kw_nil");
+  lua_rawseti(L, -2, 14);
+  lua_pushstring(L, "kw_not");
+  lua_rawseti(L, -2, 15);
+  lua_pushstring(L, "kw_or");
+  lua_rawseti(L, -2, 16);
+  lua_pushstring(L, "kw_repeat");
+  lua_rawseti(L, -2, 17);
+  lua_pushstring(L, "kw_return");
+  lua_rawseti(L, -2, 18);
+  lua_pushstring(L, "kw_then");
+  lua_rawseti(L, -2, 19);
+  lua_pushstring(L, "kw_true");
+  lua_rawseti(L, -2, 20);
+  lua_pushstring(L, "kw_until");
+  lua_rawseti(L, -2, 21);
+  lua_pushstring(L, "kw_while");
+  lua_rawseti(L, -2, 22);
+  lua_pushstring(L, "comment");
+  lua_rawseti(L, -2, 23);
+  lua_pushstring(L, "name");
+  lua_rawseti(L, -2, 24);
+  lua_pushstring(L, "string");
+  lua_rawseti(L, -2, 25);
+  lua_pushstring(L, "number");
+  lua_rawseti(L, -2, 26);
+  lua_pushstring(L, "plus");
+  lua_rawseti(L, -2, 27);
+  lua_pushstring(L, "dash");
+  lua_rawseti(L, -2, 28);
+  lua_pushstring(L, "asterisk");
+  lua_rawseti(L, -2, 29);
+  lua_pushstring(L, "slash");
+  lua_rawseti(L, -2, 30);
+  lua_pushstring(L, "percent");
+  lua_rawseti(L, -2, 31);
+  lua_pushstring(L, "caret");
+  lua_rawseti(L, -2, 32);
+  lua_pushstring(L, "hash");
+  lua_rawseti(L, -2, 33);
+  lua_pushstring(L, "ampersand");
+  lua_rawseti(L, -2, 34);
+  lua_pushstring(L, "tilde");
+  lua_rawseti(L, -2, 35);
+  lua_pushstring(L, "pipe");
+  lua_rawseti(L, -2, 36);
+  lua_pushstring(L, "lshift");
+  lua_rawseti(L, -2, 37);
+  lua_pushstring(L, "rshift");
+  lua_rawseti(L, -2, 38);
+  lua_pushstring(L, "doubleslash");
+  lua_rawseti(L, -2, 39);
+  lua_pushstring(L, "equal");
+  lua_rawseti(L, -2, 40);
+  lua_pushstring(L, "notequal");
+  lua_rawseti(L, -2, 41);
+  lua_pushstring(L, "lessequal");
+  lua_rawseti(L, -2, 42);
+  lua_pushstring(L, "greaterequal");
+  lua_rawseti(L, -2, 43);
+  lua_pushstring(L, "less");
+  lua_rawseti(L, -2, 44);
+  lua_pushstring(L, "greater");
+  lua_rawseti(L, -2, 45);
+  lua_pushstring(L, "assignment");
+  lua_rawseti(L, -2, 46);
+  lua_pushstring(L, "lparen");
+  lua_rawseti(L, -2, 47);
+  lua_pushstring(L, "rparen");
+  lua_rawseti(L, -2, 48);
+  lua_pushstring(L, "lbrace");
+  lua_rawseti(L, -2, 49);
+  lua_pushstring(L, "rbrace");
+  lua_rawseti(L, -2, 50);
+  lua_pushstring(L, "lbracket");
+  lua_rawseti(L, -2, 51);
+  lua_pushstring(L, "rbracket");
+  lua_rawseti(L, -2, 52);
+  lua_pushstring(L, "doublecolon");
+  lua_rawseti(L, -2, 53);
+  lua_pushstring(L, "semicolon");
+  lua_rawseti(L, -2, 54);
+  lua_pushstring(L, "colon");
+  lua_rawseti(L, -2, 55);
+  lua_pushstring(L, "comma");
+  lua_rawseti(L, -2, 56);
+  lua_pushstring(L, "dot");
+  lua_rawseti(L, -2, 57);
+  lua_pushstring(L, "doubledot");
+  lua_rawseti(L, -2, 58);
+  lua_pushstring(L, "tripledot");
+  lua_rawseti(L, -2, 59);
+}
+
+extern bool char_stream_keyword(char_stream_t *s, qamar_token_t *out) {
+  char_stream_skipws(s);
+  out->pos.left = char_stream_pos(s);
+  size_t amt = s->len - s->t.index;
+  if (amt == 0)
+    return false;
+  const char *start = &s->data[s->t.index];
+  const char *p = start;
+  switch (*p) {
+  case 'a':
+    if (--amt == 0 || *++p != 'n' || --amt == 0 || *++p != 'd' ||
+        (--amt > 0 && is_alphanum(*++p)))
+      return false;
+    if (--amt == 0 || *++p)
+      out->len = 3;
+    out->value = char_stream_take(s, &out->len);
+    out->pos.right = char_stream_pos(s);
+    out->type = QAMAR_TOKEN_AND;
+    return true;
+  case 'b':
+    if (--amt == 0 || *++p != 'r' || --amt == 0 || *++p != 'e' || --amt == 0 ||
+        *++p != 'a' || --amt == 0 || *++p != 'k' ||
+        (--amt > 0 && is_alphanum(*++p)))
+      return false;
+    out->len = 5;
+    out->value = char_stream_take(s, &out->len);
+    out->pos.right = char_stream_pos(s);
+    out->type = QAMAR_TOKEN_BREAK;
+    return true;
+  case 'd':
+    if (--amt == 0 || *++p != 'o' || (--amt > 0 && is_alphanum(*++p)))
+      return false;
+    out->len = 2;
+    out->value = char_stream_take(s, &out->len);
+    out->pos.right = char_stream_pos(s);
+    out->type = QAMAR_TOKEN_DO;
+    return true;
+  case 'e':
+    if (--amt == 0)
+      return false;
+    switch (*++p) {
+    case 'l':
+      if (--amt == 0 || *++p != 's' || --amt == 0 || *++p != 'e')
+        return false;
+      if (--amt > 0 && !is_alphanum(*++p)) {
+        out->len = 4;
+        out->value = char_stream_take(s, &out->len);
+        out->pos.right = char_stream_pos(s);
+        out->type = QAMAR_TOKEN_ELSE;
+        return true;
+      } else if (*p != 'i' || --amt == 0 || *++p != 'f' ||
+                 (--amt > 0 && is_alphanum(*++p)))
+        return false;
+      out->len = 6;
+      out->value = char_stream_take(s, &out->len);
+      out->pos.right = char_stream_pos(s);
+      out->type = QAMAR_TOKEN_ELSEIF;
+      return true;
+    case 'n':
+      if (--amt == 0 || *++p != 'd' || (--amt > 0 && is_alphanum(*++p)))
+        return false;
+      out->len = 3;
+      out->value = char_stream_take(s, &out->len);
+      out->pos.right = char_stream_pos(s);
+      out->type = QAMAR_TOKEN_END;
+      return true;
+    }
+    break;
+  case 'f':
+    if (--amt == 0)
+      return false;
+    switch (*++p) {
+    case 'a':
+      if (--amt == 0 || *++p != 'l' || --amt == 0 || *++p != 's' ||
+          --amt == 0 || *++p != 'e' || (--amt > 0 && is_alphanum(*++p)))
+        return false;
+      out->len = 5;
+      out->value = char_stream_take(s, &out->len);
+      out->pos.right = char_stream_pos(s);
+      out->type = QAMAR_TOKEN_FALSE;
+      return true;
+    case 'o':
+      if (--amt == 0 || *++p != 'r' || (--amt > 0 && is_alphanum(*++p)))
+        return false;
+      out->len = 3;
+      out->value = char_stream_take(s, &out->len);
+      out->pos.right = char_stream_pos(s);
+      out->type = QAMAR_TOKEN_FOR;
+      return true;
+    case 'u':
+      if (--amt == 0 || *++p != 'n' || --amt == 0 || *++p != 'c' ||
+          --amt == 0 || *++p != 't' || --amt == 0 || *++p != 'i' ||
+          --amt == 0 || *++p != 'o' || --amt == 0 || *++p != 'n' ||
+          (--amt > 0 && is_alphanum(*++p)))
+        return false;
+      out->len = 8;
+      out->value = char_stream_take(s, &out->len);
+      out->pos.right = char_stream_pos(s);
+      out->type = QAMAR_TOKEN_FUNCTION;
+      return true;
+    }
+    break;
+  case 'g':
+    if (--amt == 0 || *++p != 'o' || --amt == 0 || *++p != 't' || --amt == 0 ||
+        *++p != 'o' || (--amt > 0 && is_alphanum(*++p)))
+      return false;
+    out->len = 4;
+    out->value = char_stream_take(s, &out->len);
+    out->pos.right = char_stream_pos(s);
+    out->type = QAMAR_TOKEN_GOTO;
+    return true;
+    break;
+  case 'i':
+    if (--amt == 0)
+      return false;
+    switch (*++p) {
+    case 'f':
+      if (--amt > 0 && is_alphanum(*++p))
+        return false;
+      out->len = 2;
+      out->value = char_stream_take(s, &out->len);
+      out->pos.right = char_stream_pos(s);
+      out->type = QAMAR_TOKEN_IF;
+      return true;
+    case 'n':
+      if (--amt > 0 && is_alphanum(*++p))
+        return false;
+      out->len = 2;
+      out->value = char_stream_take(s, &out->len);
+      out->pos.right = char_stream_pos(s);
+      out->type = QAMAR_TOKEN_IN;
+      return true;
+    }
+    break;
+  case 'l':
+    if (--amt == 0 || *++p != 'o' || --amt == 0 || *++p != 'c' || --amt == 0 ||
+        *++p != 'a' || --amt == 0 || *++p != 'l' ||
+        (--amt > 0 && is_alphanum(*++p)))
+      return false;
+    out->len = 5;
+    out->value = char_stream_take(s, &out->len);
+    out->pos.right = char_stream_pos(s);
+    out->type = QAMAR_TOKEN_LOCAL;
+    return true;
+  case 'n':
+    if (--amt == 0)
+      return false;
+    switch (*++p) {
+    case 'i':
+      if (--amt == 0 || *++p != 'l' || (--amt > 0 && is_alphanum(*++p)))
+        return false;
+      out->len = 3;
+      out->value = char_stream_take(s, &out->len);
+      out->pos.right = char_stream_pos(s);
+      out->type = QAMAR_TOKEN_NIL;
+      return true;
+    case 'o':
+      if (--amt == 0 || *++p != 't' || (--amt > 0 && is_alphanum(*++p)))
+        return false;
+      out->len = 3;
+      out->value = char_stream_take(s, &out->len);
+      out->pos.right = char_stream_pos(s);
+      out->type = QAMAR_TOKEN_NOT;
+      return true;
+    }
+    break;
+  case 'o':
+    if (--amt == 0 || *++p != 'r' || (--amt > 0 && is_alphanum(*++p)))
+      return false;
+    out->len = 2;
+    out->value = char_stream_take(s, &out->len);
+    out->pos.right = char_stream_pos(s);
+    out->type = QAMAR_TOKEN_OR;
+    return true;
+  case 'r':
+    if (--amt == 0 || *++p != 'e')
+      return false;
+    if (--amt == 0)
+      return false;
+    switch (*++p) {
+    case 'p':
+      if (--amt == 0 || *++p != 'e' || --amt == 0 || *++p != 'a' ||
+          --amt == 0 || *++p != 't' || (--amt > 0 && is_alphanum(*++p)))
+        return false;
+      out->len = 6;
+      out->value = char_stream_take(s, &out->len);
+      out->pos.right = char_stream_pos(s);
+      out->type = QAMAR_TOKEN_REPEAT;
+      return true;
+    case 't':
+      if (--amt == 0 || *++p != 'u' || --amt == 0 || *++p != 'r' ||
+          --amt == 0 || *++p != 'n' || (--amt > 0 && is_alphanum(*++p)))
+        return false;
+      out->len = 6;
+      out->value = char_stream_take(s, &out->len);
+      out->pos.right = char_stream_pos(s);
+      out->type = QAMAR_TOKEN_RETURN;
+      return true;
+    }
+    break;
+  case 't':
+    if (--amt == 0)
+      return false;
+    switch (*++p) {
+    case 'h':
+      if (--amt == 0 || *++p != 'e' || --amt == 0 || *++p != 'n' ||
+          (--amt > 0 && is_alphanum(*++p)))
+        return false;
+      out->len = 4;
+      out->value = char_stream_take(s, &out->len);
+      out->pos.right = char_stream_pos(s);
+      out->type = QAMAR_TOKEN_THEN;
+      return true;
+    case 'r':
+      if (--amt == 0 || *++p != 'u' || --amt == 0 || *++p != 'e' ||
+          (--amt > 0 && is_alphanum(*++p)))
+        return false;
+      out->len = 4;
+      out->value = char_stream_take(s, &out->len);
+      out->pos.right = char_stream_pos(s);
+      out->type = QAMAR_TOKEN_TRUE;
+      return true;
+    }
+    break;
+  case 'u':
+    if (--amt == 0 || *++p != 'n' || --amt == 0 || *++p != 't' || --amt == 0 ||
+        *++p != 'i' || --amt == 0 || *++p != 'l' ||
+        (--amt > 0 && is_alphanum(*++p)))
+      return false;
+    out->len = 5;
+    out->value = char_stream_take(s, &out->len);
+    out->pos.right = char_stream_pos(s);
+    out->type = QAMAR_TOKEN_UNTIL;
+    return true;
+  case 'w':
+    if (--amt == 0 || *++p != 'h' || --amt == 0 || *++p != 'i' || --amt == 0 ||
+        *++p != 'l' || --amt == 0 || *++p != 'e' ||
+        (--amt > 0 && is_alphanum(*++p)))
+      return false;
+    out->len = 5;
+    out->value = char_stream_take(s, &out->len);
+    out->pos.right = char_stream_pos(s);
+    out->type = QAMAR_TOKEN_WHILE;
+    return true;
+  }
+  return false;
+}
+
+static int lua_char_stream_keyword(lua_State *L) {
+  char_stream_t *s;
+  if (lua_gettop(L) < 1 ||
+      (s = luaL_checkudata(L, 1, QAMAR_TYPE_CHAR_STREAM)) == 0 ||
+      s->t.index >= s->len)
+    return 0;
+  qamar_token_t token;
+  if (!char_stream_keyword(s, &token))
+    return 0;
+
+  lua_newtable(L);
+  lua_pushstring(L, "value");
+  lua_pushlstring(L, token.value, token.len);
+  lua_rawset(L, -3);
+  lua_pushstring(L, "type");
+  lua_pushnumber(L, token.type);
+  lua_rawset(L, -3);
+  lua_pushstring(L, "pos");
+  lua_newtable(L);
+  lua_pushstring(L, "left");
+  lua_newtable(L);
+  lua_pushstring(L, "col");
+  lua_pushnumber(L, token.pos.left.col);
+  lua_rawset(L, -3);
+  lua_pushstring(L, "row");
+  lua_pushnumber(L, token.pos.left.row);
+  lua_rawset(L, -3);
+  lua_pushstring(L, "byte");
+  lua_pushnumber(L, token.pos.left.byte);
+  lua_rawset(L, -3);
+  lua_pushstring(L, "file_char");
+  lua_pushnumber(L, token.pos.left.file_char);
+  lua_rawset(L, -3);
+  lua_pushstring(L, "file_byte");
+  lua_pushnumber(L, token.pos.left.file_byte);
+  lua_rawset(L, -3);
+  lua_rawset(L, -3);
+  lua_pushstring(L, "right");
+  lua_newtable(L);
+  lua_pushstring(L, "col");
+  lua_pushnumber(L, token.pos.right.col);
+  lua_rawset(L, -3);
+  lua_pushstring(L, "row");
+  lua_pushnumber(L, token.pos.right.row);
+  lua_rawset(L, -3);
+  lua_pushstring(L, "byte");
+  lua_pushnumber(L, token.pos.right.byte);
+  lua_rawset(L, -3);
+  lua_pushstring(L, "file_char");
+  lua_pushnumber(L, token.pos.right.file_char);
+  lua_rawset(L, -3);
+  lua_pushstring(L, "file_byte");
+  lua_pushnumber(L, token.pos.right.file_byte);
+  lua_rawset(L, -3);
+  lua_rawset(L, -3);
+  lua_rawset(L, -3);
+
+  return 1;
+}
+
 const luaL_Reg library[] = {
     {"new", lua_char_stream_new},
     {"peek", lua_char_stream_peek},
@@ -460,6 +956,7 @@ const luaL_Reg library[] = {
     {"alpha", lua_char_stream_alpha},
     {"numeric", lua_char_stream_numeric},
     {"alphanumeric", lua_char_stream_alphanumeric},
+    {"keyword", lua_char_stream_keyword},
     {NULL, NULL}};
 
 int qamar_char_stream_init(lua_State *L) {
@@ -488,6 +985,10 @@ int qamar_char_stream_init(lua_State *L) {
   lua_pop(L, 1);
 
   luaL_register(L, "char_stream", library);
+  lua_pushstring(L, "types");
+  lua_create_token_type_table(L);
+  lua_rawset(L, -3);
+
   lua_pop(L, 1);
   return 0;
 }
