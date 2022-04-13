@@ -881,6 +881,55 @@ extern bool char_stream_keyword(char_stream_t *s, qamar_token_t *out) {
   return false;
 }
 
+static void lua_qamar_create_token(lua_State *L, const qamar_token_t *token) {
+  lua_newtable(L);
+  lua_pushstring(L, "value");
+  lua_pushlstring(L, token->value, token->len);
+  lua_rawset(L, -3);
+  lua_pushstring(L, "type");
+  lua_pushnumber(L, token->type);
+  lua_rawset(L, -3);
+  lua_pushstring(L, "pos");
+  lua_newtable(L);
+  lua_pushstring(L, "left");
+  lua_newtable(L);
+  lua_pushstring(L, "col");
+  lua_pushnumber(L, token->pos.left.col);
+  lua_rawset(L, -3);
+  lua_pushstring(L, "row");
+  lua_pushnumber(L, token->pos.left.row);
+  lua_rawset(L, -3);
+  lua_pushstring(L, "byte");
+  lua_pushnumber(L, token->pos.left.byte);
+  lua_rawset(L, -3);
+  lua_pushstring(L, "file_char");
+  lua_pushnumber(L, token->pos.left.file_char);
+  lua_rawset(L, -3);
+  lua_pushstring(L, "file_byte");
+  lua_pushnumber(L, token->pos.left.file_byte);
+  lua_rawset(L, -3);
+  lua_rawset(L, -3);
+  lua_pushstring(L, "right");
+  lua_newtable(L);
+  lua_pushstring(L, "col");
+  lua_pushnumber(L, token->pos.right.col);
+  lua_rawset(L, -3);
+  lua_pushstring(L, "row");
+  lua_pushnumber(L, token->pos.right.row);
+  lua_rawset(L, -3);
+  lua_pushstring(L, "byte");
+  lua_pushnumber(L, token->pos.right.byte);
+  lua_rawset(L, -3);
+  lua_pushstring(L, "file_char");
+  lua_pushnumber(L, token->pos.right.file_char);
+  lua_rawset(L, -3);
+  lua_pushstring(L, "file_byte");
+  lua_pushnumber(L, token->pos.right.file_byte);
+  lua_rawset(L, -3);
+  lua_rawset(L, -3);
+  lua_rawset(L, -3);
+}
+
 static int lua_char_stream_keyword(lua_State *L) {
   char_stream_t *s;
   if (lua_gettop(L) < 1 ||
@@ -890,54 +939,34 @@ static int lua_char_stream_keyword(lua_State *L) {
   qamar_token_t token;
   if (!char_stream_keyword(s, &token))
     return 0;
+  lua_qamar_create_token(L, &token);
+  return 1;
+}
 
-  lua_newtable(L);
-  lua_pushstring(L, "value");
-  lua_pushlstring(L, token.value, token.len);
-  lua_rawset(L, -3);
-  lua_pushstring(L, "type");
-  lua_pushnumber(L, token.type);
-  lua_rawset(L, -3);
-  lua_pushstring(L, "pos");
-  lua_newtable(L);
-  lua_pushstring(L, "left");
-  lua_newtable(L);
-  lua_pushstring(L, "col");
-  lua_pushnumber(L, token.pos.left.col);
-  lua_rawset(L, -3);
-  lua_pushstring(L, "row");
-  lua_pushnumber(L, token.pos.left.row);
-  lua_rawset(L, -3);
-  lua_pushstring(L, "byte");
-  lua_pushnumber(L, token.pos.left.byte);
-  lua_rawset(L, -3);
-  lua_pushstring(L, "file_char");
-  lua_pushnumber(L, token.pos.left.file_char);
-  lua_rawset(L, -3);
-  lua_pushstring(L, "file_byte");
-  lua_pushnumber(L, token.pos.left.file_byte);
-  lua_rawset(L, -3);
-  lua_rawset(L, -3);
-  lua_pushstring(L, "right");
-  lua_newtable(L);
-  lua_pushstring(L, "col");
-  lua_pushnumber(L, token.pos.right.col);
-  lua_rawset(L, -3);
-  lua_pushstring(L, "row");
-  lua_pushnumber(L, token.pos.right.row);
-  lua_rawset(L, -3);
-  lua_pushstring(L, "byte");
-  lua_pushnumber(L, token.pos.right.byte);
-  lua_rawset(L, -3);
-  lua_pushstring(L, "file_char");
-  lua_pushnumber(L, token.pos.right.file_char);
-  lua_rawset(L, -3);
-  lua_pushstring(L, "file_byte");
-  lua_pushnumber(L, token.pos.right.file_byte);
-  lua_rawset(L, -3);
-  lua_rawset(L, -3);
-  lua_rawset(L, -3);
+extern bool char_stream_name(char_stream_t *s, qamar_token_t *out) {
+  char_stream_skipws(s);
+  out->pos.left = char_stream_pos(s);
+  out->value = char_stream_alpha(s);
+  if (out->value == NULL)
+    return false;
+  out->len = 1;
+  out->type = QAMAR_TOKEN_NAME;
+  while (char_stream_alphanumeric(s))
+    ++out->len;
+  out->pos.right = char_stream_pos(s);
+  return true;
+}
 
+static int lua_char_stream_name(lua_State *L) {
+  char_stream_t *s;
+  if (lua_gettop(L) < 1 ||
+      (s = luaL_checkudata(L, 1, QAMAR_TYPE_CHAR_STREAM)) == 0 ||
+      s->t.index >= s->len)
+    return 0;
+  qamar_token_t token;
+  if (!char_stream_name(s, &token))
+    return 0;
+  lua_qamar_create_token(L, &token);
   return 1;
 }
 
@@ -957,6 +986,7 @@ const luaL_Reg library[] = {
     {"numeric", lua_char_stream_numeric},
     {"alphanumeric", lua_char_stream_alphanumeric},
     {"keyword", lua_char_stream_keyword},
+    {"name", lua_char_stream_name},
     {NULL, NULL}};
 
 int qamar_char_stream_init(lua_State *L) {
