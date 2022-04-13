@@ -80,7 +80,7 @@ static int lua_char_stream_tostring(lua_State *L) {
   return 1;
 }
 
-const char *char_stream_peek(char_stream_t *s, size_t skip) {
+extern const char *char_stream_peek(char_stream_t *s, size_t skip) {
   return s->t.index + skip < s->len ? &s->data[s->t.index + skip] : NULL;
 }
 
@@ -111,7 +111,7 @@ static int lua_char_stream_peek(lua_State *L) {
   return 1;
 }
 
-const char *char_stream_take(char_stream_t *s, size_t *a) {
+extern const char *char_stream_take(char_stream_t *s, size_t *a) {
   size_t amt = *a;
   if (s->t.index + amt > s->len) {
     amt = s->len - s->t.index;
@@ -164,7 +164,7 @@ static int lua_char_stream_take(lua_State *L) {
   return 1;
 }
 
-void char_stream_begin(char_stream_t *s) {
+extern void char_stream_begin(char_stream_t *s) {
   if (s->transactions_index == s->transactions_capacity) {
     size_t newcapacity = s->transactions_capacity * 2;
     char_stream_transaction_t *newbuf = realloc(
@@ -190,7 +190,7 @@ static int lua_char_stream_begin(lua_State *L) {
   return 0;
 }
 
-void char_stream_undo(char_stream_t *s) {
+extern void char_stream_undo(char_stream_t *s) {
   if (s->transactions_index > 0)
     s->t = s->transactions[--s->transactions_index];
 }
@@ -208,7 +208,7 @@ static int lua_char_stream_undo(lua_State *L) {
   return 0;
 }
 
-void char_stream_commit(char_stream_t *s) {
+extern void char_stream_commit(char_stream_t *s) {
   if (s->transactions_index > 0)
     --s->transactions_index;
 }
@@ -226,7 +226,7 @@ static int lua_char_stream_commit(lua_State *L) {
   return 0;
 }
 
-qamar_position_t char_stream_pos(char_stream_t *s) {
+extern qamar_position_t char_stream_pos(char_stream_t *s) {
   qamar_position_t p;
   p.col = s->t.col;
   p.row = s->t.row;
@@ -270,8 +270,9 @@ static int lua_char_stream_pos(lua_State *L) {
   return 1;
 }
 
-const char *char_stream_try_consume_string(char_stream_t *s, const char *str,
-                                           const size_t len) {
+extern const char *char_stream_try_consume_string(char_stream_t *s,
+                                                  const char *str,
+                                                  const size_t len) {
   if (s->t.index + len > s->len)
     return NULL;
   for (size_t i = 0; i < len; ++i)
@@ -300,7 +301,7 @@ static int lua_char_stream_try_consume_string(lua_State *L) {
   return 1;
 }
 
-void char_stream_skipws(char_stream_t *s) {
+extern void char_stream_skipws(char_stream_t *s) {
   if (s->skip_ws_ctr == 0) {
     for (; s->t.index < s->len; ++s->t.index) {
       char x = s->data[s->t.index];
@@ -324,7 +325,7 @@ static int lua_char_stream_skipws(lua_State *L) {
   return 0;
 }
 
-void char_stream_suspend_skip_ws(char_stream_t *s) { ++s->skip_ws_ctr; }
+extern void char_stream_suspend_skip_ws(char_stream_t *s) { ++s->skip_ws_ctr; }
 
 static int lua_char_stream_suspend_skip_ws(lua_State *L) {
   char_stream_t *s;
@@ -339,7 +340,7 @@ static int lua_char_stream_suspend_skip_ws(lua_State *L) {
   return 0;
 }
 
-void char_stream_resume_skip_ws(char_stream_t *s) {
+extern void char_stream_resume_skip_ws(char_stream_t *s) {
   if (s->skip_ws_ctr > 0)
     --s->skip_ws_ctr;
 }
@@ -357,7 +358,7 @@ static int lua_char_stream_resume_skip_ws(lua_State *L) {
   return 0;
 }
 
-const char *char_stream_alpha(char_stream_t *s) {
+extern const char *char_stream_alpha(char_stream_t *s) {
   if (s->t.index >= s->len)
     return NULL;
   const char *ret = &s->data[s->t.index];
@@ -385,7 +386,7 @@ static int lua_char_stream_alpha(lua_State *L) {
   return 1;
 }
 
-const char *char_stream_numeric(char_stream_t *s) {
+extern const char *char_stream_numeric(char_stream_t *s) {
   if (s->t.index >= s->len)
     return NULL;
   const char *ret = &s->data[s->t.index];
@@ -414,7 +415,7 @@ static int lua_char_stream_numeric(lua_State *L) {
   return 1;
 }
 
-const char *char_stream_alphanumeric(char_stream_t *s) {
+extern const char *char_stream_alphanumeric(char_stream_t *s) {
   if (s->t.index >= s->len)
     return NULL;
   const char *ret = &s->data[s->t.index];
