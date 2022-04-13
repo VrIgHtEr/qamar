@@ -176,33 +176,6 @@ end
 function qamar.run()
 	math.randomseed(os.time())
 	parse_everything()
-
-	local s = _G.char_stream
-
-	local str = s.new("return function() print 'Hello World!' end")
-	stdout(str)
-
-	str:begin()
-	for _ = 1, 6 do
-		stdout(str:take())
-		print(str)
-	end
-	str:commit()
-	print(str)
-	str:begin()
-	print(str)
-	str:skipws()
-	print(str)
-	str:begin()
-	print(str)
-	stdout(str:try_consume_string("function"))
-	print(str)
-	str:undo()
-	print(str)
-	stdout(str:take(99999))
-	print(str)
-	str:commit()
-	print(str)
 end
 
 return qamar
