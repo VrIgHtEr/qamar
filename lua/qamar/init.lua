@@ -174,7 +174,7 @@ local function parse_everything()
 end
 
 function qamar.run()
-	--	math.randomseed(os.time())
+	math.randomseed(os.time())
 	parse_everything()
 end
 

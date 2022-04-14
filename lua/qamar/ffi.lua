@@ -1,6 +1,11 @@
 local qamar_lexer = _G["qamar_lexer"]
 local lexer = setmetatable({}, { __index = qamar_lexer })
 
+--jit.opt.start(3) -- same as -O2
+--jit.opt.start("-dce")
+jit.opt.start(3)
+jit.opt.start("maxtrace=1000", "maxrecord=1600")
+
 local ffi = require("ffi")
 if ffi then
 	ffi.cdef([[
