@@ -1,10 +1,10 @@
 local lexer = _G["qamar_lexer"]
 local lexers = {
 	require("qamar.lexer.token.comment"),
-	require("qamar.lexer.token.string"),
 	lexer.keyword,
-	require("qamar.lexer.token.number"),
 	lexer.name,
+	require("qamar.lexer.token.number"),
+	require("qamar.lexer.token.string"),
 }
 local token = require("qamar.lexer.types")
 local spos = lexer.pos

@@ -815,9 +815,33 @@ extern bool lexer_keyword(qamar_lexer_t *s, qamar_token_t *out) {
     out->type = QAMAR_TOKEN_DASH;
     goto success;
   case '[':
-    out->len = 1;
-    out->type = QAMAR_TOKEN_LBRACKET;
-    goto success;
+    if (--amt == 0) {
+      out->len = 1;
+      out->type = QAMAR_TOKEN_LBRACKET;
+      goto success;
+    }
+    switch (*++p) {
+    case '[':
+      return false;
+    case '=':
+      while (true) {
+        if (--amt == 0) {
+          out->len = 1;
+          out->type = QAMAR_TOKEN_LBRACKET;
+          goto success;
+        }
+        char c = *++p;
+        if (c != '=') {
+          if (c == '[')
+            return false;
+          break;
+        }
+      }
+    default:
+      out->len = 1;
+      out->type = QAMAR_TOKEN_LBRACKET;
+      goto success;
+    }
   case ']':
     out->len = 1;
     out->type = QAMAR_TOKEN_RBRACKET;
