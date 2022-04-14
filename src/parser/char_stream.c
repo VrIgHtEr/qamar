@@ -1,4 +1,5 @@
 #include "char_stream.h"
+#include "token_types.h"
 #include <lauxlib.h>
 #include <lua.h>
 #include <stdbool.h>
@@ -79,6 +80,48 @@ static int lua_char_stream_tostring(lua_State *L) {
            s->transactions_index);
   lua_pushlstring(L, t, amt);
   return 1;
+}
+
+static void lua_qamar_create_position(lua_State *L, const qamar_position_t *t) {
+  lua_newtable(L);
+  lua_pushstring(L, "col");
+  lua_pushnumber(L, t->col);
+  lua_rawset(L, -3);
+  lua_pushstring(L, "row");
+  lua_pushnumber(L, t->row);
+  lua_rawset(L, -3);
+  lua_pushstring(L, "byte");
+  lua_pushnumber(L, t->byte);
+  lua_rawset(L, -3);
+  lua_pushstring(L, "file_char");
+  lua_pushnumber(L, t->file_char);
+  lua_rawset(L, -3);
+  lua_pushstring(L, "file_byte");
+  lua_pushnumber(L, t->file_byte);
+  lua_rawset(L, -3);
+}
+
+static void lua_qamar_create_range(lua_State *L, const qamar_range_t *r) {
+  lua_newtable(L);
+  lua_pushstring(L, "left");
+  lua_qamar_create_position(L, &r->left);
+  lua_rawset(L, -3);
+  lua_pushstring(L, "right");
+  lua_qamar_create_position(L, &r->right);
+  lua_rawset(L, -3);
+}
+
+static void lua_qamar_create_token(lua_State *L, const qamar_token_t *token) {
+  lua_newtable(L);
+  lua_pushstring(L, "value");
+  lua_pushlstring(L, token->value, token->len);
+  lua_rawset(L, -3);
+  lua_pushstring(L, "type");
+  lua_pushnumber(L, token->type);
+  lua_rawset(L, -3);
+  lua_pushstring(L, "pos");
+  lua_qamar_create_range(L, &token->pos);
+  lua_rawset(L, -3);
 }
 
 extern const char *char_stream_peek(char_stream_t *s, size_t skip) {
@@ -246,28 +289,8 @@ static int lua_char_stream_pos(lua_State *L) {
   printf("POS\n");
   fflush(stdout);
 #endif
-  lua_newtable(L);
-
-  lua_pushstring(L, "col");
-  lua_pushnumber(L, s->t.col);
-  lua_rawset(L, -3);
-
-  lua_pushstring(L, "row");
-  lua_pushnumber(L, s->t.row);
-  lua_rawset(L, -3);
-
-  lua_pushstring(L, "byte");
-  lua_pushnumber(L, s->t.byte);
-  lua_rawset(L, -3);
-
-  lua_pushstring(L, "file_char");
-  lua_pushnumber(L, s->t.file_char);
-  lua_rawset(L, -3);
-
-  lua_pushstring(L, "file_byte");
-  lua_pushnumber(L, s->t.file_byte);
-  lua_rawset(L, -3);
-
+  qamar_position_t pos = char_stream_pos(s);
+  lua_qamar_create_position(L, &pos);
   return 1;
 }
 
@@ -451,186 +474,126 @@ static inline bool is_alphanum(const char x) {
          (x >= 48 && x <= 57) || x == 95;
 }
 
-#define QAMAR_TOKEN_AND 1
-#define QAMAR_TOKEN_BREAK 2
-#define QAMAR_TOKEN_DO 3
-#define QAMAR_TOKEN_ELSE 4
-#define QAMAR_TOKEN_ELSEIF 5
-#define QAMAR_TOKEN_END 6
-#define QAMAR_TOKEN_FALSE 7
-#define QAMAR_TOKEN_FOR 8
-#define QAMAR_TOKEN_FUNCTION 9
-#define QAMAR_TOKEN_GOTO 10
-#define QAMAR_TOKEN_IF 11
-#define QAMAR_TOKEN_IN 12
-#define QAMAR_TOKEN_LOCAL 13
-#define QAMAR_TOKEN_NIL 14
-#define QAMAR_TOKEN_NOT 15
-#define QAMAR_TOKEN_OR 16
-#define QAMAR_TOKEN_REPEAT 17
-#define QAMAR_TOKEN_RETURN 18
-#define QAMAR_TOKEN_THEN 19
-#define QAMAR_TOKEN_TRUE 20
-#define QAMAR_TOKEN_UNTIL 21
-#define QAMAR_TOKEN_WHILE 22
-#define QAMAR_TOKEN_COMMENT 23
-#define QAMAR_TOKEN_NAME 24
-#define QAMAR_TOKEN_STRING 25
-#define QAMAR_TOKEN_NUMBER 26
-#define QAMAR_TOKEN_PLUS 27
-#define QAMAR_TOKEN_DASH 28
-#define QAMAR_TOKEN_ASTERISK 29
-#define QAMAR_TOKEN_SLASH 30
-#define QAMAR_TOKEN_PERCENT 31
-#define QAMAR_TOKEN_CARET 32
-#define QAMAR_TOKEN_HASH 33
-#define QAMAR_TOKEN_AMPERSAND 34
-#define QAMAR_TOKEN_TILDE 35
-#define QAMAR_TOKEN_PIPE 36
-#define QAMAR_TOKEN_LSHIFT 37
-#define QAMAR_TOKEN_RSHIFT 38
-#define QAMAR_TOKEN_DOUBLESLASH 39
-#define QAMAR_TOKEN_EQUAL 40
-#define QAMAR_TOKEN_NOTEQUAL 41
-#define QAMAR_TOKEN_LESSEQUAL 42
-#define QAMAR_TOKEN_GREATEREQUAL 43
-#define QAMAR_TOKEN_LESS 44
-#define QAMAR_TOKEN_GREATER 45
-#define QAMAR_TOKEN_ASSIGNMENT 46
-#define QAMAR_TOKEN_LPAREN 47
-#define QAMAR_TOKEN_RPAREN 48
-#define QAMAR_TOKEN_LBRACE 49
-#define QAMAR_TOKEN_RBRACE 50
-#define QAMAR_TOKEN_LBRACKET 51
-#define QAMAR_TOKEN_RBRACKET 52
-#define QAMAR_TOKEN_DOUBLECOLON 53
-#define QAMAR_TOKEN_SEMICOLON 54
-#define QAMAR_TOKEN_COLON 55
-#define QAMAR_TOKEN_COMMA 56
-#define QAMAR_TOKEN_DOT 57
-#define QAMAR_TOKEN_DOUBLEDOT 58
-#define QAMAR_TOKEN_TRIPLEDOT 59
-
 static void lua_create_token_type_table(lua_State *L) {
   lua_newtable(L);
   lua_pushstring(L, "kw_and");
-  lua_rawseti(L, -2, 1);
+  lua_rawseti(L, -2, QAMAR_TOKEN_AND);
   lua_pushstring(L, "kw_break");
-  lua_rawseti(L, -2, 2);
+  lua_rawseti(L, -2, QAMAR_TOKEN_BREAK);
   lua_pushstring(L, "kw_do");
-  lua_rawseti(L, -2, 3);
+  lua_rawseti(L, -2, QAMAR_TOKEN_DO);
   lua_pushstring(L, "kw_else");
-  lua_rawseti(L, -2, 4);
+  lua_rawseti(L, -2, QAMAR_TOKEN_ELSE);
   lua_pushstring(L, "kw_elseif");
-  lua_rawseti(L, -2, 5);
+  lua_rawseti(L, -2, QAMAR_TOKEN_ELSEIF);
   lua_pushstring(L, "kw_end");
-  lua_rawseti(L, -2, 6);
+  lua_rawseti(L, -2, QAMAR_TOKEN_END);
   lua_pushstring(L, "kw_false");
-  lua_rawseti(L, -2, 7);
+  lua_rawseti(L, -2, QAMAR_TOKEN_FALSE);
   lua_pushstring(L, "kw_for");
-  lua_rawseti(L, -2, 8);
+  lua_rawseti(L, -2, QAMAR_TOKEN_FOR);
   lua_pushstring(L, "kw_function");
-  lua_rawseti(L, -2, 9);
+  lua_rawseti(L, -2, QAMAR_TOKEN_FUNCTION);
   lua_pushstring(L, "kw_goto");
-  lua_rawseti(L, -2, 10);
+  lua_rawseti(L, -2, QAMAR_TOKEN_GOTO);
   lua_pushstring(L, "kw_if");
-  lua_rawseti(L, -2, 11);
+  lua_rawseti(L, -2, QAMAR_TOKEN_IF);
   lua_pushstring(L, "kw_in");
-  lua_rawseti(L, -2, 12);
+  lua_rawseti(L, -2, QAMAR_TOKEN_IN);
   lua_pushstring(L, "kw_local");
-  lua_rawseti(L, -2, 13);
+  lua_rawseti(L, -2, QAMAR_TOKEN_LOCAL);
   lua_pushstring(L, "kw_nil");
-  lua_rawseti(L, -2, 14);
+  lua_rawseti(L, -2, QAMAR_TOKEN_NIL);
   lua_pushstring(L, "kw_not");
-  lua_rawseti(L, -2, 15);
+  lua_rawseti(L, -2, QAMAR_TOKEN_NOT);
   lua_pushstring(L, "kw_or");
-  lua_rawseti(L, -2, 16);
+  lua_rawseti(L, -2, QAMAR_TOKEN_OR);
   lua_pushstring(L, "kw_repeat");
-  lua_rawseti(L, -2, 17);
+  lua_rawseti(L, -2, QAMAR_TOKEN_REPEAT);
   lua_pushstring(L, "kw_return");
-  lua_rawseti(L, -2, 18);
+  lua_rawseti(L, -2, QAMAR_TOKEN_RETURN);
   lua_pushstring(L, "kw_then");
-  lua_rawseti(L, -2, 19);
+  lua_rawseti(L, -2, QAMAR_TOKEN_THEN);
   lua_pushstring(L, "kw_true");
-  lua_rawseti(L, -2, 20);
+  lua_rawseti(L, -2, QAMAR_TOKEN_TRUE);
   lua_pushstring(L, "kw_until");
-  lua_rawseti(L, -2, 21);
+  lua_rawseti(L, -2, QAMAR_TOKEN_UNTIL);
   lua_pushstring(L, "kw_while");
-  lua_rawseti(L, -2, 22);
+  lua_rawseti(L, -2, QAMAR_TOKEN_WHILE);
   lua_pushstring(L, "comment");
-  lua_rawseti(L, -2, 23);
+  lua_rawseti(L, -2, QAMAR_TOKEN_COMMENT);
   lua_pushstring(L, "name");
-  lua_rawseti(L, -2, 24);
+  lua_rawseti(L, -2, QAMAR_TOKEN_NAME);
   lua_pushstring(L, "string");
-  lua_rawseti(L, -2, 25);
+  lua_rawseti(L, -2, QAMAR_TOKEN_STRING);
   lua_pushstring(L, "number");
-  lua_rawseti(L, -2, 26);
+  lua_rawseti(L, -2, QAMAR_TOKEN_NUMBER);
   lua_pushstring(L, "plus");
-  lua_rawseti(L, -2, 27);
+  lua_rawseti(L, -2, QAMAR_TOKEN_PLUS);
   lua_pushstring(L, "dash");
-  lua_rawseti(L, -2, 28);
+  lua_rawseti(L, -2, QAMAR_TOKEN_DASH);
   lua_pushstring(L, "asterisk");
-  lua_rawseti(L, -2, 29);
+  lua_rawseti(L, -2, QAMAR_TOKEN_ASTERISK);
   lua_pushstring(L, "slash");
-  lua_rawseti(L, -2, 30);
+  lua_rawseti(L, -2, QAMAR_TOKEN_SLASH);
   lua_pushstring(L, "percent");
-  lua_rawseti(L, -2, 31);
+  lua_rawseti(L, -2, QAMAR_TOKEN_PERCENT);
   lua_pushstring(L, "caret");
-  lua_rawseti(L, -2, 32);
+  lua_rawseti(L, -2, QAMAR_TOKEN_CARET);
   lua_pushstring(L, "hash");
-  lua_rawseti(L, -2, 33);
+  lua_rawseti(L, -2, QAMAR_TOKEN_HASH);
   lua_pushstring(L, "ampersand");
-  lua_rawseti(L, -2, 34);
+  lua_rawseti(L, -2, QAMAR_TOKEN_AMPERSAND);
   lua_pushstring(L, "tilde");
-  lua_rawseti(L, -2, 35);
+  lua_rawseti(L, -2, QAMAR_TOKEN_TILDE);
   lua_pushstring(L, "pipe");
-  lua_rawseti(L, -2, 36);
+  lua_rawseti(L, -2, QAMAR_TOKEN_PIPE);
   lua_pushstring(L, "lshift");
-  lua_rawseti(L, -2, 37);
+  lua_rawseti(L, -2, QAMAR_TOKEN_LSHIFT);
   lua_pushstring(L, "rshift");
-  lua_rawseti(L, -2, 38);
+  lua_rawseti(L, -2, QAMAR_TOKEN_RSHIFT);
   lua_pushstring(L, "doubleslash");
-  lua_rawseti(L, -2, 39);
+  lua_rawseti(L, -2, QAMAR_TOKEN_DOUBLESLASH);
   lua_pushstring(L, "equal");
-  lua_rawseti(L, -2, 40);
+  lua_rawseti(L, -2, QAMAR_TOKEN_EQUAL);
   lua_pushstring(L, "notequal");
-  lua_rawseti(L, -2, 41);
+  lua_rawseti(L, -2, QAMAR_TOKEN_NOTEQUAL);
   lua_pushstring(L, "lessequal");
-  lua_rawseti(L, -2, 42);
+  lua_rawseti(L, -2, QAMAR_TOKEN_LESSEQUAL);
   lua_pushstring(L, "greaterequal");
-  lua_rawseti(L, -2, 43);
+  lua_rawseti(L, -2, QAMAR_TOKEN_GREATEREQUAL);
   lua_pushstring(L, "less");
-  lua_rawseti(L, -2, 44);
+  lua_rawseti(L, -2, QAMAR_TOKEN_LESS);
   lua_pushstring(L, "greater");
-  lua_rawseti(L, -2, 45);
+  lua_rawseti(L, -2, QAMAR_TOKEN_GREATER);
   lua_pushstring(L, "assignment");
-  lua_rawseti(L, -2, 46);
+  lua_rawseti(L, -2, QAMAR_TOKEN_ASSIGNMENT);
   lua_pushstring(L, "lparen");
-  lua_rawseti(L, -2, 47);
+  lua_rawseti(L, -2, QAMAR_TOKEN_LPAREN);
   lua_pushstring(L, "rparen");
-  lua_rawseti(L, -2, 48);
+  lua_rawseti(L, -2, QAMAR_TOKEN_RPAREN);
   lua_pushstring(L, "lbrace");
-  lua_rawseti(L, -2, 49);
+  lua_rawseti(L, -2, QAMAR_TOKEN_LBRACE);
   lua_pushstring(L, "rbrace");
-  lua_rawseti(L, -2, 50);
+  lua_rawseti(L, -2, QAMAR_TOKEN_RBRACE);
   lua_pushstring(L, "lbracket");
-  lua_rawseti(L, -2, 51);
+  lua_rawseti(L, -2, QAMAR_TOKEN_LBRACKET);
   lua_pushstring(L, "rbracket");
-  lua_rawseti(L, -2, 52);
+  lua_rawseti(L, -2, QAMAR_TOKEN_RBRACKET);
   lua_pushstring(L, "doublecolon");
-  lua_rawseti(L, -2, 53);
+  lua_rawseti(L, -2, QAMAR_TOKEN_DOUBLECOLON);
   lua_pushstring(L, "semicolon");
-  lua_rawseti(L, -2, 54);
+  lua_rawseti(L, -2, QAMAR_TOKEN_SEMICOLON);
   lua_pushstring(L, "colon");
-  lua_rawseti(L, -2, 55);
+  lua_rawseti(L, -2, QAMAR_TOKEN_COLON);
   lua_pushstring(L, "comma");
-  lua_rawseti(L, -2, 56);
+  lua_rawseti(L, -2, QAMAR_TOKEN_COMMA);
   lua_pushstring(L, "dot");
-  lua_rawseti(L, -2, 57);
+  lua_rawseti(L, -2, QAMAR_TOKEN_DOT);
   lua_pushstring(L, "doubledot");
-  lua_rawseti(L, -2, 58);
+  lua_rawseti(L, -2, QAMAR_TOKEN_DOUBLEDOT);
   lua_pushstring(L, "tripledot");
-  lua_rawseti(L, -2, 59);
+  lua_rawseti(L, -2, QAMAR_TOKEN_TRIPLEDOT);
 }
 
 extern bool char_stream_keyword(char_stream_t *s, qamar_token_t *out) {
@@ -989,55 +952,6 @@ success:
   return true;
 }
 
-static void lua_qamar_create_token(lua_State *L, const qamar_token_t *token) {
-  lua_newtable(L);
-  lua_pushstring(L, "value");
-  lua_pushlstring(L, token->value, token->len);
-  lua_rawset(L, -3);
-  lua_pushstring(L, "type");
-  lua_pushnumber(L, token->type);
-  lua_rawset(L, -3);
-  lua_pushstring(L, "pos");
-  lua_newtable(L);
-  lua_pushstring(L, "left");
-  lua_newtable(L);
-  lua_pushstring(L, "col");
-  lua_pushnumber(L, token->pos.left.col);
-  lua_rawset(L, -3);
-  lua_pushstring(L, "row");
-  lua_pushnumber(L, token->pos.left.row);
-  lua_rawset(L, -3);
-  lua_pushstring(L, "byte");
-  lua_pushnumber(L, token->pos.left.byte);
-  lua_rawset(L, -3);
-  lua_pushstring(L, "file_char");
-  lua_pushnumber(L, token->pos.left.file_char);
-  lua_rawset(L, -3);
-  lua_pushstring(L, "file_byte");
-  lua_pushnumber(L, token->pos.left.file_byte);
-  lua_rawset(L, -3);
-  lua_rawset(L, -3);
-  lua_pushstring(L, "right");
-  lua_newtable(L);
-  lua_pushstring(L, "col");
-  lua_pushnumber(L, token->pos.right.col);
-  lua_rawset(L, -3);
-  lua_pushstring(L, "row");
-  lua_pushnumber(L, token->pos.right.row);
-  lua_rawset(L, -3);
-  lua_pushstring(L, "byte");
-  lua_pushnumber(L, token->pos.right.byte);
-  lua_rawset(L, -3);
-  lua_pushstring(L, "file_char");
-  lua_pushnumber(L, token->pos.right.file_char);
-  lua_rawset(L, -3);
-  lua_pushstring(L, "file_byte");
-  lua_pushnumber(L, token->pos.right.file_byte);
-  lua_rawset(L, -3);
-  lua_rawset(L, -3);
-  lua_rawset(L, -3);
-}
-
 static int lua_char_stream_keyword(lua_State *L) {
   char_stream_t *s;
   if (lua_gettop(L) < 1 ||
@@ -1126,7 +1040,7 @@ int qamar_char_stream_init(lua_State *L) {
   lua_pushstring(L, "types");
   lua_create_token_type_table(L);
   lua_rawset(L, -3);
-
   lua_pop(L, 1);
+
   return 0;
 }
