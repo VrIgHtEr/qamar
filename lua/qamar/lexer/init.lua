@@ -1,4 +1,4 @@
-local lexer = _G["qamar_lexer"]
+local lexer = require("qamar.ffi")
 local lexers = {
 	require("qamar.lexer.token.comment"),
 	lexer.keyword,

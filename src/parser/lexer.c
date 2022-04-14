@@ -11,7 +11,7 @@
 
 const char *QAMAR_TYPE_LEXER = "__QAMAR_LEXER";
 
-int lexer_new(qamar_lexer_t *c, const char *str, const size_t len) {
+extern int lexer_new(qamar_lexer_t *c, const char *str, const size_t len) {
   memcpy((void *)c->data, str, len);
   c->skip_ws_ctr = 0;
   c->len = len;
@@ -47,6 +47,12 @@ static int lua_lexer_new(lua_State *L) {
   return 1;
 }
 
+extern void lexer_destroy(qamar_lexer_t *s) {
+  if (s->transactions != NULL)
+    free(s->transactions);
+  s->transactions = NULL;
+}
+
 static int lua_lexer_destroy(lua_State *L) {
   qamar_lexer_t *s;
   if (lua_gettop(L) < 1 || (s = luaL_checkudata(L, 1, QAMAR_TYPE_LEXER)) == 0)
@@ -55,9 +61,7 @@ static int lua_lexer_destroy(lua_State *L) {
   printf("DESTROY\n");
   fflush(stdout);
 #endif
-  if (s->transactions != NULL)
-    free(s->transactions);
-  s->transactions = NULL;
+  lexer_destroy(s);
   return 0;
 }
 

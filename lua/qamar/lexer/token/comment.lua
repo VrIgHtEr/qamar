@@ -1,5 +1,5 @@
 local token, string_token = require("qamar.lexer.types"), require("qamar.lexer.token.string")
-local lexer = _G["qamar_lexer"]
+local lexer = require("qamar.ffi")
 
 local begin = lexer.begin
 local skipws = lexer.skipws

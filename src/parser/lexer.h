@@ -48,6 +48,7 @@ typedef struct {
 int qamar_lexer_init(lua_State *);
 
 int lexer_new(qamar_lexer_t *c, const char *, const size_t);
+void lexer_destroy(qamar_lexer_t *);
 const char *lexer_peek(qamar_lexer_t *, size_t);
 const char *lexer_take(qamar_lexer_t *, size_t *);
 void lexer_begin(qamar_lexer_t *);
@@ -62,5 +63,6 @@ const char *lexer_alpha(qamar_lexer_t *);
 const char *lexer_numeric(qamar_lexer_t *);
 const char *lexer_alphanumeric(qamar_lexer_t *);
 bool lexer_keyword(qamar_lexer_t *, qamar_token_t *);
+bool lexer_name(qamar_lexer_t *, qamar_token_t *);
 
 #endif

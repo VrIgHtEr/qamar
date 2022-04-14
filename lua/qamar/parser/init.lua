@@ -50,7 +50,7 @@ local MT = {
 	end,
 }
 
-local lexer = _G["qamar_lexer"]
+local lexer = require("qamar.ffi")
 local stpos = lexer.pos
 local stpeek = lexer.peek
 local sttake = lexer.take
