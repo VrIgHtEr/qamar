@@ -1,11 +1,9 @@
 local tokenizers = {
 	require("qamar.tokenizer.token.comment"),
-	--require("qamar.tokenizer.token.keyword"),
-	char_stream.keyword,
-	--require("qamar.tokenizer.token.name"),
-	char_stream.name,
-	require("qamar.tokenizer.token.number"),
 	require("qamar.tokenizer.token.string"),
+	char_stream.keyword,
+	require("qamar.tokenizer.token.number"),
+	char_stream.name,
 	require("qamar.tokenizer.token.symbol"),
 }
 local token = require("qamar.tokenizer.types")
