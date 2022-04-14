@@ -1,29 +1,30 @@
-local tokenizers = {
-	require("qamar.tokenizer.token.comment"),
-	require("qamar.tokenizer.token.string"),
-	char_stream.keyword,
-	require("qamar.tokenizer.token.number"),
-	char_stream.name,
+local lexer = require("qamar.lexer")
+local lexers = {
+	require("qamar.lexer.token.comment"),
+	require("qamar.lexer.token.string"),
+	lexer.keyword,
+	require("qamar.lexer.token.number"),
+	lexer.name,
 }
-local token = require("qamar.tokenizer.types")
-local spos = char_stream.pos
+local token = require("qamar.lexer.types")
+local spos = lexer.pos
 local ipairs = ipairs
 local concat = table.concat
-local peek = char_stream.peek
-local begin = char_stream.begin
-local take = char_stream.take
-local undo = char_stream.undo
-local skipws = char_stream.skipws
+local peek = lexer.peek
+local begin = lexer.begin
+local take = lexer.take
+local undo = lexer.undo
+local skipws = lexer.skipws
 local tcomment = token.comment
 local sescape = require("qamar.util.string").escape
 
 ---tries to parse the next lua token
----@param self char_stream
+---@param self lexer
 ---@return token|nil
 return function(self)
 	::restart::
 	if peek(self) then
-		for _, x in ipairs(tokenizers) do
+		for _, x in ipairs(lexers) do
 			local ret = x(self)
 			if ret then
 				if ret.type == tcomment then

@@ -1,4 +1,4 @@
-local types = _G["char_stream"].types
+local types = _G["lexer"].types
 for i, v in ipairs(types) do
 	types[v] = i
 end

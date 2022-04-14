@@ -15,7 +15,7 @@
 #include <string.h>
 
 #include "loop/loop.h"
-#include "parser/char_stream.h"
+#include "parser/lexer.h"
 #include <uv.h>
 
 void prepend_lua_path(lua_State *L, const char *prefix) {
@@ -46,7 +46,7 @@ void initialize_environment(lua_State *L) {
   prepend_lua_path(L, "./lua/?.lua;./lua/?/init.lua;");
   lua_pushnil(L);
   lua_setglobal(L, "package");
-  qamar_char_stream_init(L);
+  qamar_lexer_init(L);
 }
 
 int main(void) {

@@ -1,32 +1,33 @@
-local token = require("qamar.tokenizer.types")
+local token = require("qamar.lexer.types")
 
-local begin = char_stream.begin
-local skipws = char_stream.skipws
-local suspend_skip_ws = char_stream.suspend_skip_ws
-local spos = char_stream.pos
-local resume_skip_ws = char_stream.resume_skip_ws
-local undo = char_stream.undo
-local commit = char_stream.commit
-local numeric = char_stream.numeric
-local peek = char_stream.peek
-local take = char_stream.take
-local try_consume_string = char_stream.try_consume_string
+local lexer = require("qamar.lexer")
+local begin = lexer.begin
+local skipws = lexer.skipws
+local suspend_skip_ws = lexer.suspend_skip_ws
+local spos = lexer.pos
+local resume_skip_ws = lexer.resume_skip_ws
+local undo = lexer.undo
+local commit = lexer.commit
+local numeric = lexer.numeric
+local peek = lexer.peek
+local take = lexer.take
+local try_consume_string = lexer.try_consume_string
 local sbyte = string.byte
 local slower = string.lower
 local concat = table.concat
 local tnumber = token.number
 local range = require("qamar.util.range")
-local T = require("qamar.tokenizer.token")
+local T = require("qamar.lexer.token")
 
 ---tries to consume either '0x' or '0X'
----@param self char_stream
+---@param self lexer
 ---@return string|nil
 local function hex_start_parser(self)
 	return try_consume_string(self, "0x") or try_consume_string(self, "0X")
 end
 
 ---tries to consume a hex digit
----@param self char_stream
+---@param self lexer
 ---@return string|nil
 local function hex_digit_parser(self)
 	local tok = peek(self)
@@ -39,7 +40,7 @@ local function hex_digit_parser(self)
 end
 
 ---tries to consume either 'p' or 'P'
----@param self char_stream
+---@param self lexer
 ---@return string|nil
 local function hex_exponent_parser(self)
 	local tok = peek(self)
@@ -49,7 +50,7 @@ local function hex_exponent_parser(self)
 end
 
 ---tries to consume either 'e' or 'E'
----@param self char_stream
+---@param self lexer
 ---@return string|nil
 local function decimal_exponent_parser(self)
 	local tok = peek(self)
@@ -59,7 +60,7 @@ local function decimal_exponent_parser(self)
 end
 
 ---tries to consume either '-' or '+'
----@param self char_stream
+---@param self lexer
 ---@return string|nil
 local function sign_parser(self)
 	local tok = peek(self)
@@ -69,7 +70,7 @@ local function sign_parser(self)
 end
 
 ---tries to consume a lua number
----@param self char_stream
+---@param self lexer
 ---@return token|nil
 return function(self)
 	begin(self)

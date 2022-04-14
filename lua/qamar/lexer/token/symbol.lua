@@ -1,4 +1,4 @@
-local token = require("qamar.tokenizer.types")
+local token = require("qamar.lexer.types")
 local symbols = {
 	["+"] = token.plus,
 	["-"] = token.dash,
@@ -34,6 +34,7 @@ local symbols = {
 	[".."] = token.doubledot,
 	["..."] = token.tripledot,
 }
+local lexer = require("qamar.lexer")
 
 local t = {}
 do
@@ -54,18 +55,18 @@ do
 	end)
 end
 
-local begin = char_stream.begin
-local skipws = char_stream.skipws
-local spos = char_stream.pos
-local undo = char_stream.undo
-local commit = char_stream.commit
-local try_consume_string = char_stream.try_consume_string
+local begin = lexer.begin
+local skipws = lexer.skipws
+local spos = lexer.pos
+local undo = lexer.undo
+local commit = lexer.commit
+local try_consume_string = lexer.try_consume_string
 local ipairs = ipairs
 local range = require("qamar.util.range")
-local T = require("qamar.tokenizer.token")
+local T = require("qamar.lexer.token")
 
 ---tries to consume a lua symbol token
----@param self char_stream
+---@param self lexer
 ---@return string|nil
 local function parser(self)
 	for _, x in ipairs(t) do
@@ -76,7 +77,7 @@ local function parser(self)
 end
 
 ---tries to consume a lua symbol token
----@param self char_stream
+---@param self lexer
 ---@return token
 return function(self)
 	begin(self)

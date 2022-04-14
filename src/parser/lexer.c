@@ -1,4 +1,4 @@
-#include "char_stream.h"
+#include "lexer.h"
 #include "token_types.h"
 #include <lauxlib.h>
 #include <lua.h>
@@ -9,9 +9,9 @@
 
 //#define QAMAR_TRACE
 
-const char *QAMAR_TYPE_CHAR_STREAM = "__QAMAR_CHAR_STREAM";
+const char *QAMAR_TYPE_LEXER = "__QAMAR_LEXER";
 
-int char_stream_new(char_stream_t *c, const char *str, const size_t len) {
+int lexer_new(qamar_lexer_t *c, const char *str, const size_t len) {
   memcpy((void *)c->data, str, len);
   c->skip_ws_ctr = 0;
   c->len = len;
@@ -24,13 +24,13 @@ int char_stream_new(char_stream_t *c, const char *str, const size_t len) {
   c->transactions_capacity = 1;
   c->transactions_index = 0;
   c->transactions =
-      malloc(sizeof(char_stream_transaction_t) * c->transactions_capacity);
+      malloc(sizeof(qamar_lexer_transaction_t) * c->transactions_capacity);
   if (c->transactions == NULL)
     return 1;
   return 0;
 }
 
-static int lua_char_stream_new(lua_State *L) {
+static int lua_lexer_new(lua_State *L) {
 #ifdef QAMAR_TRACE
   printf("NEW\n");
   fflush(stdout);
@@ -39,18 +39,17 @@ static int lua_char_stream_new(lua_State *L) {
     return 0;
   size_t len;
   const char *str = lua_tolstring(L, 1, &len);
-  char_stream_t *c = lua_newuserdata(L, sizeof(char_stream_t) + len);
-  if (char_stream_new(c, str, len))
+  qamar_lexer_t *c = lua_newuserdata(L, sizeof(qamar_lexer_t) + len);
+  if (lexer_new(c, str, len))
     return 0;
-  luaL_getmetatable(L, QAMAR_TYPE_CHAR_STREAM);
+  luaL_getmetatable(L, QAMAR_TYPE_LEXER);
   lua_setmetatable(L, -2);
   return 1;
 }
 
-static int lua_char_stream_destroy(lua_State *L) {
-  char_stream_t *s;
-  if (lua_gettop(L) < 1 ||
-      (s = luaL_checkudata(L, 1, QAMAR_TYPE_CHAR_STREAM)) == 0)
+static int lua_lexer_destroy(lua_State *L) {
+  qamar_lexer_t *s;
+  if (lua_gettop(L) < 1 || (s = luaL_checkudata(L, 1, QAMAR_TYPE_LEXER)) == 0)
     return 0;
 #ifdef QAMAR_TRACE
   printf("DESTROY\n");
@@ -62,21 +61,20 @@ static int lua_char_stream_destroy(lua_State *L) {
   return 0;
 }
 
-static int lua_char_stream_tostring(lua_State *L) {
-  char_stream_t *s;
-  if (lua_gettop(L) < 1 ||
-      (s = luaL_checkudata(L, 1, QAMAR_TYPE_CHAR_STREAM)) == 0)
+static int lua_lexer_tostring(lua_State *L) {
+  qamar_lexer_t *s;
+  if (lua_gettop(L) < 1 || (s = luaL_checkudata(L, 1, QAMAR_TYPE_LEXER)) == 0)
     return 0;
 #ifdef QAMAR_TRACE
   //  printf("TOSTRING\n");
   fflush(stdout);
 #endif
-  int amt = snprintf(0, 0, "<char_stream>:%ld:%ld:%ld", s->len, s->t.index,
+  int amt = snprintf(0, 0, "<lexer>:%ld:%ld:%ld", s->len, s->t.index,
                      s->transactions_index);
   if (amt < 0)
     return 0;
   char t[amt + 1];
-  snprintf(t, amt + 1, "<char_stream>:%ld:%ld:%ld", s->len, s->t.index,
+  snprintf(t, amt + 1, "<lexer>:%ld:%ld:%ld", s->len, s->t.index,
            s->transactions_index);
   lua_pushlstring(L, t, amt);
   return 1;
@@ -124,14 +122,14 @@ static void lua_qamar_create_token(lua_State *L, const qamar_token_t *token) {
   lua_rawset(L, -3);
 }
 
-extern const char *char_stream_peek(char_stream_t *s, size_t skip) {
+extern const char *lexer_peek(qamar_lexer_t *s, size_t skip) {
   return s->t.index + skip < s->len ? &s->data[s->t.index + skip] : NULL;
 }
 
-static int lua_char_stream_peek(lua_State *L) {
-  char_stream_t *s;
+static int lua_lexer_peek(lua_State *L) {
+  qamar_lexer_t *s;
   int top = lua_gettop(L);
-  if (top < 1 || (s = luaL_checkudata(L, 1, QAMAR_TYPE_CHAR_STREAM)) == 0)
+  if (top < 1 || (s = luaL_checkudata(L, 1, QAMAR_TYPE_LEXER)) == 0)
     return 0;
 #ifdef QAMAR_TRACE
   printf("PEEK\n");
@@ -148,14 +146,14 @@ static int lua_char_stream_peek(lua_State *L) {
     } else
       return 0;
   }
-  const char *p = char_stream_peek(s, skip);
+  const char *p = lexer_peek(s, skip);
   if (p == NULL)
     return 0;
   lua_pushlstring(L, p, 1);
   return 1;
 }
 
-extern const char *char_stream_take(char_stream_t *s, size_t *a) {
+extern const char *lexer_take(qamar_lexer_t *s, size_t *a) {
   size_t amt = *a;
   if (s->t.index + amt > s->len) {
     amt = s->len - s->t.index;
@@ -181,10 +179,10 @@ extern const char *char_stream_take(char_stream_t *s, size_t *a) {
   return start;
 }
 
-static int lua_char_stream_take(lua_State *L) {
-  char_stream_t *s;
+static int lua_lexer_take(lua_State *L) {
+  qamar_lexer_t *s;
   int top = lua_gettop(L);
-  if (top < 1 || (s = luaL_checkudata(L, 1, QAMAR_TYPE_CHAR_STREAM)) == 0)
+  if (top < 1 || (s = luaL_checkudata(L, 1, QAMAR_TYPE_LEXER)) == 0)
     return 0;
 #ifdef QAMAR_TRACE
   printf("TAKE\n");
@@ -201,18 +199,18 @@ static int lua_char_stream_take(lua_State *L) {
     } else
       return 0;
   }
-  const char *str = char_stream_take(s, &amt);
+  const char *str = lexer_take(s, &amt);
   if (str == NULL)
     return 0;
   lua_pushlstring(L, str, amt);
   return 1;
 }
 
-extern void char_stream_begin(char_stream_t *s) {
+extern void lexer_begin(qamar_lexer_t *s) {
   if (s->transactions_index == s->transactions_capacity) {
     size_t newcapacity = s->transactions_capacity * 2;
-    char_stream_transaction_t *newbuf = realloc(
-        s->transactions, sizeof(char_stream_transaction_t) * newcapacity);
+    qamar_lexer_transaction_t *newbuf = realloc(
+        s->transactions, sizeof(qamar_lexer_transaction_t) * newcapacity);
     if (newbuf == 0)
       exit(-1);
     s->transactions_capacity = newcapacity;
@@ -221,56 +219,53 @@ extern void char_stream_begin(char_stream_t *s) {
   s->transactions[s->transactions_index++] = s->t;
 }
 
-static int lua_char_stream_begin(lua_State *L) {
-  char_stream_t *s;
-  if (lua_gettop(L) < 1 ||
-      (s = luaL_checkudata(L, 1, QAMAR_TYPE_CHAR_STREAM)) == 0)
+static int lua_lexer_begin(lua_State *L) {
+  qamar_lexer_t *s;
+  if (lua_gettop(L) < 1 || (s = luaL_checkudata(L, 1, QAMAR_TYPE_LEXER)) == 0)
     return 0;
 #ifdef QAMAR_TRACE
   printf("BEGIN\n");
   fflush(stdout);
 #endif
-  char_stream_begin(s);
+  lexer_begin(s);
   return 0;
 }
 
-extern void char_stream_undo(char_stream_t *s) {
+extern void lexer_undo(qamar_lexer_t *s) {
   if (s->transactions_index > 0)
     s->t = s->transactions[--s->transactions_index];
 }
 
-static int lua_char_stream_undo(lua_State *L) {
-  char_stream_t *s;
-  if (lua_gettop(L) < 1 ||
-      (s = luaL_checkudata(L, 1, QAMAR_TYPE_CHAR_STREAM)) == 0)
+static int lua_lexer_undo(lua_State *L) {
+  qamar_lexer_t *s;
+  if (lua_gettop(L) < 1 || (s = luaL_checkudata(L, 1, QAMAR_TYPE_LEXER)) == 0)
     return 0;
 #ifdef QAMAR_TRACE
   printf("UNDO\n");
   fflush(stdout);
 #endif
-  char_stream_undo(s);
+  lexer_undo(s);
   return 0;
 }
 
-extern void char_stream_commit(char_stream_t *s) {
+extern void lexer_commit(qamar_lexer_t *s) {
   if (s->transactions_index > 0)
     --s->transactions_index;
 }
 
-static int lua_char_stream_commit(lua_State *L) {
-  char_stream_t *s;
-  if (lua_gettop(L) < 1 ||
-      (s = luaL_checkudata(L, 1, QAMAR_TYPE_CHAR_STREAM)) == 0)
+static int lua_lexer_commit(lua_State *L) {
+  qamar_lexer_t *s;
+  if (lua_gettop(L) < 1 || (s = luaL_checkudata(L, 1, QAMAR_TYPE_LEXER)) == 0)
     return 0;
 #ifdef QAMAR_TRACE
   printf("COMMIT\n");
   fflush(stdout);
 #endif
-  char_stream_commit(s);
+  lexer_commit(s);
   return 0;
 }
 
-extern qamar_position_t char_stream_pos(char_stream_t *s) {
+extern qamar_position_t lexer_pos(qamar_lexer_t *s) {
   qamar_position_t p;
   p.col = s->t.col;
   p.row = s->t.row;
@@ -280,23 +275,21 @@ extern qamar_position_t char_stream_pos(char_stream_t *s) {
   return p;
 }
 
-static int lua_char_stream_pos(lua_State *L) {
-  char_stream_t *s;
-  if (lua_gettop(L) < 1 ||
-      (s = luaL_checkudata(L, 1, QAMAR_TYPE_CHAR_STREAM)) == 0)
+static int lua_lexer_pos(lua_State *L) {
+  qamar_lexer_t *s;
+  if (lua_gettop(L) < 1 || (s = luaL_checkudata(L, 1, QAMAR_TYPE_LEXER)) == 0)
     return 0;
 #ifdef QAMAR_TRACE
   printf("POS\n");
   fflush(stdout);
 #endif
-  qamar_position_t pos = char_stream_pos(s);
+  qamar_position_t pos = lexer_pos(s);
   lua_qamar_create_position(L, &pos);
   return 1;
 }
 
-extern const char *char_stream_try_consume_string(char_stream_t *s,
-                                                  const char *str,
-                                                  const size_t len) {
+extern const char *lexer_try_consume_string(qamar_lexer_t *s, const char *str,
+                                            const size_t len) {
   if (s->t.index + len > s->len)
     return NULL;
   for (size_t i = 0; i < len; ++i)
@@ -306,10 +299,9 @@ extern const char *char_stream_try_consume_string(char_stream_t *s,
   return &s->data[s->t.index];
 }
 
-static int lua_char_stream_try_consume_string(lua_State *L) {
-  char_stream_t *s;
-  if (lua_gettop(L) < 2 ||
-      (s = luaL_checkudata(L, 1, QAMAR_TYPE_CHAR_STREAM)) == 0 ||
+static int lua_lexer_try_consume_string(lua_State *L) {
+  qamar_lexer_t *s;
+  if (lua_gettop(L) < 2 || (s = luaL_checkudata(L, 1, QAMAR_TYPE_LEXER)) == 0 ||
       !lua_isstring(L, 2))
     return 0;
 #ifdef QAMAR_TRACE
@@ -318,14 +310,14 @@ static int lua_char_stream_try_consume_string(lua_State *L) {
 #endif
   size_t len;
   const char *str = lua_tolstring(L, 2, &len);
-  const char *x = char_stream_try_consume_string(s, str, len);
+  const char *x = lexer_try_consume_string(s, str, len);
   if (x == NULL)
     return 0;
   lua_pushlstring(L, x, len);
   return 1;
 }
 
-extern void char_stream_skipws(char_stream_t *s) {
+extern void lexer_skipws(qamar_lexer_t *s) {
   if (s->skip_ws_ctr == 0) {
     for (; s->t.index < s->len; ++s->t.index) {
       char x = s->data[s->t.index];
@@ -336,53 +328,50 @@ extern void char_stream_skipws(char_stream_t *s) {
   }
 }
 
-static int lua_char_stream_skipws(lua_State *L) {
-  char_stream_t *s;
-  if (lua_gettop(L) < 1 ||
-      (s = luaL_checkudata(L, 1, QAMAR_TYPE_CHAR_STREAM)) == 0)
+static int lua_lexer_skipws(lua_State *L) {
+  qamar_lexer_t *s;
+  if (lua_gettop(L) < 1 || (s = luaL_checkudata(L, 1, QAMAR_TYPE_LEXER)) == 0)
     return 0;
 #ifdef QAMAR_TRACE
   printf("SKIPWS\n");
   fflush(stdout);
 #endif
-  char_stream_skipws(s);
+  lexer_skipws(s);
   return 0;
 }
 
-extern void char_stream_suspend_skip_ws(char_stream_t *s) { ++s->skip_ws_ctr; }
+extern void lexer_suspend_skip_ws(qamar_lexer_t *s) { ++s->skip_ws_ctr; }
 
-static int lua_char_stream_suspend_skip_ws(lua_State *L) {
-  char_stream_t *s;
-  if (lua_gettop(L) < 1 ||
-      (s = luaL_checkudata(L, 1, QAMAR_TYPE_CHAR_STREAM)) == 0)
+static int lua_lexer_suspend_skip_ws(lua_State *L) {
+  qamar_lexer_t *s;
+  if (lua_gettop(L) < 1 || (s = luaL_checkudata(L, 1, QAMAR_TYPE_LEXER)) == 0)
     return 0;
 #ifdef QAMAR_TRACE
   printf("SUSPEND_SKIP_WS\n");
   fflush(stdout);
 #endif
-  char_stream_suspend_skip_ws(s);
+  lexer_suspend_skip_ws(s);
   return 0;
 }
 
-extern void char_stream_resume_skip_ws(char_stream_t *s) {
+extern void lexer_resume_skip_ws(qamar_lexer_t *s) {
   if (s->skip_ws_ctr > 0)
     --s->skip_ws_ctr;
 }
 
-static int lua_char_stream_resume_skip_ws(lua_State *L) {
-  char_stream_t *s;
-  if (lua_gettop(L) < 1 ||
-      (s = luaL_checkudata(L, 1, QAMAR_TYPE_CHAR_STREAM)) == 0)
+static int lua_lexer_resume_skip_ws(lua_State *L) {
+  qamar_lexer_t *s;
+  if (lua_gettop(L) < 1 || (s = luaL_checkudata(L, 1, QAMAR_TYPE_LEXER)) == 0)
     return 0;
 #ifdef QAMAR_TRACE
   printf("RESUME_SKIP_WS\n");
   fflush(stdout);
 #endif
-  char_stream_resume_skip_ws(s);
+  lexer_resume_skip_ws(s);
   return 0;
 }
 
-extern const char *char_stream_alpha(char_stream_t *s) {
+extern const char *lexer_alpha(qamar_lexer_t *s) {
   if (s->t.index >= s->len)
     return NULL;
   const char *ret = &s->data[s->t.index];
@@ -394,23 +383,22 @@ extern const char *char_stream_alpha(char_stream_t *s) {
   return NULL;
 }
 
-static int lua_char_stream_alpha(lua_State *L) {
-  char_stream_t *s;
-  if (lua_gettop(L) < 1 ||
-      (s = luaL_checkudata(L, 1, QAMAR_TYPE_CHAR_STREAM)) == 0)
+static int lua_lexer_alpha(lua_State *L) {
+  qamar_lexer_t *s;
+  if (lua_gettop(L) < 1 || (s = luaL_checkudata(L, 1, QAMAR_TYPE_LEXER)) == 0)
     return 0;
 #ifdef QAMAR_TRACE
   printf("ALPHA\n");
   fflush(stdout);
 #endif
-  const char *x = char_stream_alpha(s);
+  const char *x = lexer_alpha(s);
   if (x == NULL)
     return 0;
   lua_pushlstring(L, x, 1);
   return 1;
 }
 
-extern const char *char_stream_numeric(char_stream_t *s) {
+extern const char *lexer_numeric(qamar_lexer_t *s) {
   if (s->t.index >= s->len)
     return NULL;
   const char *ret = &s->data[s->t.index];
@@ -422,24 +410,23 @@ extern const char *char_stream_numeric(char_stream_t *s) {
   return NULL;
 }
 
-static int lua_char_stream_numeric(lua_State *L) {
-  char_stream_t *s;
-  if (lua_gettop(L) < 1 ||
-      (s = luaL_checkudata(L, 1, QAMAR_TYPE_CHAR_STREAM)) == 0 ||
+static int lua_lexer_numeric(lua_State *L) {
+  qamar_lexer_t *s;
+  if (lua_gettop(L) < 1 || (s = luaL_checkudata(L, 1, QAMAR_TYPE_LEXER)) == 0 ||
       s->t.index >= s->len)
     return 0;
 #ifdef QAMAR_TRACE
   printf("NUMERIC\n");
   fflush(stdout);
 #endif
-  const char *x = char_stream_numeric(s);
+  const char *x = lexer_numeric(s);
   if (x == NULL)
     return 0;
   lua_pushlstring(L, x, 1);
   return 1;
 }
 
-extern const char *char_stream_alphanumeric(char_stream_t *s) {
+extern const char *lexer_alphanumeric(qamar_lexer_t *s) {
   if (s->t.index >= s->len)
     return NULL;
   const char *ret = &s->data[s->t.index];
@@ -452,17 +439,16 @@ extern const char *char_stream_alphanumeric(char_stream_t *s) {
   return NULL;
 }
 
-static int lua_char_stream_alphanumeric(lua_State *L) {
-  char_stream_t *s;
-  if (lua_gettop(L) < 1 ||
-      (s = luaL_checkudata(L, 1, QAMAR_TYPE_CHAR_STREAM)) == 0 ||
+static int lua_lexer_alphanumeric(lua_State *L) {
+  qamar_lexer_t *s;
+  if (lua_gettop(L) < 1 || (s = luaL_checkudata(L, 1, QAMAR_TYPE_LEXER)) == 0 ||
       s->t.index >= s->len)
     return 0;
 #ifdef QAMAR_TRACE
   printf("ALPHANUMERIC\n");
   fflush(stdout);
 #endif
-  const char *x = char_stream_alphanumeric(s);
+  const char *x = lexer_alphanumeric(s);
   if (x == NULL)
     return 0;
   lua_pushlstring(L, x, 1);
@@ -596,9 +582,9 @@ static void lua_create_token_type_table(lua_State *L) {
   lua_rawseti(L, -2, QAMAR_TOKEN_TRIPLEDOT);
 }
 
-extern bool char_stream_keyword(char_stream_t *s, qamar_token_t *out) {
-  char_stream_skipws(s);
-  out->pos.left = char_stream_pos(s);
+extern bool lexer_keyword(qamar_lexer_t *s, qamar_token_t *out) {
+  lexer_skipws(s);
+  out->pos.left = lexer_pos(s);
   size_t amt = s->len - s->t.index;
   if (amt == 0)
     return false;
@@ -947,72 +933,70 @@ extern bool char_stream_keyword(char_stream_t *s, qamar_token_t *out) {
   }
   return false;
 success:
-  out->value = char_stream_take(s, &out->len);
-  out->pos.right = char_stream_pos(s);
+  out->value = lexer_take(s, &out->len);
+  out->pos.right = lexer_pos(s);
   return true;
 }
 
-static int lua_char_stream_keyword(lua_State *L) {
-  char_stream_t *s;
-  if (lua_gettop(L) < 1 ||
-      (s = luaL_checkudata(L, 1, QAMAR_TYPE_CHAR_STREAM)) == 0 ||
+static int lua_lexer_keyword(lua_State *L) {
+  qamar_lexer_t *s;
+  if (lua_gettop(L) < 1 || (s = luaL_checkudata(L, 1, QAMAR_TYPE_LEXER)) == 0 ||
       s->t.index >= s->len)
     return 0;
   qamar_token_t token;
-  if (!char_stream_keyword(s, &token))
+  if (!lexer_keyword(s, &token))
     return 0;
   lua_qamar_create_token(L, &token);
   return 1;
 }
 
-extern bool char_stream_name(char_stream_t *s, qamar_token_t *out) {
-  char_stream_skipws(s);
-  out->pos.left = char_stream_pos(s);
-  out->value = char_stream_alpha(s);
+extern bool lexer_name(qamar_lexer_t *s, qamar_token_t *out) {
+  lexer_skipws(s);
+  out->pos.left = lexer_pos(s);
+  out->value = lexer_alpha(s);
   if (out->value == NULL)
     return false;
   out->len = 1;
   out->type = QAMAR_TOKEN_NAME;
-  while (char_stream_alphanumeric(s))
+  while (lexer_alphanumeric(s))
     ++out->len;
-  out->pos.right = char_stream_pos(s);
+  out->pos.right = lexer_pos(s);
   return true;
 }
 
-static int lua_char_stream_name(lua_State *L) {
-  char_stream_t *s;
-  if (lua_gettop(L) < 1 ||
-      (s = luaL_checkudata(L, 1, QAMAR_TYPE_CHAR_STREAM)) == 0 ||
+static int lua_lexer_name(lua_State *L) {
+  qamar_lexer_t *s;
+  if (lua_gettop(L) < 1 || (s = luaL_checkudata(L, 1, QAMAR_TYPE_LEXER)) == 0 ||
       s->t.index >= s->len)
     return 0;
   qamar_token_t token;
-  if (!char_stream_name(s, &token))
+  if (!lexer_name(s, &token))
     return 0;
   lua_qamar_create_token(L, &token);
   return 1;
 }
 
 const luaL_Reg library[] = {
-    {"new", lua_char_stream_new},
-    {"peek", lua_char_stream_peek},
-    {"take", lua_char_stream_take},
-    {"begin", lua_char_stream_begin},
-    {"undo", lua_char_stream_undo},
-    {"commit", lua_char_stream_commit},
-    {"pos", lua_char_stream_pos},
-    {"try_consume_string", lua_char_stream_try_consume_string},
-    {"skipws", lua_char_stream_skipws},
-    {"suspend_skip_ws", lua_char_stream_suspend_skip_ws},
-    {"resume_skip_ws", lua_char_stream_resume_skip_ws},
-    {"alpha", lua_char_stream_alpha},
-    {"numeric", lua_char_stream_numeric},
-    {"alphanumeric", lua_char_stream_alphanumeric},
-    {"keyword", lua_char_stream_keyword},
-    {"name", lua_char_stream_name},
+    {"new", lua_lexer_new},
+    {"peek", lua_lexer_peek},
+    {"take", lua_lexer_take},
+    {"begin", lua_lexer_begin},
+    {"undo", lua_lexer_undo},
+    {"commit", lua_lexer_commit},
+    {"pos", lua_lexer_pos},
+    {"try_consume_string", lua_lexer_try_consume_string},
+    {"skipws", lua_lexer_skipws},
+    {"suspend_skip_ws", lua_lexer_suspend_skip_ws},
+    {"resume_skip_ws", lua_lexer_resume_skip_ws},
+    {"alpha", lua_lexer_alpha},
+    {"numeric", lua_lexer_numeric},
+    {"alphanumeric", lua_lexer_alphanumeric},
+    {"keyword", lua_lexer_keyword},
+    {"name", lua_lexer_name},
     {NULL, NULL}};
 
-int qamar_char_stream_init(lua_State *L) {
-  luaL_newmetatable(L, QAMAR_TYPE_CHAR_STREAM);
+int qamar_lexer_init(lua_State *L) {
+  luaL_newmetatable(L, QAMAR_TYPE_LEXER);
 
   lua_pushstring(L, "__index");
   lua_newtable(L);
@@ -1029,14 +1013,14 @@ int qamar_char_stream_init(lua_State *L) {
   lua_rawset(L, -3);
 
   lua_pushstring(L, "__tostring");
-  lua_pushcfunction(L, lua_char_stream_tostring);
+  lua_pushcfunction(L, lua_lexer_tostring);
   lua_rawset(L, -3);
   lua_pushstring(L, "__gc");
-  lua_pushcfunction(L, lua_char_stream_destroy);
+  lua_pushcfunction(L, lua_lexer_destroy);
   lua_rawset(L, -3);
   lua_pop(L, 1);
 
-  luaL_register(L, "char_stream", library);
+  luaL_register(L, "lexer", library);
   lua_pushstring(L, "types");
   lua_create_token_type_table(L);
   lua_rawset(L, -3);

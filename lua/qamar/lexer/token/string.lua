@@ -1,16 +1,18 @@
-local token = require("qamar.tokenizer.types")
+local token = require("qamar.lexer.types")
 local string = require("qamar.util.string")
 
-local begin = char_stream.begin
-local skipws = char_stream.skipws
-local suspend_skip_ws = char_stream.suspend_skip_ws
-local spos = char_stream.pos
-local try_consume_string = char_stream.try_consume_string
-local resume_skip_ws = char_stream.resume_skip_ws
-local undo = char_stream.undo
-local commit = char_stream.commit
-local peek = char_stream.peek
-local take = char_stream.take
+local lexer = require("qamar.lexer")
+
+local begin = lexer.begin
+local skipws = lexer.skipws
+local suspend_skip_ws = lexer.suspend_skip_ws
+local spos = lexer.pos
+local try_consume_string = lexer.try_consume_string
+local resume_skip_ws = lexer.resume_skip_ws
+local undo = lexer.undo
+local commit = lexer.commit
+local peek = lexer.peek
+local take = lexer.take
 
 local sbyte = string.byte
 local slen = string.len
@@ -23,7 +25,7 @@ local concat = table.concat
 local ipairs = ipairs
 local tstring = token.string
 local range = require("qamar.util.range")
-local T = require("qamar.tokenizer.token")
+local T = require("qamar.lexer.token")
 
 ---converts a hex character to its equivalent number value
 ---@param c string
@@ -153,7 +155,7 @@ local MT = {
 }
 
 ---tries to consume "'" or '"'
----@param self char_stream
+---@param self lexer
 ---@return string|nil
 local function terminator_parser(self)
 	local tok = peek(self)
@@ -163,7 +165,7 @@ local function terminator_parser(self)
 end
 
 ---tries to consume a lua verbatim opening terminator
----@param self char_stream
+---@param self lexer
 ---@return string|nil
 local function long_form_parser(self)
 	local start = peek(self)
@@ -193,7 +195,7 @@ end
 
 ---tries to consume a lua string
 ---if disallow_short_form is not false then only a verbatim string is allowed
----@param self char_stream
+---@param self lexer
 ---@param disallow_short_form boolean|nil
 ---@return token|nil
 return function(self, disallow_short_form)

@@ -1,11 +1,11 @@
 do
-	return _G["char_stream"]
+	return _G["lexer"]
 end
 
 local string, deque = require("qamar.util.string"), require("qamar.util.deque")
 local position = require("qamar.util.position")
 
----@class char_transaction
+---@class lexer_transaction
 ---@field index number
 ---@field row number
 ---@field col number
@@ -13,13 +13,13 @@ local position = require("qamar.util.position")
 ---@field file_char number
 ---@field file_byte number
 
----@class char_stream
+---@class lexer
 ---@field input function()
 ---@field la deque
 ---@field ts table
 ---@field tc number
 ---@field skip_ws_ctr number
----@field t char_transaction
+---@field t lexer_transaction
 
 local function nullfunc() end
 local concat = table.concat
@@ -28,7 +28,7 @@ local sutf8 = string.utf8
 local setmetatable = setmetatable
 local sescape = require("qamar.util.string").escape
 
----@type char_stream
+---@type lexer
 local M = {}
 local MT = {
 	__index = M,
@@ -52,8 +52,8 @@ local MT = {
 }
 
 ---creates a copy of a transaction
----@param self char_transaction
----@return char_transaction
+---@param self lexer_transaction
+---@return lexer_transaction
 local function transaction_copy(self)
 	return {
 		index = self.index,
@@ -67,7 +67,7 @@ end
 
 ---creates a new parser
 ---@param input function():string|nil
----@return char_stream|nil
+---@return lexer|nil
 ---@return string|nil
 function M.new(input)
 	if type(input) ~= "string" then
@@ -115,7 +115,7 @@ function M:undo()
 end
 
 ---discards all consumed tokens if there are no pending transactions
----@param self char_stream
+---@param self lexer
 local function normalize(self)
 	if self.tc == 0 then
 		for _ = 1, self.t.index do
@@ -134,7 +134,7 @@ function M:commit()
 end
 
 ---ensures the internal buffer contains at least 'amt' items, unless the end of stream has been reached
----@param self char_stream
+---@param self lexer
 ---@param amt number
 local function fill(self, amt)
 	while self.la.size() < amt do
@@ -151,7 +151,7 @@ M.fill = fill
 
 ---gets the Nth token (zero based) in the internal buffer.
 ---N defaults to 0
----@param self char_stream
+---@param self lexer
 ---@param N number|nil
 ---@return string|nil
 local function peek(self, N)
@@ -163,7 +163,7 @@ end
 M.peek = peek
 
 ---consumes N characters from the stream
----@param self char_stream
+---@param self lexer
 ---@param N number
 ---@return string|nil
 local function take(self, N)
@@ -242,7 +242,7 @@ end
 local ascii = string.byte
 
 ---tries to match and consume an alpha or underscore character
----@param self char_stream
+---@param self lexer
 ---@return string|nil
 M.alpha = function(self)
 	local tok = peek(self)
@@ -256,7 +256,7 @@ M.alpha = function(self)
 end
 
 ---tries to match and consume a numeric character
----@param self char_stream
+---@param self lexer
 ---@return string|nil
 M.numeric = function(self)
 	local tok = peek(self)
@@ -269,7 +269,7 @@ M.numeric = function(self)
 end
 
 ---tries to match and consume an alphanumeric or underscore character
----@param self char_stream
+---@param self lexer
 ---@return string|nil
 M.alphanumeric = function(self)
 	local tok = peek(self)
