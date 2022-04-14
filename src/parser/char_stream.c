@@ -646,30 +646,23 @@ extern bool char_stream_keyword(char_stream_t *s, qamar_token_t *out) {
     if (--amt == 0 || *++p != 'n' || --amt == 0 || *++p != 'd' ||
         (--amt > 0 && is_alphanum(*++p)))
       return false;
-    if (--amt == 0 || *++p)
-      out->len = 3;
-    out->value = char_stream_take(s, &out->len);
-    out->pos.right = char_stream_pos(s);
+    out->len = 3;
     out->type = QAMAR_TOKEN_AND;
-    return true;
+    goto success;
   case 'b':
     if (--amt == 0 || *++p != 'r' || --amt == 0 || *++p != 'e' || --amt == 0 ||
         *++p != 'a' || --amt == 0 || *++p != 'k' ||
         (--amt > 0 && is_alphanum(*++p)))
       return false;
     out->len = 5;
-    out->value = char_stream_take(s, &out->len);
-    out->pos.right = char_stream_pos(s);
     out->type = QAMAR_TOKEN_BREAK;
-    return true;
+    goto success;
   case 'd':
     if (--amt == 0 || *++p != 'o' || (--amt > 0 && is_alphanum(*++p)))
       return false;
     out->len = 2;
-    out->value = char_stream_take(s, &out->len);
-    out->pos.right = char_stream_pos(s);
     out->type = QAMAR_TOKEN_DO;
-    return true;
+    goto success;
   case 'e':
     if (--amt == 0)
       return false;
@@ -679,26 +672,20 @@ extern bool char_stream_keyword(char_stream_t *s, qamar_token_t *out) {
         return false;
       if (--amt > 0 && !is_alphanum(*++p)) {
         out->len = 4;
-        out->value = char_stream_take(s, &out->len);
-        out->pos.right = char_stream_pos(s);
         out->type = QAMAR_TOKEN_ELSE;
-        return true;
+        goto success;
       } else if (*p != 'i' || --amt == 0 || *++p != 'f' ||
                  (--amt > 0 && is_alphanum(*++p)))
         return false;
       out->len = 6;
-      out->value = char_stream_take(s, &out->len);
-      out->pos.right = char_stream_pos(s);
       out->type = QAMAR_TOKEN_ELSEIF;
-      return true;
+      goto success;
     case 'n':
       if (--amt == 0 || *++p != 'd' || (--amt > 0 && is_alphanum(*++p)))
         return false;
       out->len = 3;
-      out->value = char_stream_take(s, &out->len);
-      out->pos.right = char_stream_pos(s);
       out->type = QAMAR_TOKEN_END;
-      return true;
+      goto success;
     }
     break;
   case 'f':
@@ -710,18 +697,14 @@ extern bool char_stream_keyword(char_stream_t *s, qamar_token_t *out) {
           --amt == 0 || *++p != 'e' || (--amt > 0 && is_alphanum(*++p)))
         return false;
       out->len = 5;
-      out->value = char_stream_take(s, &out->len);
-      out->pos.right = char_stream_pos(s);
       out->type = QAMAR_TOKEN_FALSE;
-      return true;
+      goto success;
     case 'o':
       if (--amt == 0 || *++p != 'r' || (--amt > 0 && is_alphanum(*++p)))
         return false;
       out->len = 3;
-      out->value = char_stream_take(s, &out->len);
-      out->pos.right = char_stream_pos(s);
       out->type = QAMAR_TOKEN_FOR;
-      return true;
+      goto success;
     case 'u':
       if (--amt == 0 || *++p != 'n' || --amt == 0 || *++p != 'c' ||
           --amt == 0 || *++p != 't' || --amt == 0 || *++p != 'i' ||
@@ -729,10 +712,8 @@ extern bool char_stream_keyword(char_stream_t *s, qamar_token_t *out) {
           (--amt > 0 && is_alphanum(*++p)))
         return false;
       out->len = 8;
-      out->value = char_stream_take(s, &out->len);
-      out->pos.right = char_stream_pos(s);
       out->type = QAMAR_TOKEN_FUNCTION;
-      return true;
+      goto success;
     }
     break;
   case 'g':
@@ -740,11 +721,8 @@ extern bool char_stream_keyword(char_stream_t *s, qamar_token_t *out) {
         *++p != 'o' || (--amt > 0 && is_alphanum(*++p)))
       return false;
     out->len = 4;
-    out->value = char_stream_take(s, &out->len);
-    out->pos.right = char_stream_pos(s);
     out->type = QAMAR_TOKEN_GOTO;
-    return true;
-    break;
+    goto success;
   case 'i':
     if (--amt == 0)
       return false;
@@ -753,18 +731,14 @@ extern bool char_stream_keyword(char_stream_t *s, qamar_token_t *out) {
       if (--amt > 0 && is_alphanum(*++p))
         return false;
       out->len = 2;
-      out->value = char_stream_take(s, &out->len);
-      out->pos.right = char_stream_pos(s);
       out->type = QAMAR_TOKEN_IF;
-      return true;
+      goto success;
     case 'n':
       if (--amt > 0 && is_alphanum(*++p))
         return false;
       out->len = 2;
-      out->value = char_stream_take(s, &out->len);
-      out->pos.right = char_stream_pos(s);
       out->type = QAMAR_TOKEN_IN;
-      return true;
+      goto success;
     }
     break;
   case 'l':
@@ -773,10 +747,8 @@ extern bool char_stream_keyword(char_stream_t *s, qamar_token_t *out) {
         (--amt > 0 && is_alphanum(*++p)))
       return false;
     out->len = 5;
-    out->value = char_stream_take(s, &out->len);
-    out->pos.right = char_stream_pos(s);
     out->type = QAMAR_TOKEN_LOCAL;
-    return true;
+    goto success;
   case 'n':
     if (--amt == 0)
       return false;
@@ -785,32 +757,24 @@ extern bool char_stream_keyword(char_stream_t *s, qamar_token_t *out) {
       if (--amt == 0 || *++p != 'l' || (--amt > 0 && is_alphanum(*++p)))
         return false;
       out->len = 3;
-      out->value = char_stream_take(s, &out->len);
-      out->pos.right = char_stream_pos(s);
       out->type = QAMAR_TOKEN_NIL;
-      return true;
+      goto success;
     case 'o':
       if (--amt == 0 || *++p != 't' || (--amt > 0 && is_alphanum(*++p)))
         return false;
       out->len = 3;
-      out->value = char_stream_take(s, &out->len);
-      out->pos.right = char_stream_pos(s);
       out->type = QAMAR_TOKEN_NOT;
-      return true;
+      goto success;
     }
     break;
   case 'o':
     if (--amt == 0 || *++p != 'r' || (--amt > 0 && is_alphanum(*++p)))
       return false;
     out->len = 2;
-    out->value = char_stream_take(s, &out->len);
-    out->pos.right = char_stream_pos(s);
     out->type = QAMAR_TOKEN_OR;
-    return true;
+    goto success;
   case 'r':
-    if (--amt == 0 || *++p != 'e')
-      return false;
-    if (--amt == 0)
+    if (--amt == 0 || *++p != 'e' || --amt == 0)
       return false;
     switch (*++p) {
     case 'p':
@@ -818,19 +782,15 @@ extern bool char_stream_keyword(char_stream_t *s, qamar_token_t *out) {
           --amt == 0 || *++p != 't' || (--amt > 0 && is_alphanum(*++p)))
         return false;
       out->len = 6;
-      out->value = char_stream_take(s, &out->len);
-      out->pos.right = char_stream_pos(s);
       out->type = QAMAR_TOKEN_REPEAT;
-      return true;
+      goto success;
     case 't':
       if (--amt == 0 || *++p != 'u' || --amt == 0 || *++p != 'r' ||
           --amt == 0 || *++p != 'n' || (--amt > 0 && is_alphanum(*++p)))
         return false;
       out->len = 6;
-      out->value = char_stream_take(s, &out->len);
-      out->pos.right = char_stream_pos(s);
       out->type = QAMAR_TOKEN_RETURN;
-      return true;
+      goto success;
     }
     break;
   case 't':
@@ -842,19 +802,15 @@ extern bool char_stream_keyword(char_stream_t *s, qamar_token_t *out) {
           (--amt > 0 && is_alphanum(*++p)))
         return false;
       out->len = 4;
-      out->value = char_stream_take(s, &out->len);
-      out->pos.right = char_stream_pos(s);
       out->type = QAMAR_TOKEN_THEN;
-      return true;
+      goto success;
     case 'r':
       if (--amt == 0 || *++p != 'u' || --amt == 0 || *++p != 'e' ||
           (--amt > 0 && is_alphanum(*++p)))
         return false;
       out->len = 4;
-      out->value = char_stream_take(s, &out->len);
-      out->pos.right = char_stream_pos(s);
       out->type = QAMAR_TOKEN_TRUE;
-      return true;
+      goto success;
     }
     break;
   case 'u':
@@ -863,206 +819,175 @@ extern bool char_stream_keyword(char_stream_t *s, qamar_token_t *out) {
         (--amt > 0 && is_alphanum(*++p)))
       return false;
     out->len = 5;
-    out->value = char_stream_take(s, &out->len);
-    out->pos.right = char_stream_pos(s);
     out->type = QAMAR_TOKEN_UNTIL;
-    return true;
+    goto success;
   case 'w':
     if (--amt == 0 || *++p != 'h' || --amt == 0 || *++p != 'i' || --amt == 0 ||
         *++p != 'l' || --amt == 0 || *++p != 'e' ||
         (--amt > 0 && is_alphanum(*++p)))
       return false;
     out->len = 5;
-    out->value = char_stream_take(s, &out->len);
-    out->pos.right = char_stream_pos(s);
     out->type = QAMAR_TOKEN_WHILE;
-    return true;
+    goto success;
   case '#':
     out->len = 1;
-    out->value = char_stream_take(s, &out->len);
-    out->pos.right = char_stream_pos(s);
     out->type = QAMAR_TOKEN_HASH;
-    return true;
+    goto success;
   case '%':
     out->len = 1;
-    out->value = char_stream_take(s, &out->len);
-    out->pos.right = char_stream_pos(s);
     out->type = QAMAR_TOKEN_PERCENT;
-    return true;
+    goto success;
   case '&':
     out->len = 1;
-    out->value = char_stream_take(s, &out->len);
-    out->pos.right = char_stream_pos(s);
     out->type = QAMAR_TOKEN_AMPERSAND;
-    return true;
+    goto success;
   case '(':
     out->len = 1;
-    out->value = char_stream_take(s, &out->len);
-    out->pos.right = char_stream_pos(s);
     out->type = QAMAR_TOKEN_LPAREN;
-    return true;
+    goto success;
   case ')':
     out->len = 1;
-    out->value = char_stream_take(s, &out->len);
-    out->pos.right = char_stream_pos(s);
     out->type = QAMAR_TOKEN_RPAREN;
-    return true;
+    goto success;
   case '*':
     out->len = 1;
-    out->value = char_stream_take(s, &out->len);
-    out->pos.right = char_stream_pos(s);
     out->type = QAMAR_TOKEN_ASTERISK;
-    return true;
+    goto success;
   case '+':
     out->len = 1;
-    out->value = char_stream_take(s, &out->len);
-    out->pos.right = char_stream_pos(s);
     out->type = QAMAR_TOKEN_PLUS;
-    return true;
+    goto success;
   case ',':
     out->len = 1;
-    out->value = char_stream_take(s, &out->len);
-    out->pos.right = char_stream_pos(s);
     out->type = QAMAR_TOKEN_COMMA;
-    return true;
+    goto success;
   case '-':
     out->len = 1;
-    out->value = char_stream_take(s, &out->len);
-    out->pos.right = char_stream_pos(s);
     out->type = QAMAR_TOKEN_DASH;
-    return true;
+    goto success;
   case '[':
     out->len = 1;
-    out->value = char_stream_take(s, &out->len);
-    out->pos.right = char_stream_pos(s);
     out->type = QAMAR_TOKEN_LBRACKET;
-    return true;
+    goto success;
   case ']':
     out->len = 1;
-    out->value = char_stream_take(s, &out->len);
-    out->pos.right = char_stream_pos(s);
     out->type = QAMAR_TOKEN_RBRACKET;
-    return true;
+    goto success;
   case '^':
     out->len = 1;
-    out->value = char_stream_take(s, &out->len);
-    out->pos.right = char_stream_pos(s);
     out->type = QAMAR_TOKEN_CARET;
-    return true;
+    goto success;
   case '{':
     out->len = 1;
-    out->value = char_stream_take(s, &out->len);
-    out->pos.right = char_stream_pos(s);
     out->type = QAMAR_TOKEN_LBRACE;
-    return true;
+    goto success;
   case '|':
     out->len = 1;
-    out->value = char_stream_take(s, &out->len);
-    out->pos.right = char_stream_pos(s);
     out->type = QAMAR_TOKEN_PIPE;
-    return true;
+    goto success;
   case '}':
     out->len = 1;
-    out->value = char_stream_take(s, &out->len);
-    out->pos.right = char_stream_pos(s);
     out->type = QAMAR_TOKEN_RBRACE;
-    return true;
+    goto success;
   case ';':
     out->len = 1;
-    out->value = char_stream_take(s, &out->len);
-    out->pos.right = char_stream_pos(s);
     out->type = QAMAR_TOKEN_SEMICOLON;
-    return true;
+    goto success;
   case '/':
-    if (--amt == 0) {
+    if (--amt == 0 || *++p != '/') {
       out->len = 1;
-      out->value = char_stream_take(s, &out->len);
-      out->pos.right = char_stream_pos(s);
       out->type = QAMAR_TOKEN_SLASH;
-      return true;
-    }
-    if (*++p == '/') {
+    } else {
       out->len = 2;
-      out->value = char_stream_take(s, &out->len);
       out->type = QAMAR_TOKEN_DOUBLESLASH;
-    } else {
-      out->len = 1;
-      out->value = char_stream_take(s, &out->len);
-      out->type = QAMAR_TOKEN_SLASH;
     }
-    out->pos.right = char_stream_pos(s);
-    return true;
+    goto success;
   case ':':
-    if (--amt == 0) {
+    if (--amt == 0 || *++p != ':') {
       out->len = 1;
-      out->value = char_stream_take(s, &out->len);
-      out->pos.right = char_stream_pos(s);
       out->type = QAMAR_TOKEN_COLON;
-      return true;
-    }
-    if (*++p == ':') {
+    } else {
       out->len = 2;
-      out->value = char_stream_take(s, &out->len);
       out->type = QAMAR_TOKEN_DOUBLECOLON;
-    } else {
-      out->len = 1;
-      out->value = char_stream_take(s, &out->len);
-      out->type = QAMAR_TOKEN_COLON;
     }
-    out->pos.right = char_stream_pos(s);
-    return true;
+    goto success;
   case '=':
-    if (--amt == 0) {
+    if (--amt == 0 || *++p != '=') {
       out->len = 1;
-      out->value = char_stream_take(s, &out->len);
-      out->pos.right = char_stream_pos(s);
       out->type = QAMAR_TOKEN_ASSIGNMENT;
-      return true;
-    }
-    if (*++p == '=') {
+    } else {
       out->len = 2;
-      out->value = char_stream_take(s, &out->len);
       out->type = QAMAR_TOKEN_EQUAL;
-    } else {
-      out->len = 1;
-      out->value = char_stream_take(s, &out->len);
-      out->type = QAMAR_TOKEN_ASSIGNMENT;
     }
-    out->pos.right = char_stream_pos(s);
-    return true;
+    goto success;
   case '~':
+    if (--amt == 0 || *++p != '=') {
+      out->len = 1;
+      out->type = QAMAR_TOKEN_TILDE;
+    } else {
+      out->len = 2;
+      out->type = QAMAR_TOKEN_NOTEQUAL;
+    }
+    goto success;
+  case '.':
+    if (--amt == 0 || *++p != '.') {
+      out->len = 1;
+      out->type = QAMAR_TOKEN_DOT;
+    } else if (--amt == 0 || *++p != '.') {
+      out->len = 2;
+      out->type = QAMAR_TOKEN_DOUBLEDOT;
+    } else {
+      out->len = 3;
+      out->type = QAMAR_TOKEN_TRIPLEDOT;
+    }
+    goto success;
+  case '<':
     if (--amt == 0) {
       out->len = 1;
-      out->value = char_stream_take(s, &out->len);
-      out->pos.right = char_stream_pos(s);
-      out->type = QAMAR_TOKEN_TILDE;
-      return true;
+      out->type = QAMAR_TOKEN_LESS;
+      goto success;
     }
-    if (*++p == '=') {
+    switch (*++p) {
+    case '=':
       out->len = 2;
-      out->value = char_stream_take(s, &out->len);
-      out->type = QAMAR_TOKEN_NOTEQUAL;
-    } else {
+      out->type = QAMAR_TOKEN_LESSEQUAL;
+      goto success;
+    case '<':
+      out->len = 2;
+      out->type = QAMAR_TOKEN_LSHIFT;
+      goto success;
+    default:
       out->len = 1;
-      out->value = char_stream_take(s, &out->len);
-      out->type = QAMAR_TOKEN_TILDE;
+      out->type = QAMAR_TOKEN_LESS;
+      goto success;
     }
-    out->pos.right = char_stream_pos(s);
-    return true;
+  case '>':
+    if (--amt == 0) {
+      out->len = 1;
+      out->type = QAMAR_TOKEN_GREATER;
+      goto success;
+    }
+    switch (*++p) {
+    case '=':
+      out->len = 2;
+      out->type = QAMAR_TOKEN_GREATEREQUAL;
+      goto success;
+    case '>':
+      out->len = 2;
+      out->type = QAMAR_TOKEN_RSHIFT;
+      goto success;
+    default:
+      out->len = 1;
+      out->type = QAMAR_TOKEN_GREATER;
+      goto success;
+    }
   }
   return false;
+success:
+  out->value = char_stream_take(s, &out->len);
+  out->pos.right = char_stream_pos(s);
+  return true;
 }
-/*
-        ["."] = token.dot,
-        [".."] = token.doubledot,
-        ["..."] = token.tripledot,
-        ["<"] = token.less,
-        ["<<"] = token.lshift,
-        ["<="] = token.lessequal,
-        [">"] = token.greater,
-        [">="] = token.greaterequal,
-        [">>"] = token.rshift,
- */
 
 static void lua_qamar_create_token(lua_State *L, const qamar_token_t *token) {
   lua_newtable(L);

@@ -4,7 +4,6 @@ local tokenizers = {
 	char_stream.keyword,
 	require("qamar.tokenizer.token.number"),
 	char_stream.name,
-	require("qamar.tokenizer.token.symbol"),
 }
 local token = require("qamar.tokenizer.types")
 local spos = char_stream.pos
