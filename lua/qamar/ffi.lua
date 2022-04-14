@@ -1,10 +1,9 @@
 local qamar_lexer = _G["qamar_lexer"]
 local lexer = setmetatable({}, { __index = qamar_lexer })
 
-jit.opt.start(3)
-
 local ffi = require("ffi")
 if ffi then
+	--	jit.opt.start(3)
 	ffi.cdef([[
 typedef struct {
   size_t file_char;
@@ -76,7 +75,7 @@ const char *lexer_take(qamar_lexer_t *, size_t *);
 		--io.stdout:write("DESTROY\n")
 		--io.stdout:flush()
 		ffi.C.lexer_destroy(x)
-		ffi.C.free(ffi.cast("void*", x))
+		ffi.C.free(ffi.cast(void_tp, x))
 	end
 
 	local slen = string.len
@@ -95,7 +94,7 @@ const char *lexer_take(qamar_lexer_t *, size_t *);
 			--io.stdout:flush()
 			return ffi.gc(l, finalizer)
 		end
-		ffi.C.free(ffi.cast("void*", l))
+		ffi.C.free(ffi.cast(void_tp, l))
 	end
 
 	function lexer.peek(self, skip)
@@ -186,21 +185,28 @@ const char *lexer_take(qamar_lexer_t *, size_t *);
 		return ffi.C.lexer_pos(self)
 	end
 
+	local function create_token(t)
+		return {
+			pos = t.pos,
+			type = t.type,
+			value = ffi.string(t.value, t.len),
+		}
+	end
+
+	local tokenbuf = ffi.new(qamar_token_t)
 	function lexer.keyword(self)
 		--io.stdout:write("KEYWORD\n")
 		--io.stdout:flush()
-		local token = ffi.new(qamar_token_t)
-		if ffi.C.lexer_keyword(self, token) then
-			return token
+		if ffi.C.lexer_keyword(self, tokenbuf) then
+			return create_token(tokenbuf)
 		end
 	end
 
 	function lexer.name(self)
 		--io.stdout:write("NAME\n")
 		--io.stdout:flush()
-		local token = ffi.new(qamar_token_t)
-		if ffi.C.lexer_name(self, token) then
-			return token
+		if ffi.C.lexer_name(self, tokenbuf) then
+			return create_token(tokenbuf)
 		end
 	end
 
