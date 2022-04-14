@@ -20,6 +20,7 @@ typedef struct {
 } qamar_range_t;
 
 typedef struct {
+  size_t id;
   int type;
   qamar_range_t pos;
   const char *value;
