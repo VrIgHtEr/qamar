@@ -34,7 +34,7 @@ local symbols = {
 	[".."] = token.doubledot,
 	["..."] = token.tripledot,
 }
-local lexer = require("qamar.lexer")
+local lexer = _G["qamar_lexer"]
 
 local t = {}
 do

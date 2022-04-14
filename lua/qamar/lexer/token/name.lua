@@ -1,5 +1,5 @@
 local token = require("qamar.lexer.types")
-local lexer = require("qamar.lexer")
+local lexer = _G["qamar_lexer"]
 local alpha = lexer.alpha
 local keywords = require("qamar.lexer.token.keywords")
 

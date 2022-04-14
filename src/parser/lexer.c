@@ -1020,7 +1020,7 @@ int qamar_lexer_init(lua_State *L) {
   lua_rawset(L, -3);
   lua_pop(L, 1);
 
-  luaL_register(L, "lexer", library);
+  luaL_register(L, "qamar_lexer", library);
   lua_pushstring(L, "types");
   lua_create_token_type_table(L);
   lua_rawset(L, -3);

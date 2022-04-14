@@ -3,7 +3,7 @@
 ---@field pos position
 
 ---@class parser
----@field stream lexer
+---@field stream char_stream
 ---@field tokenid number
 ---@field la deque
 ---@field ts table
@@ -13,7 +13,7 @@
 ---@field on_flush function
 local parser = {}
 
-local deque, L = require("qamar.util.deque"), require("qamar.lexer")
+local deque, tokenizer = require("qamar.util.deque"), require("qamar.lexer")
 local tokentypes = require("qamar.lexer.types")
 local concat = table.concat
 local setmetatable = setmetatable
@@ -50,9 +50,10 @@ local MT = {
 	end,
 }
 
-local stpos = L.pos
-local stpeek = L.peek
-local sttake = L.take
+local lexer = _G["qamar_lexer"]
+local stpos = lexer.pos
+local stpeek = lexer.peek
+local sttake = lexer.take
 
 ---creates a copy of a token_transaction
 ---@param self parser_transaction
@@ -70,7 +71,7 @@ chunk = function(self)
 end
 
 ---creates a new parser
----@param stream lexer
+---@param stream char_stream
 ---@return node_block
 local function parse_from_stream(stream)
 	local pos = stpos(stream)
@@ -106,7 +107,7 @@ end
 ---@param str string
 ---@return node_block
 function parser.parse(str)
-	return parse_from_stream(L.new(str))
+	return parse_from_stream(lexer.new(str))
 end
 
 ---discards any consumed cached tokens if there are no pending transactions
@@ -126,7 +127,7 @@ parser.normalize = normalize
 ---@param amt number
 local function fill(self, amt)
 	while self.la.size() < amt do
-		local c = L(self.stream)
+		local c = tokenizer(self.stream)
 		if c then
 			c.id = self.tokenid
 			self.tokenid = self.tokenid + 1

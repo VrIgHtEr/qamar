@@ -1,4 +1,4 @@
-local types = _G["lexer"].types
+local types = _G["qamar_lexer"].types
 for i, v in ipairs(types) do
 	types[v] = i
 end
