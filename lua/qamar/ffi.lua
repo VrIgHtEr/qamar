@@ -202,13 +202,14 @@ const char *lexer_take(qamar_lexer_t *, size_t *);
 		end
 	end
 
+	local takebuf = ffi.new("size_t[1]")
 	function lexer.take(self, amt)
-		local a = ffi.new("size_t[1]", amt or 1)
+		takebuf[0] = amt or 1
 		--io.stdout:write("TAKE\n")
 		--io.stdout:flush()
-		local ret = ffi.C.lexer_take(self, a)
+		local ret = ffi.C.lexer_take(self, takebuf)
 		if ret ~= nil then
-			return ffi.string(ret, a[0])
+			return ffi.string(ret, takebuf[0])
 		end
 	end
 end
