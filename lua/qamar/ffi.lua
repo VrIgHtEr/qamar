@@ -3,7 +3,17 @@ local lexer = setmetatable({}, { __index = qamar_lexer })
 
 local ffi = require("ffi")
 if ffi then
-	--	jit.opt.start(3)
+	jit.opt.start(3)
+	jit.opt.start(
+		"maxtrace=10000",
+		"hotloop=1",
+		"maxmcode=16384",
+		"hotexit=1",
+		"maxirconst=10000",
+		"maxrecord=10000",
+		"maxside=10000",
+		"maxsnap=10000"
+	)
 	ffi.cdef([[
 typedef struct {
   size_t file_char;
@@ -106,23 +116,13 @@ const char *lexer_take(qamar_lexer_t *, size_t *);
 		end
 	end
 
-	function lexer.begin(self)
-		--io.stdout:write("BEGIN\n")
-		--io.stdout:flush()
-		ffi.C.lexer_begin(self)
-	end
-
-	function lexer.undo(self)
-		--io.stdout:write("UNDO\n")
-		--io.stdout:flush()
-		ffi.C.lexer_undo(self)
-	end
-
-	function lexer.commit(self)
-		--io.stdout:write("COMMIT\n")
-		--io.stdout:flush()
-		ffi.C.lexer_commit(self)
-	end
+	lexer.begin = ffi.C.lexer_begin
+	lexer.commit = ffi.C.lexer_commit
+	lexer.undo = ffi.C.lexer_undo
+	lexer.skipws = ffi.C.lexer_skipws
+	lexer.suspend_skip_ws = ffi.C.lexer_suspend_skip_ws
+	lexer.resume_skip_ws = ffi.C.lexer_resume_skip_ws
+	lexer.pos = ffi.C.lexer_pos
 
 	function lexer.try_consume_string(self, s)
 		--io.stdout:write("TRY_CONSUME_STRING\n")
@@ -132,24 +132,6 @@ const char *lexer_take(qamar_lexer_t *, size_t *);
 		if ret ~= nil then
 			return s
 		end
-	end
-
-	function lexer.skipws(self)
-		--io.stdout:write("SKIPWS\n")
-		--io.stdout:flush()
-		ffi.C.lexer_skipws(self)
-	end
-
-	function lexer.suspend_skip_ws(self)
-		--io.stdout:write("SUSPEND_SKIP_WS\n")
-		--io.stdout:flush()
-		ffi.C.lexer_suspend_skip_ws(self)
-	end
-
-	function lexer.resume_skip_ws(self)
-		--io.stdout:write("RESUME_SKIP_WS\n")
-		--io.stdout:flush()
-		ffi.C.lexer_resume_skip_ws(self)
 	end
 
 	function lexer.alpha(self)
@@ -177,12 +159,6 @@ const char *lexer_take(qamar_lexer_t *, size_t *);
 		if ret ~= nil then
 			return ffi.string(ret, 1)
 		end
-	end
-
-	function lexer.pos(self)
-		--io.stdout:write("POS\n")
-		--io.stdout:flush()
-		return ffi.C.lexer_pos(self)
 	end
 
 	local function create_token(t)
