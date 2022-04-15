@@ -76,43 +76,56 @@ bool lexer_keyword(qamar_lexer_t *, qamar_token_t *);
 bool lexer_name(qamar_lexer_t *, qamar_token_t *);
 const char *lexer_take(qamar_lexer_t *, size_t *);
 ]])
+	local slen = string.len
 	local qamar_token_t = ffi.typeof("qamar_token_t")
 	local qamar_lexer_t = ffi.typeof("qamar_lexer_t")
 	local qamar_lexer_tp = ffi.typeof("qamar_lexer_t*")
 	local void_tp = ffi.typeof("void*")
+	local gc = ffi.gc
+	local copy = ffi.copy
+	local cast = ffi.cast
+	local fstring = ffi.string
+	local malloc = ffi.C.malloc
+	local free = ffi.C.free
+	local typesize = ffi.sizeof(qamar_lexer_t)
+	local lexer_destroy = ffi.C.lexer_destroy
+	local lexer_new = ffi.C.lexer_new
+	local lexer_peek = ffi.C.lexer_peek
+	local lexer_try_consume_string = ffi.C.lexer_try_consume_string
+	local lexer_alphanumeric = ffi.C.lexer_alphanumeric
+	local lexer_numeric = ffi.C.lexer_numeric
+	local lexer_alpha = ffi.C.lexer_alpha
+	local lexer_keyword = ffi.C.lexer_keyword
+	local lexer_name = ffi.C.lexer_name
+	local lexer_take = ffi.C.lexer_take
+	local tokenbuf = ffi.new(qamar_token_t)
+	local takebuf = ffi.new("size_t[1]")
 
 	local function finalizer(x)
-		--io.stdout:write("DESTROY\n")
-		--io.stdout:flush()
-		ffi.C.lexer_destroy(x)
-		ffi.C.free(ffi.cast(void_tp, x))
+		local _ = lexer_destroy(x)
+		_ = free(cast(void_tp, x))
 	end
 
-	local slen = string.len
 	function lexer.new(s)
 		local len = slen(s)
-		local typesize = ffi.sizeof(qamar_lexer_t)
 		local size = len + typesize
-		local l = ffi.cast(qamar_lexer_tp, ffi.C.malloc(size))
-		if l == nil then
-			return
+		local l = cast(qamar_lexer_tp, malloc(size))
+		if l ~= nil then
+			local ret = lexer_new(l, s, len)
+			if ret == 0 then
+				copy(cast(void_tp, l.data), s, len)
+				--io.stdout:write("OLE!!!\n")
+				--io.stdout:flush()
+				return gc(l, finalizer)
+			end
+			free(cast(void_tp, l))
 		end
-		local ret = ffi.C.lexer_new(l, s, len)
-		if ret == 0 then
-			ffi.copy(ffi.cast(void_tp, l.data), s, len)
-			--io.stdout:write("OLE!!!\n")
-			--io.stdout:flush()
-			return ffi.gc(l, finalizer)
-		end
-		ffi.C.free(ffi.cast(void_tp, l))
 	end
 
 	function lexer.peek(self, skip)
-		--io.stdout:write("PEEK\n")
-		--io.stdout:flush()
-		local ret = ffi.C.lexer_peek(self, skip or 0)
+		local ret = lexer_peek(self, skip or 0)
 		if ret ~= nil then
-			return ffi.string(ret, 1)
+			return fstring(ret, 1)
 		end
 	end
 
@@ -125,37 +138,28 @@ const char *lexer_take(qamar_lexer_t *, size_t *);
 	lexer.pos = ffi.C.lexer_pos
 
 	function lexer.try_consume_string(self, s)
-		--io.stdout:write("TRY_CONSUME_STRING\n")
-		--io.stdout:flush()
-		local len = slen(s)
-		local ret = ffi.C.lexer_try_consume_string(self, s, len)
+		local ret = lexer_try_consume_string(self, s, slen(s))
 		if ret ~= nil then
 			return s
 		end
 	end
 
 	function lexer.alpha(self)
-		--io.stdout:write("ALPHA\n")
-		--io.stdout:flush()
-		local ret = ffi.C.lexer_alpha(self)
+		local ret = lexer_alpha(self)
 		if ret ~= nil then
 			return ffi.string(ret, 1)
 		end
 	end
 
 	function lexer.numeric(self)
-		--io.stdout:write("NUMERIC\n")
-		--io.stdout:flush()
-		local ret = ffi.C.lexer_numeric(self)
+		local ret = lexer_numeric(self)
 		if ret ~= nil then
 			return ffi.string(ret, 1)
 		end
 	end
 
 	function lexer.alphanumeric(self)
-		--io.stdout:write("ALPHANUMERIC\n")
-		--io.stdout:flush()
-		local ret = ffi.C.lexer_alphanumeric(self)
+		local ret = lexer_alphanumeric(self)
 		if ret ~= nil then
 			return ffi.string(ret, 1)
 		end
@@ -165,35 +169,27 @@ const char *lexer_take(qamar_lexer_t *, size_t *);
 		return {
 			pos = t.pos,
 			type = t.type,
-			value = ffi.string(t.value, t.len),
+			value = fstring(t.value, t.len),
 		}
 	end
 
-	local tokenbuf = ffi.new(qamar_token_t)
 	function lexer.keyword(self)
-		--io.stdout:write("KEYWORD\n")
-		--io.stdout:flush()
-		if ffi.C.lexer_keyword(self, tokenbuf) then
+		if lexer_keyword(self, tokenbuf) then
 			return create_token(tokenbuf)
 		end
 	end
 
 	function lexer.name(self)
-		--io.stdout:write("NAME\n")
-		--io.stdout:flush()
-		if ffi.C.lexer_name(self, tokenbuf) then
+		if lexer_name(self, tokenbuf) then
 			return create_token(tokenbuf)
 		end
 	end
 
-	local takebuf = ffi.new("size_t[1]")
 	function lexer.take(self, amt)
 		takebuf[0] = amt or 1
-		--io.stdout:write("TAKE\n")
-		--io.stdout:flush()
-		local ret = ffi.C.lexer_take(self, takebuf)
+		local ret = lexer_take(self, takebuf)
 		if ret ~= nil then
-			return ffi.string(ret, takebuf[0])
+			return fstring(ret, takebuf[0])
 		end
 	end
 end
