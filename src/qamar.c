@@ -1,7 +1,3 @@
-#ifndef NULL
-#define NULL ((void *)0)
-#endif
-
 #include "qamar_config.h"
 #include "util/queue_ts.h"
 
@@ -14,8 +10,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "lexer/lexer.h"
 #include "loop/loop.h"
-#include "parser/lexer.h"
 #include <uv.h>
 
 void prepend_lua_path(lua_State *L, const char *prefix) {
