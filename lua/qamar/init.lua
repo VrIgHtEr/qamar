@@ -16,15 +16,15 @@ end
 local dpath = "/home/cedric/qamar"
 local odir = dpath
 --odir = '/mnt/c/luaparse'
-local idir = "/home/cedric/.local/share/nvim"
+local idir = "/home/cedric/.local/share/nvim/site"
 local cfg = require("qamar.config")
 local function stdout(str)
 	io.stdout:write((tostring(str or "")) .. "\n")
-	io.stdout:flush()
+	--	io.stdout:flush()
 end
 local function stderr(str)
 	io.stderr:write((tostring(str or "")) .. "\n")
-	io.stderr:flush()
+	--	io.stderr:flush()
 end
 
 local function shuffle(tbl)

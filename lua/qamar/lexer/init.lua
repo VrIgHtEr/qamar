@@ -4,7 +4,7 @@ local lexers = {
 	lexer.keyword,
 	lexer.name,
 	require("qamar.lexer.token.number"),
-	require("qamar.lexer.token.string"),
+	--	require("qamar.lexer.token.string"),
 }
 local token = require("qamar.lexer.types")
 local spos = lexer.pos
