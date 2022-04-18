@@ -819,6 +819,9 @@ extern bool lexer_keyword(qamar_lexer_t *s, qamar_token_t *out) {
     out->len = 1;
     out->type = QAMAR_TOKEN_DASH;
     goto success;
+  case '"':
+  case '\'':
+    return !qamar_match_string(s, p, amt, out);
   case '[': {
     int32_t len = qamar_find_open_long_string_terminator(p, amt);
     if (len >= 0)
