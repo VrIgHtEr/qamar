@@ -45,7 +45,7 @@ set (CMAKE_CXX_STANDARD_REQUIRED true)
 configure_file(qamar_config.h.in qamar_config.h)
 
 FILE(GLOB_RECURSE sourcefiles src/*.c)
-add_executable(qamar src/qamar.c src/util/queue_ts.c src/lexer/lexer.c src/loop/loop.c)
+add_executable(qamar src/qamar.c src/util/queue_ts.c src/lexer/lexer.c src/loop/loop.c src/lexer/lexer_string.c)
 add_dependencies(qamar luajit libuv)
 
 ##############################################################

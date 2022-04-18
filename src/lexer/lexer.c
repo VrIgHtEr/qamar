@@ -1,4 +1,5 @@
 #include "lexer.h"
+#include "lexer_string.h"
 #include "token_types.h"
 #include <lauxlib.h>
 #include <lua.h>
@@ -818,34 +819,14 @@ extern bool lexer_keyword(qamar_lexer_t *s, qamar_token_t *out) {
     out->len = 1;
     out->type = QAMAR_TOKEN_DASH;
     goto success;
-  case '[':
-    if (--amt == 0) {
-      out->len = 1;
-      out->type = QAMAR_TOKEN_LBRACKET;
-      goto success;
-    }
-    switch (*++p) {
-    case '[':
-      return false;
-    case '=':
-      while (true) {
-        if (--amt == 0) {
-          out->len = 1;
-          out->type = QAMAR_TOKEN_LBRACKET;
-          goto success;
-        }
-        char c = *++p;
-        if (c != '=') {
-          if (c == '[')
-            return false;
-          break;
-        }
-      }
-    default:
-      out->len = 1;
-      out->type = QAMAR_TOKEN_LBRACKET;
-      goto success;
-    }
+  case '[': {
+    int32_t len = qamar_find_open_long_string_terminator(p, amt);
+    if (len >= 0)
+      return !qamar_match_long_string(s, p, amt, len, out);
+    out->len = 1;
+    out->type = QAMAR_TOKEN_LBRACKET;
+    goto success;
+  }
   case ']':
     out->len = 1;
     out->type = QAMAR_TOKEN_RBRACKET;
@@ -1024,6 +1005,8 @@ const luaL_Reg library[] = {
     {NULL, NULL}};
 
 int qamar_lexer_init(lua_State *L) {
+  if (lexer_string_init())
+    return true;
   luaL_newmetatable(L, QAMAR_TYPE_LEXER);
 
   lua_pushstring(L, "__index");
@@ -1054,5 +1037,5 @@ int qamar_lexer_init(lua_State *L) {
   lua_rawset(L, -3);
   lua_pop(L, 1);
 
-  return 0;
+  return false;
 }
