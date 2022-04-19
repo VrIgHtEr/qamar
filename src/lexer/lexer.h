@@ -65,5 +65,6 @@ const char *lexer_numeric(qamar_lexer_t *);
 const char *lexer_alphanumeric(qamar_lexer_t *);
 bool lexer_keyword(qamar_lexer_t *, qamar_token_t *);
 bool lexer_name(qamar_lexer_t *, qamar_token_t *);
+bool lexer_token(qamar_lexer_t *, qamar_token_t *);
 
 #endif

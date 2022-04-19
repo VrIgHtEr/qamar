@@ -69,6 +69,7 @@ void lexer_skipws(qamar_lexer_t *);
 qamar_position_t lexer_pos(qamar_lexer_t *);
 bool lexer_keyword(qamar_lexer_t *, qamar_token_t *);
 bool lexer_name(qamar_lexer_t *, qamar_token_t *);
+bool lexer_token(qamar_lexer_t *, qamar_token_t *);
 ]])
 
 do
@@ -131,6 +132,14 @@ function lexer.peek(self, skip)
 	end
 end
 
+function lexer.take(self, amt)
+	takebuf[0] = amt or 1
+	local ret = C.lexer_take(self, takebuf)
+	if ret ~= nil then
+		return fstring(ret, takebuf[0])
+	end
+end
+
 lexer.skipws = function(self)
 	return C.lexer_skipws(self)
 end
@@ -158,11 +167,9 @@ function lexer.name(self)
 	end
 end
 
-function lexer.take(self, amt)
-	takebuf[0] = amt or 1
-	local ret = C.lexer_take(self, takebuf)
-	if ret ~= nil then
-		return fstring(ret, takebuf[0])
+function lexer.token(self)
+	if C.lexer_token(self, tokenbuf) then
+		return create_token(tokenbuf)
 	end
 end
 

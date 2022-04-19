@@ -1106,6 +1106,30 @@ static int lua_lexer_name(lua_State *L) {
   return 1;
 }
 
+extern bool lexer_token(qamar_lexer_t *s, qamar_token_t *out) {
+restart:
+  lexer_skipws(s);
+  if (lexer_keyword(s, out)) {
+    if (out->type == QAMAR_TOKEN_COMMENT)
+      goto restart;
+    else
+      return true;
+  }
+  return lexer_name(s, out);
+}
+
+static int lua_lexer_token(lua_State *L) {
+  qamar_lexer_t *s;
+  if (lua_gettop(L) < 1 || (s = luaL_checkudata(L, 1, QAMAR_TYPE_LEXER)) == 0 ||
+      s->t.index >= s->len)
+    return 0;
+  qamar_token_t token;
+  if (!lexer_token(s, &token))
+    return 0;
+  lua_qamar_create_token(L, &token);
+  return 1;
+}
+
 const luaL_Reg library[] = {
     {"new", lua_lexer_new},
     {"peek", lua_lexer_peek},
@@ -1123,6 +1147,7 @@ const luaL_Reg library[] = {
     {"alphanumeric", lua_lexer_alphanumeric},
     {"keyword", lua_lexer_keyword},
     {"name", lua_lexer_name},
+    {"token", lua_lexer_token},
     {NULL, NULL}};
 
 int qamar_lexer_init(lua_State *L) {
