@@ -15,6 +15,6 @@ return function(self)
 	local pos = spos(self)
 	local tok = take(self, 30)
 	if tok then
-		error(tostring(pos) .. ":INVALID_TOKEN: " .. sescape(tok, true))
+		error(tostring(pos) .. ":INVALID_TOKEN:" .. sescape(tok, true))
 	end
 end

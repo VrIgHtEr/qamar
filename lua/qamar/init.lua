@@ -56,7 +56,7 @@ local dstats
 local function parse_everything()
 	os.execute("rm -rf '" .. odir .. "'")
 	local files = scandir(idir)
-	shuffle(files)
+	--shuffle(files)
 	os.execute("mkdir -p '" .. odir .. "'")
 	stderr()
 	cfg.print("\n")
