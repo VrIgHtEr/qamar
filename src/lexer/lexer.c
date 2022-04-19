@@ -590,7 +590,6 @@ static void lua_create_token_type_table(lua_State *L) {
 }
 
 extern bool lexer_keyword(qamar_lexer_t *s, qamar_token_t *out) {
-  lexer_skipws(s);
   out->pos.left = lexer_pos(s);
   size_t amt = s->len - s->t.index;
   if (amt == 0)
@@ -1083,7 +1082,6 @@ static int lua_lexer_keyword(lua_State *L) {
 }
 
 extern bool lexer_name(qamar_lexer_t *s, qamar_token_t *out) {
-  lexer_skipws(s);
   out->pos.left = lexer_pos(s);
   out->value = lexer_alpha(s);
   if (out->value == NULL)
