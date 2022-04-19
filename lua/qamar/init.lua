@@ -34,6 +34,36 @@ local function shuffle(tbl)
 	end
 end
 
+local excluded = {
+	[[/home/cedric/.local/share/nvim/site/pack/nvim-lua/opt/plenary.nvim/scripts/vararg/rotate.lua]],
+	[[/home/cedric/.local/share/nvim/env/opt/neovim/test/functional/fixtures/lua/syntax_error.lua]],
+	[[/home/cedric/.local/share/nvim/env/opt/neovim/test/functional/legacy/069_multibyte_formatting_spec.lua]],
+	[[/home/cedric/.local/share/nvim/env/opt/lua-language-server/test/completion/common.lua]],
+	[[/home/cedric/.local/share/nvim/env/opt/lua-language-server/3rd/EmmyLuaCodeStyle/Test/test_script/grammar/gengc.lua]],
+	[[/home/cedric/.local/share/nvim/env/opt/StyLua/tests/inputs-full_moon/goto-as-identifier.lua]],
+	[[/home/cedric/.local/share/nvim/env/opt/StyLua/tests/inputs/string-escapes-2.lua]],
+	[[/home/cedric/.local/share/nvim/env/opt/StyLua/tests/inputs/excess-parentheses.lua]],
+	[[/home/cedric/.local/share/nvim/env/opt/lua-language-server/script/core/completion/keyword.lua]],
+	[[/home/cedric/.local/share/nvim/env/opt/lua-language-server/script/core/completion/completion.lua]],
+	[[/home/cedric/.local/share/nvim/env/opt/lua-language-server/3rd/EmmyLuaCodeStyle/Test/test_script/grammar/strings.lua]],
+	[[/home/cedric/.local/share/nvim/env/opt/lua-language-server/3rd/EmmyLuaCodeStyle/Test/test_script/grammar/tpack.lua]],
+	[[/home/cedric/.local/share/nvim/env/opt/lua-language-server/3rd/EmmyLuaCodeStyle/Test/test_script/grammar/events.lua]],
+	[[/home/cedric/.local/share/nvim/env/opt/lua-language-server/3rd/EmmyLuaCodeStyle/Test/test_script/grammar/utf8.lua]],
+	[[/home/cedric/.local/share/nvim/env/opt/lua-language-server/3rd/EmmyLuaCodeStyle/Test/test_script/grammar/literals.lua]],
+	[[/home/cedric/.local/share/nvim/env/opt/lua-language-server/3rd/EmmyLuaCodeStyle/Test/test_script/format_text/wait_format/comment.lua]],
+	[[/home/cedric/.local/share/nvim/env/opt/lua-language-server/3rd/EmmyLuaCodeStyle/Test/test_script/format_text/wait_format/unicode.lua]],
+	[[/home/cedric/.local/share/nvim/env/opt/lua-language-server/3rd/EmmyLuaCodeStyle/Test/test_script/format_text/wait_format/while.lua]],
+	[[/home/cedric/.local/share/nvim/env/opt/lua-language-server/3rd/EmmyLuaCodeStyle/Test/test_script/format_text/wait_format_should_be/comment.lua]],
+	[[/home/cedric/.local/share/nvim/env/opt/lua-language-server/3rd/EmmyLuaCodeStyle/Test/test_script/format_text/wait_format_should_be/unicode.lua]],
+	[[/home/cedric/.local/share/nvim/env/opt/lua-language-server/3rd/EmmyLuaCodeStyle/Test/test_script/format_text/wait_format_should_be/while.lua]],
+	[[/home/cedric/.local/share/nvim/env/opt/lua-language-server/meta/3rd/lovr/library/lovr.data.lua]],
+	[[/home/cedric/.local/share/nvim/env/opt/lua-language-server/meta/3rd/lovr/library/lovr.graphics.lua]],
+}
+
+for _, x in ipairs(excluded) do
+	excluded[x] = true
+end
+
 local types = require("qamar.parser.types")
 local function tostring_tree(tree)
 	return vim.inspect(tree, {
@@ -67,7 +97,7 @@ local function parse_everything()
 		local counter = 0
 		local tlen = 0
 		for _, filename in ipairs(files) do
-			if not filename:match(".*luau.*") then
+			if not excluded[filename] and not filename:match(".*-luau.*") then
 				stdout("-----------------------------------------------------------------------------------")
 				stdout("PARSING FILE " .. (counter + 1) .. ": " .. filename)
 				local txt = util.read_file(filename)
@@ -119,6 +149,7 @@ local function parse_everything()
 								str = str:sub(idx + 2)
 							end
 							stderr(str)
+							stderr("")
 						end
 					end
 				end
