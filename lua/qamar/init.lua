@@ -34,7 +34,6 @@ local function shuffle(tbl)
 	end
 end
 
---[[
 local types = require("qamar.parser.types")
 local function tostring_tree(tree)
 	return vim.inspect(tree, {
@@ -52,13 +51,12 @@ local function tostring_tree(tree)
 		end,
 	})
 end
-]]
 
 local dstats
 local function parse_everything()
 	os.execute("rm -rf '" .. odir .. "'")
 	local files = scandir(idir)
-	--shuffle(files)
+	shuffle(files)
 	os.execute("mkdir -p '" .. odir .. "'")
 	stderr()
 	cfg.print("\n")
