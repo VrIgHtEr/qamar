@@ -323,12 +323,14 @@ static int lua_lexer_try_consume_string(lua_State *L) {
 }
 
 extern void lexer_skipws(qamar_lexer_t *s) {
+  size_t _1 = 1;
   if (s->skip_ws_ctr == 0) {
-    for (; s->t.index < s->len; ++s->t.index) {
+    for (; s->t.index < s->len;) {
       char x = s->data[s->t.index];
       if (x != ' ' && x != '\f' && x != '\n' && x != '\r' && x != '\t' &&
           x != '\v')
         break;
+      lexer_take(s, &_1);
     }
   }
 }
