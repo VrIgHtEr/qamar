@@ -1,9 +1,9 @@
 local lexer = require("qamar.ffi")
 local lexers = {
-	require("qamar.lexer.token.comment"),
 	lexer.keyword,
 	lexer.name,
 	require("qamar.lexer.token.number"),
+	--	require("qamar.lexer.token.comment"),
 	--	require("qamar.lexer.token.string"),
 }
 local token = require("qamar.lexer.types")

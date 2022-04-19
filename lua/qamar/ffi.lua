@@ -140,13 +140,27 @@ function lexer.peek(self, skip)
 	end
 end
 
-lexer.begin = C.lexer_begin
-lexer.commit = C.lexer_commit
-lexer.undo = C.lexer_undo
-lexer.skipws = C.lexer_skipws
-lexer.suspend_skip_ws = C.lexer_suspend_skip_ws
-lexer.resume_skip_ws = C.lexer_resume_skip_ws
-lexer.pos = C.lexer_pos
+lexer.begin = function(self)
+	return C.lexer_begin(self)
+end
+lexer.commit = function(self)
+	return C.lexer_commit(self)
+end
+lexer.undo = function(self)
+	return C.lexer_undo(self)
+end
+lexer.skipws = function(self)
+	return C.lexer_skipws(self)
+end
+lexer.suspend_skip_ws = function(self)
+	return C.lexer_suspend_skip_ws(self)
+end
+lexer.resume_skip_ws = function(self)
+	return C.lexer_resume_skip_ws(self)
+end
+lexer.pos = function(self)
+	return C.lexer_pos(self)
+end
 
 function lexer.try_consume_string(self, s)
 	local ret = C.lexer_try_consume_string(self, s, slen(s))

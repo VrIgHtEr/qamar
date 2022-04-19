@@ -816,8 +816,38 @@ extern bool lexer_keyword(qamar_lexer_t *s, qamar_token_t *out) {
     out->type = QAMAR_TOKEN_COMMA;
     goto success;
   case '-':
-    out->len = 1;
-    out->type = QAMAR_TOKEN_DASH;
+    if (--amt == 0 || *++p != '-') {
+      out->len = 1;
+      out->type = QAMAR_TOKEN_DASH;
+      goto success;
+    }
+    out->len = 2;
+    out->type = QAMAR_TOKEN_COMMENT;
+    if (--amt == 0) {
+      goto success;
+    }
+    if (*++p == '[') {
+      qamar_position_t temp = out->pos.left;
+      int32_t len = qamar_find_open_long_string_terminator(p, amt);
+      if (len >= 0) {
+        lexer_take(s, &out->len);
+        if (!qamar_match_long_string(s, p, amt, len, out)) {
+          out->type = QAMAR_TOKEN_COMMENT;
+          out->pos.left = temp;
+          return true;
+        }
+      }
+    }
+    out->len = 2;
+    out->type = QAMAR_TOKEN_COMMENT;
+    if (*p == '\n' || *p == '\r')
+      goto success;
+    ++out->len;
+    while (true)
+      if (--amt == 0 || *++p == '\n' || *p == '\r')
+        break;
+      else
+        ++out->len;
     goto success;
   case '"':
   case '\'':

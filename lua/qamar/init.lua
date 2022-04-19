@@ -16,7 +16,7 @@ end
 local dpath = "/home/cedric/qamar"
 local odir = dpath
 --odir = '/mnt/c/luaparse'
-local idir = "/home/cedric/.local/share/nvim/site"
+local idir = "/home/cedric/.local/share/nvim"
 local cfg = require("qamar.config")
 local function stdout(str)
 	io.stdout:write((tostring(str or "")) .. "\n")
@@ -58,7 +58,7 @@ local dstats
 local function parse_everything()
 	os.execute("rm -rf '" .. odir .. "'")
 	local files = scandir(idir)
-	shuffle(files)
+	--shuffle(files)
 	os.execute("mkdir -p '" .. odir .. "'")
 	stderr()
 	cfg.print("\n")
@@ -69,7 +69,7 @@ local function parse_everything()
 		local counter = 0
 		local tlen = 0
 		for _, filename in ipairs(files) do
-			if true or filename:match("^.*/test.lua") then
+			if not filename:match(".*luau.*") then
 				stdout("-----------------------------------------------------------------------------------")
 				stdout("PARSING FILE " .. (counter + 1) .. ": " .. filename)
 				local txt = util.read_file(filename)
