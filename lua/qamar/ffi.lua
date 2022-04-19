@@ -64,20 +64,11 @@ void free(void*);
 int lexer_new(qamar_lexer_t *c, const char *, const size_t);
 void lexer_destroy(qamar_lexer_t *);
 const char *lexer_peek(qamar_lexer_t *, size_t);
-void lexer_begin(qamar_lexer_t *);
-void lexer_undo(qamar_lexer_t *);
-void lexer_commit(qamar_lexer_t *);
-const char *lexer_try_consume_string(qamar_lexer_t *, const char *, size_t);
+const char *lexer_take(qamar_lexer_t *, size_t *);
 void lexer_skipws(qamar_lexer_t *);
-void lexer_suspend_skip_ws(qamar_lexer_t *);
-void lexer_resume_skip_ws(qamar_lexer_t *);
-const char *lexer_numeric(qamar_lexer_t *);
-const char *lexer_alpha(qamar_lexer_t *);
-const char *lexer_alphanumeric(qamar_lexer_t *);
 qamar_position_t lexer_pos(qamar_lexer_t *);
 bool lexer_keyword(qamar_lexer_t *, qamar_token_t *);
 bool lexer_name(qamar_lexer_t *, qamar_token_t *);
-const char *lexer_take(qamar_lexer_t *, size_t *);
 ]])
 
 do
@@ -140,54 +131,11 @@ function lexer.peek(self, skip)
 	end
 end
 
-lexer.begin = function(self)
-	return C.lexer_begin(self)
-end
-lexer.commit = function(self)
-	return C.lexer_commit(self)
-end
-lexer.undo = function(self)
-	return C.lexer_undo(self)
-end
 lexer.skipws = function(self)
 	return C.lexer_skipws(self)
 end
-lexer.suspend_skip_ws = function(self)
-	return C.lexer_suspend_skip_ws(self)
-end
-lexer.resume_skip_ws = function(self)
-	return C.lexer_resume_skip_ws(self)
-end
 lexer.pos = function(self)
 	return C.lexer_pos(self)
-end
-
-function lexer.try_consume_string(self, s)
-	local ret = C.lexer_try_consume_string(self, s, slen(s))
-	if ret ~= nil then
-		return s
-	end
-end
-
-function lexer.alpha(self)
-	local ret = C.lexer_alpha(self)
-	if ret ~= nil then
-		return ffi.string(ret, 1)
-	end
-end
-
-function lexer.numeric(self)
-	local ret = C.lexer_numeric(self)
-	if ret ~= nil then
-		return ffi.string(ret, 1)
-	end
-end
-
-function lexer.alphanumeric(self)
-	local ret = C.lexer_alphanumeric(self)
-	if ret ~= nil then
-		return ffi.string(ret, 1)
-	end
 end
 
 local function create_token(t)

@@ -2,18 +2,11 @@ local lexer = require("qamar.ffi")
 local lexers = {
 	lexer.keyword,
 	lexer.name,
-	require("qamar.lexer.token.number"),
-	--	require("qamar.lexer.token.comment"),
-	--	require("qamar.lexer.token.string"),
 }
 local token = require("qamar.lexer.types")
 local spos = lexer.pos
 local ipairs = ipairs
-local concat = table.concat
-local peek = lexer.peek
-local begin = lexer.begin
 local take = lexer.take
-local undo = lexer.undo
 local skipws = lexer.skipws
 local tcomment = token.comment
 local sescape = require("qamar.util.string").escape
@@ -23,29 +16,19 @@ local sescape = require("qamar.util.string").escape
 ---@return token|nil
 return function(self)
 	::restart::
-	if peek(self) then
-		for _, x in ipairs(lexers) do
-			local ret = x(self)
-			if ret then
-				if ret.type == tcomment then
-					goto restart
-				end
-				return ret
+	skipws(self)
+	for _, x in ipairs(lexers) do
+		local ret = x(self)
+		if ret then
+			if ret.type == tcomment then
+				goto restart
 			end
+			return ret
 		end
-		skipws(self)
-		if peek(self) then
-			local preview = {}
-			begin(self)
-			for i = 1, 30 do
-				local t = take(self)
-				if not t then
-					break
-				end
-				preview[i] = t
-			end
-			undo(self)
-			error(tostring(spos(self)) .. ":INVALID_TOKEN: " .. sescape(concat(preview), true))
-		end
+	end
+	local pos = spos(self)
+	local tok = take(self, 30)
+	if tok then
+		error(tostring(pos) .. ":INVALID_TOKEN: " .. sescape(tok, true))
 	end
 end

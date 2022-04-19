@@ -921,7 +921,17 @@ extern bool lexer_keyword(qamar_lexer_t *s, qamar_token_t *out) {
     }
     goto success;
   case '.':
-    if (--amt == 0 || *++p != '.') {
+    if (--amt == 0) {
+      out->len = 1;
+      out->type = QAMAR_TOKEN_DOT;
+      goto success;
+    }
+    if (*++p >= '0' && *p <= '9') {
+      out->len = 2;
+      out->type = QAMAR_TOKEN_NUMBER;
+      goto consume_number_from_decimal;
+    }
+    if (*p != '.') {
       out->len = 1;
       out->type = QAMAR_TOKEN_DOT;
     } else if (--amt == 0 || *++p != '.') {
@@ -972,6 +982,84 @@ extern bool lexer_keyword(qamar_lexer_t *s, qamar_token_t *out) {
       out->type = QAMAR_TOKEN_GREATER;
       goto success;
     }
+  case '0':
+    out->len = 1;
+    out->type = QAMAR_TOKEN_NUMBER;
+    if (--amt == 0)
+      goto success;
+    if (*++p == 'x' || *p == 'X') {
+      ++out->len;
+      size_t x = 0;
+      while (true) {
+        if (--amt == 0 || ((*++p < '0' && *p > '9') && (*p < 'a' && *p > 'f') &&
+                           (*p < 'A' && *p > 'F')))
+          break;
+        ++x;
+        ++out->len;
+      }
+      if (x == 0)
+        return false;
+      goto success;
+    } else if ((*p < '0' || *p > '9') && *p != '.')
+      goto success;
+    ++amt;
+    --p;
+    goto consume_number;
+  case '1':
+  case '2':
+  case '3':
+  case '4':
+  case '5':
+  case '6':
+  case '7':
+  case '8':
+  case '9':
+    out->len = 1;
+    out->type = QAMAR_TOKEN_NUMBER;
+  consume_number:
+    while (true) {
+      if (--amt == 0)
+        goto success;
+      ++p;
+      if (*p < '0' || *p > '9')
+        break;
+      ++out->len;
+    }
+    if (*p == '.') {
+      ++out->len;
+    consume_number_from_decimal:
+      while (true) {
+        if (--amt == 0)
+          goto success;
+        ++p;
+        if (*p < '0' || *p > '9')
+          break;
+        ++out->len;
+      }
+    }
+    if (*p == 'e' || *p == 'E') {
+      ++out->len;
+      if (--amt == 0)
+        return false;
+      if (*++p == '-' || *p == '+') {
+        ++out->len;
+        if (--amt == 0)
+          return false;
+        ++p;
+      }
+      if (*p < '0' || *p > '9')
+        return false;
+      ++out->len;
+      while (true) {
+        if (--amt == 0)
+          goto success;
+        ++p;
+        if (*p < '0' || *p > '9')
+          break;
+        ++out->len;
+      }
+    }
+    goto success;
   }
   return false;
 success:
