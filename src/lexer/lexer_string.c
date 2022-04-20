@@ -131,6 +131,19 @@ bool qamar_match_string(qamar_lexer_t *s, const char *p, size_t amt,
       ++ilen;
       char x = *++p;
       switch (x) {
+      case 'z':
+        while (true) {
+          if (--amt == 0)
+            return true;
+          char x = *++p;
+          ++ilen;
+          if (x != ' ' && x != '\t' && x != '\r' && x != '\n' && x != '\v' &&
+              x != '\f') {
+            --p, ++amt, --ilen;
+            break;
+          }
+        }
+        break;
       case 'x':
         if (--amt == 0)
           return true;
