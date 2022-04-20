@@ -1001,7 +1001,7 @@ extern bool lexer_keyword(qamar_lexer_t *s, qamar_token_t *out) {
       if (x == 0)
         return false;
       goto success;
-    } else if ((*p < '0' || *p > '9') && *p != '.')
+    } else if ((*p < '0' || *p > '9') && *p != '.' && *p != 'e' && *p != 'E')
       goto success;
     ++amt;
     --p;
