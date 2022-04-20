@@ -17,6 +17,7 @@ local dpath = "/home/cedric/qamar"
 local odir = dpath
 --odir = '/mnt/c/luaparse'
 local idir = "/home/cedric/.local/share/nvim"
+--idir = "/home/cedric/code/c/qamar/lua"
 local cfg = require("qamar.config")
 local function stdout(str)
 	io.stdout:write((tostring(str or "")) .. "\n")
@@ -96,8 +97,12 @@ local function parse_everything()
 		dstats = {}
 		local counter = 0
 		local tlen = 0
+		local numexcluded = 0
 		for _, filename in ipairs(files) do
-			if not excluded[filename] and not filename:match(".*-luau.*") then
+			if
+				not excluded[filename] and not filename:match(".*-luau.*")
+				--and filename:match("^.*test[.]lua$")
+			then
 				stdout("-----------------------------------------------------------------------------------")
 				stdout("PARSING FILE " .. (counter + 1) .. ": " .. filename)
 				local txt = util.read_file(filename)
@@ -153,6 +158,8 @@ local function parse_everything()
 						end
 					end
 				end
+			else
+				numexcluded = numexcluded + 1
 			end
 		end
 
@@ -174,7 +181,7 @@ local function parse_everything()
 				stdout(x.name .. ": " .. (x.frequency * 100) .. "%")
 			end
 		end
-		return counter, #files
+		return counter, #files - numexcluded
 	end)
 	local function step()
 		local success, parsed, total = coroutine.resume(co)

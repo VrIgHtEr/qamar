@@ -33,8 +33,9 @@ int32_t qamar_find_open_long_string_terminator(const char *p, size_t amt) {
 
 bool qamar_match_long_string_close_terminator(const char *p, size_t amt,
                                               int32_t len) {
-  if (amt < len + 2 || *p != ']')
+  if (amt < len + 2 || *p != ']') {
     return false;
+  }
   for (; len > 0; --len)
     if (*++p != '=')
       return false;
@@ -62,14 +63,15 @@ bool qamar_match_long_string(qamar_lexer_t *s, const char *p, size_t amt,
   token->pos.left = lexer_pos(s);
   size_t ilen = term_len + 2;
   amt -= ilen;
-  p += term_len + 2;
+  p += ilen;
   stringlength = 0;
   --amt;
   bool first = true;
   while (true) {
-    if (amt == 0)
+    if (amt == 0) {
       return true;
-    if (qamar_match_long_string_close_terminator(p, amt, term_len)) {
+    }
+    if (qamar_match_long_string_close_terminator(p, amt + 1, term_len)) {
       ilen += term_len + 2;
       lexer_take(s, &ilen);
       token->pos.right = lexer_pos(s);

@@ -1,23 +1,23 @@
-local qamar_lexer = _G["qamar_lexer"]
-local ffi = require("ffi")
-if not ffi then
-	return qamar_lexer
+if jit and jit.opt and jit.opt.start then
+	jit.opt.start(3)
+	jit.opt.start(
+		"maxtrace=10000",
+		"hotloop=1",
+		"maxmcode=16384",
+		"hotexit=1",
+		"maxirconst=10000",
+		"maxrecord=10000",
+		"maxside=10000",
+		"maxsnap=10000"
+	)
 end
 
-local setmetatable = setmetatable
-local lexer = setmetatable({}, { __index = qamar_lexer })
-jit.opt.start(3)
-jit.opt.start(
-	"maxtrace=10000",
-	"hotloop=1",
-	"maxmcode=16384",
-	"hotexit=1",
-	"maxirconst=10000",
-	"maxrecord=10000",
-	"maxside=10000",
-	"maxsnap=10000"
-)
-ffi.cdef([[
+local qamar_lexer = _G["qamar_lexer"]
+local ffi = require("ffi")
+if ffi then
+	local setmetatable = setmetatable
+	local lexer = setmetatable({}, { __index = qamar_lexer })
+	ffi.cdef([[
 typedef struct {
   size_t file_char;
   size_t row;
@@ -72,105 +72,107 @@ bool lexer_name(qamar_lexer_t *, qamar_token_t *);
 bool lexer_token(qamar_lexer_t *, qamar_token_t *);
 ]])
 
-do
-	local mt = {
+	do
+		local mt = {
+			__metatable = function() end,
+			__tostring = function(self)
+				return tonumber(self.row) .. ":" .. tonumber(self.col)
+			end,
+		}
+		ffi.metatype(ffi.typeof("qamar_position_t"), mt)
+	end
+
+	local token_mt = {
 		__metatable = function() end,
 		__tostring = function(self)
-			return tonumber(self.row) .. ":" .. tonumber(self.col)
+			return self.value
 		end,
 	}
-	ffi.metatype(ffi.typeof("qamar_position_t"), mt)
-end
 
-local token_mt = {
-	__metatable = function() end,
-	__tostring = function(self)
-		return self.value
-	end,
-}
+	local C = ffi.C
+	local slen = string.len
+	local qamar_token_t = ffi.typeof("qamar_token_t")
+	local qamar_lexer_t = ffi.typeof("qamar_lexer_t")
+	local qamar_lexer_tp = ffi.typeof("qamar_lexer_t*")
+	local void_tp = ffi.typeof("void*")
+	local gc = ffi.gc
+	local copy = ffi.copy
+	local cast = ffi.cast
+	local fstring = ffi.string
+	local typesize = ffi.sizeof(qamar_lexer_t)
 
-local C = ffi.C
-local slen = string.len
-local qamar_token_t = ffi.typeof("qamar_token_t")
-local qamar_lexer_t = ffi.typeof("qamar_lexer_t")
-local qamar_lexer_tp = ffi.typeof("qamar_lexer_t*")
-local void_tp = ffi.typeof("void*")
-local gc = ffi.gc
-local copy = ffi.copy
-local cast = ffi.cast
-local fstring = ffi.string
-local typesize = ffi.sizeof(qamar_lexer_t)
+	local tokenbuf = ffi.new(qamar_token_t)
+	local takebuf = ffi.new("size_t[1]")
 
-local tokenbuf = ffi.new(qamar_token_t)
-local takebuf = ffi.new("size_t[1]")
+	local function finalizer(x)
+		local _ = C.lexer_destroy(x)
+		_ = C.free(cast(void_tp, x))
+	end
 
-local function finalizer(x)
-	local _ = C.lexer_destroy(x)
-	_ = C.free(cast(void_tp, x))
-end
-
-function lexer.new(s)
-	local len = slen(s)
-	local size = len + typesize
-	local l = cast(qamar_lexer_tp, C.malloc(size))
-	if l ~= nil then
-		local ret = C.lexer_new(l, s, len)
-		if ret == 0 then
-			copy(cast(void_tp, l.data), s, len)
-			--io.stdout:write("OLE!!!\n")
-			--io.stdout:flush()
-			return gc(l, finalizer)
+	function lexer.new(s)
+		local len = slen(s)
+		local size = len + typesize
+		local l = cast(qamar_lexer_tp, C.malloc(size))
+		if l ~= nil then
+			local ret = C.lexer_new(l, s, len)
+			if ret == 0 then
+				copy(cast(void_tp, l.data), s, len)
+				--io.stdout:write("OLE!!!\n")
+				--io.stdout:flush()
+				return gc(l, finalizer)
+			end
+			C.free(cast(void_tp, l))
 		end
-		C.free(cast(void_tp, l))
 	end
-end
 
-function lexer.peek(self, skip)
-	local ret = C.lexer_peek(self, skip or 0)
-	if ret ~= nil then
-		return fstring(ret, 1)
+	function lexer.peek(self, skip)
+		local ret = C.lexer_peek(self, skip or 0)
+		if ret ~= nil then
+			return fstring(ret, 1)
+		end
 	end
-end
 
-function lexer.take(self, amt)
-	takebuf[0] = amt or 1
-	local ret = C.lexer_take(self, takebuf)
-	if ret ~= nil then
-		return fstring(ret, takebuf[0])
+	function lexer.take(self, amt)
+		takebuf[0] = amt or 1
+		local ret = C.lexer_take(self, takebuf)
+		if ret ~= nil then
+			return fstring(ret, takebuf[0])
+		end
 	end
-end
 
-lexer.skipws = function(self)
-	return C.lexer_skipws(self)
-end
-lexer.pos = function(self)
-	return C.lexer_pos(self)
-end
-
-local function create_token(t)
-	return setmetatable({
-		pos = t.pos,
-		type = t.type,
-		value = fstring(t.value, t.len),
-	}, token_mt)
-end
-
-function lexer.keyword(self)
-	if C.lexer_keyword(self, tokenbuf) then
-		return create_token(tokenbuf)
+	lexer.skipws = function(self)
+		return C.lexer_skipws(self)
 	end
-end
-
-function lexer.name(self)
-	if C.lexer_name(self, tokenbuf) then
-		return create_token(tokenbuf)
+	lexer.pos = function(self)
+		return C.lexer_pos(self)
 	end
-end
 
-function lexer.token(self)
-	if C.lexer_token(self, tokenbuf) then
-		return create_token(tokenbuf)
+	local function create_token(t)
+		return setmetatable({
+			pos = t.pos,
+			type = t.type,
+			value = fstring(t.value, t.len),
+		}, token_mt)
 	end
+
+	function lexer.keyword(self)
+		if C.lexer_keyword(self, tokenbuf) then
+			return create_token(tokenbuf)
+		end
+	end
+
+	function lexer.name(self)
+		if C.lexer_name(self, tokenbuf) then
+			return create_token(tokenbuf)
+		end
+	end
+
+	function lexer.token(self)
+		if C.lexer_token(self, tokenbuf) then
+			return create_token(tokenbuf)
+		end
+	end
+	return lexer
 end
 
-return lexer
+return qamar_lexer
