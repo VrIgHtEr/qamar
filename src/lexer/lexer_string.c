@@ -215,6 +215,56 @@ bool qamar_match_string(qamar_lexer_t *s, const char *p, size_t amt,
           return true;
         insert_char((char)c);
         break;
+      case 'u':
+        if (--amt)
+          return true;
+        ++p, ++ilen;
+        if (*p != '{')
+          return true;
+        uint32_t val = 0;
+        int x = 8;
+        while (true) {
+          if (--amt == 0)
+            return true;
+          ++ilen, ++p;
+          if (*p == '}') {
+            if (x == 8)
+              return true;
+            break;
+          }
+          if (x == 0)
+            return true;
+          --x;
+          val <<= 4;
+          if (*p >= '0' && *p <= '9')
+            val |= *p - '0';
+          else if (*p >= 'A' && *p <= 'F')
+            val |= *p - ('A' - 10);
+          else if (*p >= 'a' && *p <= 'f')
+            val |= *p - ('a' - 10);
+          else
+            return true;
+        }
+        if (val <= 0177)
+          insert_char(val);
+        else if (val <= 03777) {
+          insert_char(0300 | (val >> 6));
+          insert_char(0200 | (val & 077));
+        } else if (val <= 077777) {
+          insert_char(0340 | (val >> 12));
+          insert_char(0200 | ((val >> 6) & 077));
+          insert_char(0200 | (val & 077));
+        } else if (val <= 0177777) {
+          insert_char(0350 | (val >> 12));
+          insert_char(0200 | ((val >> 6) & 077));
+          insert_char(0200 | (val & 077));
+        } else if (val <= 04177777) {
+          insert_char(0350 | (val >> 18));
+          insert_char(0200 | ((val >> 12) & 077));
+          insert_char(0200 | ((val >> 6) & 077));
+          insert_char(0200 | (val & 077));
+        } else
+          return true;
       }
       case 'a':
         insert_char('\a');
