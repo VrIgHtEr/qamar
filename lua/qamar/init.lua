@@ -100,9 +100,8 @@ local function parse_everything()
 		local numexcluded = 0
 		for _, filename in ipairs(files) do
 			if
-				not excluded[filename]
-				and not filename:match(".*-luau.*")
-				and filename:match("^.*/grammar/math[.]lua$")
+				not excluded[filename] and not filename:match(".*-luau.*")
+				--and filename:match("^.*/grammar/math[.]lua$")
 			then
 				stdout("-----------------------------------------------------------------------------------")
 				stdout("PARSING FILE " .. (counter + 1) .. ": " .. filename)

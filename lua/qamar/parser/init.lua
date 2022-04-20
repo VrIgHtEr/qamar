@@ -76,7 +76,7 @@ end
 local function parse_from_stream(stream)
 	local pos = stpos(stream)
 	if pos.file_byte == 0 then
-		if stpeek(stream) == "#" and stpeek(stream, 1) == "!" then
+		if stpeek(stream) == "#" then
 			while true do
 				local t = stpeek(stream)
 				if not t then
