@@ -309,7 +309,7 @@ bool qamar_match_string(qamar_lexer_t *s, const char *p, size_t amt,
         insert_char('\n');
         break;
       default:
-        return true;
+        insert_char(x);
       }
     default:
       insert_char(*p);
