@@ -250,16 +250,25 @@ bool qamar_match_string(qamar_lexer_t *s, const char *p, size_t amt,
         else if (val <= 03777) {
           insert_char(0300 | (val >> 6));
           insert_char(0200 | (val & 077));
-        } else if (val <= 077777) {
+        } else if (val <= 0177777) {
           insert_char(0340 | (val >> 12));
           insert_char(0200 | ((val >> 6) & 077));
           insert_char(0200 | (val & 077));
-        } else if (val <= 0177777) {
-          insert_char(0350 | (val >> 12));
+        } else if (val <= 07777777) {
+          insert_char(0360 | (val >> 18));
+          insert_char(0200 | ((val >> 12) & 077));
           insert_char(0200 | ((val >> 6) & 077));
           insert_char(0200 | (val & 077));
-        } else if (val <= 04177777) {
-          insert_char(0350 | (val >> 18));
+        } else if (val <= 0x0377777777) {
+          insert_char(0370 | (val >> 24));
+          insert_char(0200 | ((val >> 18) & 077));
+          insert_char(0200 | ((val >> 12) & 077));
+          insert_char(0200 | ((val >> 6) & 077));
+          insert_char(0200 | (val & 077));
+        } else if (val <= 0x017777777777) {
+          insert_char(0374 | (val >> 30));
+          insert_char(0200 | ((val >> 24) & 077));
+          insert_char(0200 | ((val >> 18) & 077));
           insert_char(0200 | ((val >> 12) & 077));
           insert_char(0200 | ((val >> 6) & 077));
           insert_char(0200 | (val & 077));
