@@ -6,7 +6,7 @@ if jit and jit.opt and jit.opt.start then
 		"maxmcode=16384",
 		"hotexit=1",
 		"maxirconst=10000",
-		"maxrecord=10000",
+		"maxrecord=100000",
 		"maxside=10000",
 		"maxsnap=10000"
 	)

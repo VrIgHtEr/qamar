@@ -216,7 +216,7 @@ bool qamar_match_string(qamar_lexer_t *s, const char *p, size_t amt,
         insert_char((char)c);
         break;
       case 'u':
-        if (--amt)
+        if (--amt == 0)
           return true;
         ++p, ++ilen;
         if (*p != '{')
