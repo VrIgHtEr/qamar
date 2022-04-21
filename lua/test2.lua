@@ -1,7 +1,7 @@
 local t = -1
 local t1 = not a and b or c
 local t2 = not a .. b or "" - 3 + 4 - 5
-local t3 = - -2 + - - - -5
+local t3 = - -2 + - - - -5;
 
 (function() end)()
 call(123, 456)(789)

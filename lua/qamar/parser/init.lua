@@ -153,6 +153,14 @@ local function peek(self, N)
 end
 parser.peek = peek
 
+---gets the next available token id
+---@return number
+local function next_id(self)
+	local x = peek(self)
+	return x and x.id or self.tokenid
+end
+parser.next_id = next_id
+
 ---consumes N tokens from the token cache.
 ---N defaults to 1
 ---@param self parser
@@ -165,6 +173,7 @@ local function take(self, N)
 	local ret = {}
 	for i = 1, N do
 		local c = self.la[self.t.index + 1]
+		io.stderr:write("TAKING: " .. tostring(c) .. " : " .. next_id(self) .. "\n")
 		if not c then
 			break
 		end
@@ -183,14 +192,6 @@ function parser:pos()
 	return self.t.pos
 end
 
----gets the next available token id
----@return number
-local function next_id(self)
-	local x = peek(self)
-	return x and x.id or self.tokenid
-end
-parser.next_id = next_id
-
 ---consumes tokens until one with the specified id or larger is encountered
 ---@param id number
 function parser:take_until(id)
@@ -208,19 +209,23 @@ end
 local function begin(self)
 	self.tc = self.tc + 1
 	self.ts[self.tc] = copy_transaction(self.t)
+	io.stderr:write("BEGIN: " .. self.tc .. " : " .. next_id(self) .. "\n")
 end
 parser.begin = begin
 
 ---undoes a parser transaction. must be paired with a preceding call to begin
 ---@param self parser
 local function undo(self)
+	io.stderr:write("UNDO: " .. self.tc)
 	self.t, self.ts[self.tc], self.tc = self.ts[self.tc], nil, self.tc - 1
+	io.stderr:write(" : " .. next_id(self) .. "\n")
 end
 parser.undo = undo
 
 ---commits a parser transaction. must be paired with a preceding call to begin
 ---@param self parser
 local function commit(self)
+	io.stderr:write("COMMIT: " .. self.tc .. " : " .. next_id(self) .. "\n")
 	self.ts[self.tc], self.tc = nil, self.tc - 1
 	normalize(self)
 	if self.tc == 0 and self.on_flush then
