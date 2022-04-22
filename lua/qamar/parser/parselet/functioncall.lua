@@ -84,12 +84,14 @@ return function(self, parser, left, tok)
 	then
 		local sname, arglist, right = false, nil, nil
 		if tok.type == tlparen then
-			local args = explist(parser) or setmetatable({}, mtempty)
-			if peek(parser) then
-				local rparen = take(parser)
-				if rparen.type == trparen then
-					arglist = args
-					right = rparen.pos.right
+			if left.pos.right.row == tok.pos.left.row then
+				local args = explist(parser) or setmetatable({}, mtempty)
+				if peek(parser) then
+					local rparen = take(parser)
+					if rparen.type == trparen then
+						arglist = args
+						right = rparen.pos.right
+					end
 				end
 			end
 		elseif tok.type == tlbrace then
