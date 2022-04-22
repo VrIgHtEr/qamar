@@ -24,9 +24,9 @@ local begin = p.begin
 local undo = p.undo
 local commit = p.commit
 local expression
-expression = function(self)
+expression = function(self, ...)
 	expression = require("qamar.parser.production.expression").parser
-	return expression(self)
+	return expression(self, ...)
 end
 
 ---parselet that consumes a subexpression

@@ -46,9 +46,9 @@ local MT = {
 }
 
 local expression
-expression = function(self)
+expression = function(self, ...)
 	expression = require("qamar.parser.production.expression").parser
-	return expression(self)
+	return expression(self, ...)
 end
 
 ---parselet that consumes a prefix expression

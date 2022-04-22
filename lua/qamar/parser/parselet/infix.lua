@@ -75,9 +75,9 @@ local MT = {
 }
 
 local expression
-expression = function(self)
+expression = function(self, ...)
 	expression = require("qamar.parser.production.expression").parser
-	return expression(self)
+	return expression(self, ...)
 end
 
 ---parselet to consume an infix expression
@@ -87,7 +87,8 @@ end
 ---@param tok token
 ---@return node_infix|nil
 return function(self, parser, left, tok)
-	local right = expression(parser, self.precedence - (self.right_associative and 1 or 0))
+	local subprec = self.precedence - (self.right_associative and 1 or 0)
+	local right = expression(parser, subprec)
 	if not right then
 		return nil
 	end
