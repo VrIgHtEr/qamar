@@ -16,10 +16,11 @@ local undo = p.undo
 local begintake = p.begintake
 local tkw_function = token.kw_function
 local nstat_func = n.stat_func
-local N = require("qamar.parser.node")
+local N = require("qamar.parser.node").new
 local range = require("qamar.util.range")
 
 local mt = {
+	__index = require("qamar.parser.node"),
 	---@param s node_func
 	---@return string
 	__tostring = function(s)

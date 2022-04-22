@@ -3,7 +3,7 @@
 
 local config, token, node = require("qamar.config"), require("qamar.lexer.types"), require("qamar.parser.types")
 local tconcat = require("qamar.util.table").tconcat
-local N = require("qamar.parser.node_expression")
+local N = require("qamar.parser.node_expression").new
 local range = require("qamar.util.range")
 
 local token_node_mapping = {
@@ -14,6 +14,7 @@ local token_node_mapping = {
 }
 
 local MT = {
+	__index = require("qamar.parser.node_expression"),
 	---@param self node_prefix
 	---@return string
 	__tostring = function(self)

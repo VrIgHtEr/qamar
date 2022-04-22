@@ -11,6 +11,7 @@ local parlist = require("qamar.parser.production.parlist").parser
 local block = require("qamar.parser.production.block").parser
 
 local mt = {
+	__index = require("qamar.parser.node"),
 	---@param self node_funcbody
 	---@return string
 	__tostring = function(self)
@@ -33,7 +34,7 @@ local tlparen = token.lparen
 local trparen = token.rparen
 local tkw_end = token.kw_end
 local nfuncbody = n.funcbody
-local N = require("qamar.parser.node")
+local N = require("qamar.parser.node").new
 local range = require("qamar.util.range")
 
 local M = {}

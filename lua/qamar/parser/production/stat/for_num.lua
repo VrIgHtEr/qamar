@@ -13,10 +13,11 @@ local tinsert = require("qamar.util.table").tinsert
 local name = require("qamar.parser.production.name").parser
 local expression = require("qamar.parser.production.expression").parser
 local block = require("qamar.parser.production.block").parser
-local N = require("qamar.parser.node")
+local N = require("qamar.parser.node").new
 local range = require("qamar.util.range")
 
 local mt = {
+	__index = require("qamar.parser.node"),
 	---@param s node_for_num
 	---@return string
 	__tostring = function(s)

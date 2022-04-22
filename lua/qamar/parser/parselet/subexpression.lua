@@ -3,10 +3,11 @@
 
 local token, node = require("qamar.lexer.types"), require("qamar.parser.types")
 local tconcat = require("qamar.util.table").tconcat
-local N = require("qamar.parser.node_expression")
+local N = require("qamar.parser.node_expression").new
 local range = require("qamar.util.range")
 
 local MT = {
+	__index = require("qamar.parser.node_expression"),
 	---@param self node_subexpression
 	---@return string
 	__tostring = function(self)

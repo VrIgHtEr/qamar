@@ -10,10 +10,11 @@ local vararg = require("qamar.parser.production.vararg").parser
 local ipairs = ipairs
 local nparlist = n.parlist
 local tcomma = token.comma
-local N = require("qamar.parser.node")
+local N = require("qamar.parser.node").new
 local range = require("qamar.util.range")
 
 local mt = {
+	__index = require("qamar.parser.node"),
 	---@param self node_parlist
 	---@return string
 	__tostring = function(self)

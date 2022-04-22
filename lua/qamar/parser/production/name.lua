@@ -3,9 +3,10 @@
 
 local token = require("qamar.lexer.types")
 local n = require("qamar.parser.types")
-local N = require("qamar.parser.node")
+local N = require("qamar.parser.node").new
 
 local mt = {
+	__index = require("qamar.parser.node"),
 	---@param self node_name
 	---@return string
 	__tostring = function(self)

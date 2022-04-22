@@ -21,10 +21,11 @@ local ntable_rawaccess = node.table_rawaccess
 local nfunctioncall = node.functioncall
 local nsubexpression = node.subexpression
 local tostring = tostring
-local N = require("qamar.parser.node_expression")
+local N = require("qamar.parser.node_expression").new
 local range = require("qamar.util.range")
 
 local MT = {
+	__index = require("qamar.parser.node_expression"),
 	---@param self node_functioncall
 	---@return string
 	__tostring = function(self)

@@ -9,6 +9,7 @@ local tinsert = require("qamar.util.table").tinsert
 local explist = require("qamar.parser.production.explist").parser
 
 local mt = {
+	__index = require("qamar.parser.node"),
 	---@param self node_retstat
 	---@return string
 	__tostring = function(self)
@@ -26,7 +27,7 @@ local take = p.take
 local tkw_return = token.kw_return
 local nretstat = n.retstat
 local tsemicolon = token.semicolon
-local N = require("qamar.parser.node")
+local N = require("qamar.parser.node").new
 local range = require("qamar.util.range")
 local M = {}
 

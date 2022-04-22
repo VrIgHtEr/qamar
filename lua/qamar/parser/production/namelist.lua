@@ -4,7 +4,7 @@ local token = require("qamar.lexer.types")
 local n = require("qamar.parser.types")
 local tconcat = require("qamar.util.table").tconcat
 local tinsert = require("qamar.util.table").tinsert
-local N = require("qamar.parser.node")
+local N = require("qamar.parser.node").new
 local range = require("qamar.util.range")
 
 local name = require("qamar.parser.production.name").parser
@@ -13,6 +13,7 @@ local nnamelist = n.namelist
 local tcomma = token.comma
 
 local mt = {
+	__index = require("qamar.parser.node"),
 	---@param self node_namelist
 	---@return string
 	__tostring = function(self)

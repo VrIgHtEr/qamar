@@ -14,6 +14,7 @@ local attribute = require("qamar.parser.production.attrib").parser
 
 local ipairs = ipairs
 local mt = {
+	__index = require("qamar.parser.node"),
 	---@param self node_attnamelist
 	---@return string
 	__tostring = function(self)
@@ -40,7 +41,7 @@ local undo = p.undo
 local nattname = node.attname
 local nattnamelist = node.attnamelist
 local tcomma = token.comma
-local N = require("qamar.parser.node")
+local N = require("qamar.parser.node").new
 local range = require("qamar.util.range")
 
 local M = {}

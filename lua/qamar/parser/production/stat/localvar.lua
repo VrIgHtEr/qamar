@@ -8,6 +8,7 @@ local tconcat = require("qamar.util.table").tconcat
 local tinsert = require("qamar.util.table").tinsert
 
 local mt = {
+	__index = require("qamar.parser.node"),
 	---@param self node_localvar
 	---@return string
 	__tostring = function(self)
@@ -30,7 +31,7 @@ local begintake = p.begintake
 local tkw_local = token.kw_local
 local nstat_localvar = n.stat_localvar
 local tassignment = token.assignment
-local N = require("qamar.parser.node")
+local N = require("qamar.parser.node").new
 local range = require("qamar.util.range")
 
 local M = {}

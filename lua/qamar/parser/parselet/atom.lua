@@ -2,7 +2,7 @@
 ---@field value string
 
 local token, node, string = require("qamar.lexer.types"), require("qamar.parser.types"), require("qamar.util.string")
-local N = require("qamar.parser.node_expression")
+local N = require("qamar.parser.node_expression").new
 
 local token_node_mapping = {
 	[token.name] = node.name,
@@ -37,6 +37,7 @@ local __tostring = {
 }
 
 local MT = {
+	__index = require("qamar.parser.node_expression"),
 	---@param self node_atom
 	---@return string
 	__tostring = function(self)

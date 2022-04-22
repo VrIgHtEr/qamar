@@ -3,10 +3,11 @@
 
 local token = require("qamar.lexer.types")
 local n = require("qamar.parser.types")
-local N = require("qamar.parser.node")
+local N = require("qamar.parser.node").new
 local range = require("qamar.util.range")
 
 local mt = {
+	__index = require("qamar.parser.node"),
 	---@param self node_label
 	---@return string
 	__tostring = function(self)

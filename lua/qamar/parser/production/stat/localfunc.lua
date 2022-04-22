@@ -9,6 +9,7 @@ local tconcat = require("qamar.util.table").tconcat
 local name = require("qamar.parser.production.name").parser
 local funcbody = require("qamar.parser.production.funcbody").parser
 local mt = {
+	__index = require("qamar.parser.node"),
 	---@param s node_localfunc
 	---@return string
 	__tostring = function(s)
@@ -25,7 +26,7 @@ local begintake = p.begintake
 local tkw_local = token.kw_local
 local tkw_function = token.kw_function
 local nstat_localfunc = n.stat_localfunc
-local N = require("qamar.parser.node")
+local N = require("qamar.parser.node").new
 local range = require("qamar.util.range")
 
 local M = {}

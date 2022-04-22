@@ -8,6 +8,7 @@ local tconcat = require("qamar.util.table").tconcat
 local name = require("qamar.parser.production.name").parser
 
 local mt = {
+	__index = require("qamar.parser.node"),
 	---@param self node_goto
 	---@return string
 	__tostring = function(self)
@@ -22,7 +23,7 @@ local undo = p.undo
 local begintake = p.begintake
 local tkw_goto = token.kw_goto
 local nstat_goto = n.stat_goto
-local N = require("qamar.parser.node")
+local N = require("qamar.parser.node").new
 local range = require("qamar.util.range")
 
 local M = {}

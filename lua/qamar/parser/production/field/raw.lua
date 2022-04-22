@@ -17,10 +17,11 @@ local tlbracket = token.lbracket
 local trbracket = token.rbracket
 local tassignment = token.assignment
 local nfield_raw = n.field_raw
-local N = require("qamar.parser.node")
+local N = require("qamar.parser.node").new
 local range = require("qamar.util.range")
 
 local mt = {
+	__index = require("qamar.parser.node"),
 	---@param self node_field_raw
 	---@return string
 	__tostring = function(self)

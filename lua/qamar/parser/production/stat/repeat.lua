@@ -5,6 +5,7 @@
 local tconcat = require("qamar.util.table").tconcat
 
 local mt = {
+	__index = require("qamar.parser.node"),
 	---@param self node_repeat
 	---@return string
 	__tostring = function(self)
@@ -26,7 +27,7 @@ local begintake = p.begintake
 local tkw_repeat = token.kw_repeat
 local tkw_until = token.kw_until
 local nstat_repeat = n.stat_repeat
-local N = require("qamar.parser.node")
+local N = require("qamar.parser.node").new
 local range = require("qamar.util.range")
 
 local M = {}

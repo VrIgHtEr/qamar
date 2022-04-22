@@ -7,6 +7,7 @@ local n = require("qamar.parser.types")
 local tconcat = require("qamar.util.table").tconcat
 
 local mt = {
+	__index = require("qamar.parser.node"),
 	---@param self node_while
 	---@return string
 	__tostring = function(self)
@@ -27,7 +28,7 @@ local tkw_while = token.kw_while
 local tkw_do = token.kw_do
 local tkw_end = token.kw_end
 local nstat_while = n.stat_while
-local N = require("qamar.parser.node")
+local N = require("qamar.parser.node").new
 local range = require("qamar.util.range")
 
 local M = {}

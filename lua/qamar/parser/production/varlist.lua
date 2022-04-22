@@ -11,6 +11,7 @@ local nvarlist = n.varlist
 local tcomma = token.comma
 
 local mt = {
+	__index = require("qamar.parser.node"),
 	---@param self node_varlist
 	---@return string
 	__tostring = function(self)
@@ -31,7 +32,7 @@ local take = p.take
 local commit = p.commit
 local undo = p.undo
 local begin = p.begin
-local N = require("qamar.parser.node")
+local N = require("qamar.parser.node").new
 local range = require("qamar.util.range")
 
 local M = {}

@@ -16,10 +16,11 @@ local undo = p.undo
 local tname = token.name
 local tassignment = token.assignment
 local nfield_name = n.field_name
-local N = require("qamar.parser.node")
+local N = require("qamar.parser.node").new
 local range = require("qamar.util.range")
 
 local mt = {
+	__index = require("qamar.parser.node"),
 	---@param self node_field_name
 	---@return string
 	__tostring = function(self)

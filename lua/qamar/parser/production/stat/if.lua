@@ -10,6 +10,7 @@ local tinsert = require("qamar.util.table").tinsert
 local expression = require("qamar.parser.production.expression").parser
 local block = require("qamar.parser.production.block").parser
 local mt = {
+	__index = require("qamar.parser.node"),
 	---@param self node_if
 	---@return string
 	__tostring = function(self)
@@ -38,7 +39,7 @@ local tkw_elseif = token.kw_elseif
 local tkw_else = token.kw_else
 local tkw_end = token.kw_end
 local nstat_if = n.stat_if
-local N = require("qamar.parser.node")
+local N = require("qamar.parser.node").new
 local range = require("qamar.util.range")
 
 local M = {}

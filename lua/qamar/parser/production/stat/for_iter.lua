@@ -8,6 +8,7 @@ local n = require("qamar.parser.types")
 local tconcat = require("qamar.util.table").tconcat
 
 local mt = {
+	__index = require("qamar.parser.node"),
 	---@param self node_for_iter
 	---@return string
 	__tostring = function(self)
@@ -30,7 +31,7 @@ local tkw_in = token.kw_in
 local tkw_do = token.kw_do
 local tkw_end = token.kw_end
 local nstat_for_iter = n.stat_for_iter
-local N = require("qamar.parser.node")
+local N = require("qamar.parser.node").new
 local range = require("qamar.util.range")
 
 local M = {}
