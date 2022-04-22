@@ -18,49 +18,13 @@ if ffi then
 	local setmetatable = setmetatable
 	local lexer = setmetatable({}, { __index = qamar_lexer })
 	ffi.cdef([[
-typedef struct {
-  size_t file_char;
-  size_t row;
-  size_t col;
-  size_t byte;
-  size_t file_byte;
-} qamar_position_t;
-
-typedef struct {
-  qamar_position_t left;
-  qamar_position_t right;
-} qamar_range_t;
-
-typedef struct {
-  size_t id;
-  int type;
-  qamar_range_t pos;
-  const char *value;
-  size_t len;
-} qamar_token_t;
-
-typedef struct {
-  size_t index;
-  size_t file_char;
-  size_t row;
-  size_t col;
-  size_t byte;
-  size_t file_byte;
-} qamar_lexer_transaction_t;
-
-typedef struct {
-  size_t skip_ws_ctr;
-  size_t len;
-  qamar_lexer_transaction_t *transactions;
-  size_t transactions_capacity;
-  size_t transactions_index;
-  qamar_lexer_transaction_t t;
-  const char data[];
-} qamar_lexer_t;
-
+typedef struct{size_t file_char,row,col,byte,file_byte;}qamar_position_t;
+typedef struct{qamar_position_t left,right;}qamar_range_t;
+typedef struct{size_t id;int type;qamar_range_t pos;const char *value;size_t len;}qamar_token_t;
+typedef struct{size_t index,file_char,row,col,byte,file_byte;}qamar_lexer_transaction_t;
+typedef struct{size_t skip_ws_ctr,len;qamar_lexer_transaction_t*transactions;size_t transactions_capacity,transactions_index;qamar_lexer_transaction_t t;const char data[];}qamar_lexer_t;
 void*malloc(const size_t);
 void free(void*);
-
 int lexer_new(qamar_lexer_t *c, const char *, const size_t);
 void lexer_destroy(qamar_lexer_t *);
 const char *lexer_peek(qamar_lexer_t *, size_t);
