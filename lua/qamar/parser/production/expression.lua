@@ -25,29 +25,12 @@ end
 
 local M = {}
 
-local ind = 0
-local function stderr(x)
-	io.stderr:write(string.rep("  ", ind) .. x)
-	io.stderr:flush()
-end
-local function indent()
-	ind = ind + 1
-end
-local function dedent()
-	if ind > 0 then
-		ind = ind - 1
-	end
-end
-
-local types = require("qamar.lexer.types")
-
 ---try to consume a lua expression
 ---@param self parser
 ---@param precedence number|nil
 ---@return node_expression|nil
 function M:parser(precedence)
 	precedence = precedence or 0
-	stderr("EXP: " .. precedence .. "\n")
 	local id = next_id(self)
 	if precedence == 0 then
 		local item = self.cache[id]
@@ -60,15 +43,11 @@ function M:parser(precedence)
 	end
 	local tok = peek(self)
 	if tok then
-		stderr("PREFIX TOKEN: " .. tostring(tok) .. " : " .. tostring(types[tok.type]))
 		local prefix = parselet.prefix[tok.type]
 		if prefix then
-			stderr(": MATCH\n")
 			begin(self)
 			take(self)
-			indent()
 			local left = prefix:parse(self, tok)
-			dedent()
 			if not left then
 				if precedence == 0 then
 					self.cache[id] = { last = next_id(self), value = false }
@@ -83,34 +62,25 @@ function M:parser(precedence)
 					if precedence == 0 then
 						self.cache[id] = { last = next_id(), value = left }
 					end
-					stderr("RETURNING: " .. tostring(left) .. ":" .. next_id(self) .. "\n")
 					return left
 				end
-				stderr("INFIX TOKEN: " .. tostring(tok) .. " : " .. tostring(types[tok.type]))
 				local infix = parselet.infix[tok.type]
 				if not infix then
-					stderr(" : MISMATCH\n")
 					commit(self)
 					if precedence == 0 then
 						self.cache[id] = { last = next_id(), value = left }
 					end
-					stderr("RETURNING: " .. tostring(left) .. ":" .. next_id(self) .. "\n")
 					return left
-				else
-					stderr(" : MATCH\n")
 				end
 				begin(self)
 				take(self)
-				indent()
 				local right = infix:parse(self, left, tok)
-				dedent()
 				if not right then
 					undo(self)
-					undo(self)
+					commit(self)
 					if precedence == 0 then
 						self.cache[id] = { last = next_id(self), value = left }
 					end
-					stderr("RETURNING: " .. tostring(left) .. ":" .. next_id(self) .. "\n")
 					return left
 				else
 					commit(self)
@@ -121,10 +91,8 @@ function M:parser(precedence)
 			if precedence == 0 then
 				self.cache[id] = { last = next_id(self), value = left }
 			end
-			stderr("RETURNING: " .. tostring(left) .. ":" .. next_id(self) .. "\n")
 			return left
 		elseif precedence == 0 then
-			stderr(": PREFIX NOT MATCHED\n")
 			self.cache[id] = { last = next_id(self), value = false }
 		end
 	elseif precedence == 0 then

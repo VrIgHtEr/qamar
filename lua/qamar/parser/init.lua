@@ -173,7 +173,6 @@ local function take(self, N)
 	local ret = {}
 	for i = 1, N do
 		local c = self.la[self.t.index + 1]
-		io.stderr:write("TAKING: " .. tostring(c) .. " : " .. next_id(self) .. "\n")
 		if not c then
 			break
 		end
@@ -209,23 +208,19 @@ end
 local function begin(self)
 	self.tc = self.tc + 1
 	self.ts[self.tc] = copy_transaction(self.t)
-	io.stderr:write("BEGIN: " .. self.tc .. " : " .. next_id(self) .. "\n")
 end
 parser.begin = begin
 
 ---undoes a parser transaction. must be paired with a preceding call to begin
 ---@param self parser
 local function undo(self)
-	io.stderr:write("UNDO: " .. self.tc)
 	self.t, self.ts[self.tc], self.tc = self.ts[self.tc], nil, self.tc - 1
-	io.stderr:write(" : " .. next_id(self) .. "\n")
 end
 parser.undo = undo
 
 ---commits a parser transaction. must be paired with a preceding call to begin
 ---@param self parser
 local function commit(self)
-	io.stderr:write("COMMIT: " .. self.tc .. " : " .. next_id(self) .. "\n")
 	self.ts[self.tc], self.tc = nil, self.tc - 1
 	normalize(self)
 	if self.tc == 0 and self.on_flush then

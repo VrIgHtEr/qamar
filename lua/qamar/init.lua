@@ -46,6 +46,9 @@ local excluded = {
 	[[/home/cedric/.local/share/nvim/env/opt/lua-language-server/meta/3rd/lovr/library/lovr.data.lua]],
 	[[/home/cedric/.local/share/nvim/env/opt/lua-language-server/meta/3rd/lovr/library/lovr.graphics.lua]],
 	[[/home/cedric/.local/share/nvim/env/opt/StyLua/tests/inputs/excess-parentheses.lua]],
+	[[/home/cedric/.local/share/nvim/env/opt/lua-language-server/3rd/EmmyLuaCodeStyle/Test/test_script/performance/10k_row_code.lua]],
+	[[/home/cedric/.local/share/nvim/env/opt/lua-language-server/3rd/EmmyLuaCodeStyle/Test/test_script/performance/30k_row_code.lua]],
+	[[/home/cedric/.local/share/nvim/env/opt/lua-language-server/3rd/EmmyLuaCodeStyle/Test/test_script/performance/100k_row_code.lua]],
 }
 
 for _, x in ipairs(excluded) do
@@ -87,9 +90,9 @@ local function parse_everything()
 		local numexcluded = 0
 		for _, filename in ipairs(files) do
 			if
-				not excluded[filename]
-				and not filename:match(".*-luau.*")
-				and filename:match("^.*wait_format/expression[.]lua$")
+				not excluded[filename] and not filename:match(".*-luau.*")
+				--and filename:match("^.*wait_format/expression[.]lua$")
+				--and filename:match("^.*/test2[.]lua$")
 			then
 				stdout("-----------------------------------------------------------------------------------")
 				stdout("PARSING FILE " .. (counter + 1) .. ": " .. filename)
