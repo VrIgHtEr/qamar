@@ -17,7 +17,7 @@ local dpath = "/home/cedric/qamar"
 local odir = dpath
 --odir = '/mnt/c/luaparse'
 local idir = "/home/cedric/.local/share/nvim"
-idir = "/home/cedric/code/c/qamar/lua"
+--idir = "/home/cedric/code/c/qamar/lua"
 local cfg = require("qamar.config")
 local function stdout(str)
 	io.stdout:write((tostring(str or "")) .. "\n")
@@ -90,10 +90,9 @@ local function parse_everything()
 		local numexcluded = 0
 		for _, filename in ipairs(files) do
 			if
-				not excluded[filename]
-				and not filename:match(".*-luau.*")
+				not excluded[filename] and not filename:match(".*-luau.*")
 				--and filename:match("^.*wait_format/expression[.]lua$")
-				and filename:match("^.*/test2[.]lua$")
+				--				and filename:match("^.*/test2[.]lua$")
 			then
 				stdout("-----------------------------------------------------------------------------------")
 				stdout("PARSING FILE " .. (counter + 1) .. ": " .. filename)
