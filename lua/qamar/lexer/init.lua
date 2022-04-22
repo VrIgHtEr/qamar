@@ -4,6 +4,8 @@ local take = lexer.take
 local sescape = require("qamar.util.string").escape
 local tkn = lexer.token
 
+---@class lexer
+
 ---tries to parse the next lua token
 ---@param self lexer
 ---@return token|nil

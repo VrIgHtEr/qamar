@@ -1,6 +1,6 @@
-if jit and jit.opt and jit.opt.start then
-	jit.opt.start(3)
-	jit.opt.start(
+if jit and jit["opt"] and jit["opt"].start then
+	jit["opt"].start(3)
+	jit["opt"].start(
 		"maxtrace=10000",
 		"hotloop=1",
 		"maxmcode=16384",
@@ -105,28 +105,26 @@ bool lexer_token(qamar_lexer_t *, qamar_token_t *);
 	local takebuf = ffi.new("size_t[1]")
 
 	local function finalizer(x)
-		local _ = C.lexer_destroy(x)
-		_ = C.free(cast(void_tp, x))
+		local _ = C["lexer_destroy"](x)
+		_ = C["free"](cast(void_tp, x))
 	end
 
 	function lexer.new(s)
 		local len = slen(s)
 		local size = len + typesize
-		local l = cast(qamar_lexer_tp, C.malloc(size))
+		local l = cast(qamar_lexer_tp, C["malloc"](size))
 		if l ~= nil then
-			local ret = C.lexer_new(l, s, len)
+			local ret = C["lexer_new"](l, s, len)
 			if ret == 0 then
-				copy(cast(void_tp, l.data), s, len)
-				--io.stdout:write("OLE!!!\n")
-				--io.stdout:flush()
+				copy(cast(void_tp, l["data"]), s, len)
 				return gc(l, finalizer)
 			end
-			C.free(cast(void_tp, l))
+			C["free"](cast(void_tp, l))
 		end
 	end
 
 	function lexer.peek(self, skip)
-		local ret = C.lexer_peek(self, skip or 0)
+		local ret = C["lexer_peek"](self, skip or 0)
 		if ret ~= nil then
 			return fstring(ret, 1)
 		end
@@ -134,17 +132,17 @@ bool lexer_token(qamar_lexer_t *, qamar_token_t *);
 
 	function lexer.take(self, amt)
 		takebuf[0] = amt or 1
-		local ret = C.lexer_take(self, takebuf)
+		local ret = C["lexer_take"](self, takebuf)
 		if ret ~= nil then
 			return fstring(ret, takebuf[0])
 		end
 	end
 
 	lexer.skipws = function(self)
-		return C.lexer_skipws(self)
+		return C["lexer_skipws"](self)
 	end
 	lexer.pos = function(self)
-		return C.lexer_pos(self)
+		return C["lexer_pos"](self)
 	end
 
 	local function create_token(t)
@@ -156,19 +154,19 @@ bool lexer_token(qamar_lexer_t *, qamar_token_t *);
 	end
 
 	function lexer.keyword(self)
-		if C.lexer_keyword(self, tokenbuf) then
+		if C["lexer_keyword"](self, tokenbuf) then
 			return create_token(tokenbuf)
 		end
 	end
 
 	function lexer.name(self)
-		if C.lexer_name(self, tokenbuf) then
+		if C["lexer_name"](self, tokenbuf) then
 			return create_token(tokenbuf)
 		end
 	end
 
 	function lexer.token(self)
-		if C.lexer_token(self, tokenbuf) then
+		if C["lexer_token"](self, tokenbuf) then
 			return create_token(tokenbuf)
 		end
 	end
