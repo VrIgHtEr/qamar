@@ -5,13 +5,25 @@
 local token = require("qamar.lexer.types")
 local n = require("qamar.parser.types")
 local tconcat = require("qamar.util.table").tconcat
+local sub = string.sub
+local trim = require("qamar.util.string").trim
 
 local mt = {
 	__index = require("qamar.parser.node"),
 	---@param self node_assign
 	---@return string
 	__tostring = function(self)
-		return tconcat({ self.target, "=", self.value })
+		local target = trim(tostring(self.target))
+		local idx = 0
+		local ret = {}
+		if sub(target, 1, 1) == "(" then
+			idx = idx + 1
+			ret[idx] = ";"
+		end
+		ret[idx + 1] = self.target
+		ret[idx + 2] = "="
+		ret[idx + 3] = self.value
+		return tconcat(ret)
 	end,
 }
 local varlist = require("qamar.parser.production.varlist").parser
