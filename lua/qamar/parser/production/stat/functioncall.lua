@@ -1,8 +1,8 @@
-local n = require 'qamar.parser.types'
+local n = require("qamar.parser.types")
 
-local expression = require('qamar.parser.production.expression').parser
+local expression = require("qamar.parser.production.expression").parser
 
-local p = require 'qamar.parser'
+local p = require("qamar.parser")
 local commit = p.commit
 local undo = p.undo
 local begin = p.begin
@@ -14,13 +14,14 @@ local M = {}
 ---@param self parser
 ---@return node_functioncall|nil
 function M:parser()
-    begin(self)
-    local ret = expression(self)
-    if ret and ret.type == nfunctioncall then
-        commit(self)
-        return ret
-    end
-    undo(self)
+	begin(self)
+	local ret = expression(self)
+	if ret and ret.type == nfunctioncall then
+		commit(self)
+		ret.is_statement = true
+		return ret
+	end
+	undo(self)
 end
 
 return M

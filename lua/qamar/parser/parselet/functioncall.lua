@@ -2,6 +2,7 @@
 ---@field left node
 ---@field args node
 ---@field self string
+---@field is_statement boolean
 
 local token, node = require("qamar.lexer.types"), require("qamar.parser.types")
 local tconcat, tinsert = require("qamar.util.table").tconcat, require("qamar.util.table").tinsert
@@ -23,13 +24,21 @@ local nsubexpression = node.subexpression
 local tostring = tostring
 local N = require("qamar.parser.node_expression").new
 local range = require("qamar.util.range")
+local trim = require("qamar.util.string").trim
+local sub = string.sub
 
 local MT = {
 	__index = require("qamar.parser.node_expression"),
 	---@param self node_functioncall
 	---@return string
 	__tostring = function(self)
-		local ret = { self.left }
+		local left = trim(tostring(self.left))
+		local ret
+		if self.is_statement and sub(left, 1, 1) == "(" then
+			ret = { ";", left }
+		else
+			ret = { left }
+		end
 		if self.self then
 			tinsert(ret, ":", self.self)
 		end

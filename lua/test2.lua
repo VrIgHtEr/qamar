@@ -1,1 +1,1 @@
-local xxx = 5..':'..7
+local xxx = 5 .. ":" .. 7
