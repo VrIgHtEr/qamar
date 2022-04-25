@@ -7,7 +7,7 @@ local N = require("qamar.parser.node").new
 local node_expression = setmetatable({}, { __index = require("qamar.parser.node") })
 
 local MTMT = {
-	__index = node_expression,
+	__index = require("qamar.parser.node"),
 }
 setmetatable(node_expression, MTMT)
 
