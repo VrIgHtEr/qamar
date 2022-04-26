@@ -259,13 +259,13 @@ bool qamar_match_string(qamar_lexer_t *s, const char *p, size_t amt,
           insert_char(0200 | ((val >> 12) & 077));
           insert_char(0200 | ((val >> 6) & 077));
           insert_char(0200 | (val & 077));
-        } else if (val <= 0x0377777777) {
+        } else if (val <= 00377777777) {
           insert_char(0370 | (val >> 24));
           insert_char(0200 | ((val >> 18) & 077));
           insert_char(0200 | ((val >> 12) & 077));
           insert_char(0200 | ((val >> 6) & 077));
           insert_char(0200 | (val & 077));
-        } else if (val <= 0x017777777777) {
+        } else if (val <= 017777777777) {
           insert_char(0374 | (val >> 30));
           insert_char(0200 | ((val >> 24) & 077));
           insert_char(0200 | ((val >> 18) & 077));
