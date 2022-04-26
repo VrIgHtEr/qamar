@@ -28,6 +28,15 @@ local nattrib = n.attrib
 
 local M = {}
 
+local function new(pos, nm)
+	local ret = N(nattrib, pos, mt)
+	ret.name = nm
+	return ret
+end
+
+M.new = new
+M.MT = mt
+
 ---try to consume a lua variable attribute
 ---@param self parser
 ---@return node_attrib|nil
@@ -51,9 +60,7 @@ function M:parser()
 	end
 
 	commit(self)
-	local ret = N(nattrib, range(less.pos.left, greater.pos.right), mt)
-	ret.name = name.value
-	return ret
+	return new(range(less.pos.left, greater.pos.right), name.value)
 end
 
 return M

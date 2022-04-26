@@ -33,11 +33,18 @@ local nblock = n.block
 
 local M = {}
 
+local function new()
+	return N(nblock, nil, mt)
+end
+
+M.new = new
+M.MT = mt
+
 ---consumes a lua block
 ---@param self parser
 ---@return node_block
 function M:parser()
-	local ret = N(nblock, nil, mt)
+	local ret = new()
 	local idx = 0
 	while true do
 		local stat = st(self)

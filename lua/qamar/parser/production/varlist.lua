@@ -37,6 +37,13 @@ local range = require("qamar.util.range")
 
 local M = {}
 
+local function new(pos)
+	return N(nvarlist, pos, mt)
+end
+
+M.new = new
+M.MT = mt
+
 ---try to consume a lua varlist
 ---@param self parser
 ---@return node_varlist|nil
@@ -44,7 +51,7 @@ function M:parser()
 	local v = var(self)
 	if v then
 		local pos = range(v.pos.left)
-		local ret = N(nvarlist, pos, mt)
+		local ret = new(pos)
 		ret[1] = v
 		local idx = 1
 		while true do

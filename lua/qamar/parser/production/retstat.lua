@@ -29,7 +29,21 @@ local nretstat = n.retstat
 local tsemicolon = token.semicolon
 local N = require("qamar.parser.node").new
 local range = require("qamar.util.range")
+
 local M = {}
+
+---creates a new retstat node
+---@param pos range
+---@param vals node_explist|nil
+---@return node_retstat
+local function new(pos, vals)
+	local ret = N(nretstat, pos, mt)
+	ret.explist = vals
+	return ret
+end
+
+M.new = new
+M.MT = mt
 
 ---try to consume a lua return statement
 ---@param self parser
@@ -39,8 +53,7 @@ function M:parser()
 	if retkw and retkw.type == tkw_return then
 		take(self)
 		local pos = range(retkw.pos.left)
-		local ret = N(nretstat, pos, mt)
-		ret.explist = explist(self)
+		local ret = new(pos, explist(self))
 		local tok = peek(self)
 		if tok and tok.type == tsemicolon then
 			take(self)

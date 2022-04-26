@@ -37,6 +37,16 @@ local undo = p.undo
 
 local M = {}
 
+---creates a new parlist node
+---@param pos range
+---@return node_parlist
+local function new(pos)
+	return N(nparlist, pos, mt)
+end
+
+M.new = new
+M.MT = mt
+
 ---try to consume a lua parameter list
 ---@param self parser
 ---@return node_parlist|nil
@@ -50,7 +60,7 @@ function M:parser()
 		v = namelist(self)
 		if v then
 			local pos = range(v.pos.left)
-			local ret = N(nparlist, pos, mt)
+			local ret = new(pos)
 			local idx = 0
 			for _, x in ipairs(v) do
 				idx = idx + 1

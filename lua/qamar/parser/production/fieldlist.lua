@@ -36,6 +36,15 @@ local begin = p.begin
 
 local M = {}
 
+---crates a new fieldlist node
+---@param pos range
+---@return node_fieldlist
+local function new(pos)
+	return N(nfieldlist, pos, mt)
+end
+M.new = new
+M.MT = mt
+
 ---try to consume a lua field list
 ---@param self parser
 ---@return node_fieldlist|nil
@@ -43,7 +52,7 @@ function M:parser()
 	local f = field(self)
 	if f then
 		local pos = range(f.pos.left)
-		local ret = N(nfieldlist, pos, mt)
+		local ret = new(pos)
 		ret[1] = f
 		local idx = 1
 		while true do

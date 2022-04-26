@@ -202,7 +202,9 @@ end
 
 function qamar.run()
 	math.randomseed(os.time())
-	parse_everything()
+	for _ = 1, 3 do
+		parse_everything()
+	end
 end
 
 return qamar

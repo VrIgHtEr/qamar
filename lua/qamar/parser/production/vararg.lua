@@ -18,6 +18,11 @@ local nvararg = n.vararg
 local N = require("qamar.parser.node").new
 
 local M = {}
+local function new(pos)
+	return N(nvararg, pos, mt)
+end
+M.new = new
+M.MT = mt
 
 ---try to consume a vararg token
 ---@param self parser
@@ -26,7 +31,7 @@ function M:parser()
 	local tok = peek(self)
 	if tok and tok.type == ttripledot then
 		take(self)
-		return N(nvararg, tok.pos, mt)
+		return new(tok.pos)
 	end
 end
 

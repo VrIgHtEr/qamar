@@ -28,6 +28,19 @@ local nlabel = n.label
 
 local M = {}
 
+---creates a new label node
+---@param pos range
+---@param nm string
+---@return node_label
+local function new(pos, nm)
+	local ret = N(nlabel, pos, mt)
+	ret.name = nm
+	return ret
+end
+
+M.new = new
+M.MT = mt
+
 ---try to consume a lua label
 ---@param self parser
 ---@return node_label|nil
@@ -51,9 +64,7 @@ function M:parser()
 	end
 
 	commit(self)
-	local ret = N(nlabel, range(left.pos.left, right.pos.right), mt)
-	ret.name = nam.value
-	return ret
+	return new(range(left.pos.left, right.pos.right), nam.value)
 end
 
 return M

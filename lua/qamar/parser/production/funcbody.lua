@@ -39,6 +39,21 @@ local range = require("qamar.util.range")
 
 local M = {}
 
+---create a new funcbody node
+---@param pos range
+---@param pars node_parlist|nil
+---@param body node_block
+---@return node_funcbody
+local function new(pos, pars, body)
+	local ret = N(nfuncbody, pos, mt)
+	ret.parameters = pars
+	ret.body = body
+	return ret
+end
+
+M.new = new
+M.MT = mt
+
 ---try to consume a lua function body
 ---@param self parser
 ---@return node_funcbody|nil
@@ -54,10 +69,7 @@ function M:parser()
 				tok = take(self)
 				if tok and tok.type == tkw_end then
 					commit(self)
-					local ret = N(nfuncbody, range(lparen.pos.left, tok.pos.right), mt)
-					ret.parameters = pars
-					ret.body = body
-					return ret
+					return new(range(lparen.pos.left, tok.pos.right), pars, body)
 				end
 			end
 		end

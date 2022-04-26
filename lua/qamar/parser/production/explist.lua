@@ -36,13 +36,21 @@ local undo = p.undo
 local begin = p.begin
 
 local M = {}
+
+local function new(pos)
+	return N(nexplist, pos, mt)
+end
+M.new = new
+M.MT = mt
+
 ---try to consume an expression list
 ---@param self parser
 ---@return node_explist|nil
 function M:parser()
 	local v = expression(self)
 	if v then
-		local ret = N(nexplist, range(v.pos.left), mt)
+		local pos = range(v.pos.left)
+		local ret = new(pos)
 		ret[1] = v
 		local idx = 1
 		while true do
@@ -62,8 +70,7 @@ function M:parser()
 				break
 			end
 		end
-
-		ret.pos.right = ret[idx].pos.right
+		pos.right = ret[idx].pos.right
 		return ret
 	end
 end

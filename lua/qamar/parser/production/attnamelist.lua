@@ -45,6 +45,19 @@ local N = require("qamar.parser.node").new
 local range = require("qamar.util.range")
 
 local M = {}
+local function new(pos)
+	return N(nattnamelist, pos, mt)
+end
+
+local function new_attname(pos, nm, att)
+	local ret = N(nattname, pos)
+	ret.name, ret.attrib = nm, att
+	return ret
+end
+
+M.new = new
+M.new_attname = new_attname
+M.MT = mt
 
 ---try to consume a lua name attribute list
 ---@param self parser
@@ -53,10 +66,8 @@ function M:parser()
 	local n = name(self)
 	if n then
 		local a = attribute(self)
-		local tmp = N(nattname, range(n.pos.left, (a and a.pos.right or n.pos.right)))
-		tmp.name, tmp.attrib = n, a
-		local ret = N(nattnamelist, range(n.pos.left), mt)
-		ret[1] = tmp
+		local ret = new(range(n.pos.left))
+		ret[1] = new_attname(range(n.pos.left, (a and a.pos.right or n.pos.right)), n, a)
 		local idx = 1
 		while true do
 			local t = peek(self)
@@ -70,9 +81,7 @@ function M:parser()
 				a = attribute(self)
 				commit(self)
 				idx = idx + 1
-				local item = N(nattname, range(n.pos.left, (a and a.pos.right or n.pos.right)))
-				item.name, item.attrib = n, a
-				ret[idx] = item
+				ret[idx] = new_attname(range(n.pos.left, (a and a.pos.right or n.pos.right)), n, a)
 			else
 				undo(self)
 				break

@@ -37,6 +37,16 @@ local begin = p.begin
 
 local M = {}
 
+---creates a new namelist node
+---@param pos range
+---@return node_namelist
+local function new(pos)
+	return N(nnamelist, pos, mt)
+end
+
+M.new = new
+M.MT = mt
+
 ---try to consume a lua name list
 ---@param self parser
 ---@return node_namelist|nil
@@ -44,7 +54,7 @@ function M:parser()
 	local v = name(self)
 	if v then
 		local pos = range(v.pos.left)
-		local ret = N(nnamelist, pos, mt)
+		local ret = new(pos)
 		ret[1] = v
 		local idx = 1
 		while true do

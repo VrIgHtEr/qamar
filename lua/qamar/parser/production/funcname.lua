@@ -42,6 +42,15 @@ local tcolon = token.colon
 
 local M = {}
 
+---creates a new funcname node
+---@param pos range
+---@return node_funcname
+local function new(pos)
+	return N(nfuncname, pos, mt)
+end
+
+M.new = new
+M.MT = mt
 ---try to consume a lua funcname
 ---@param self parser
 ---@return node_funcname
@@ -49,7 +58,7 @@ function M:parser()
 	local v = name(self)
 	if v then
 		local pos = range(v.pos.left)
-		local ret = N(nfuncname, pos, mt)
+		local ret = new(pos)
 		ret[1] = v
 		local idx = 1
 		while true do
