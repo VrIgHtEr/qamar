@@ -195,6 +195,12 @@ do
 		end)
 	end
 
+	function simulation:buffer_gate(name)
+		return self:add_component(name, 1, 1, function(_, a)
+			return a
+		end)
+	end
+
 	---@class sample
 	---@field time number
 	---@field value signal
@@ -320,8 +326,9 @@ do
 	end
 
 	function simulation:step()
-		local print = function(_) end
-		print("---------------------------------------------------------")
+		--local prt = function(_) end
+		--prt("---------------------------------------------------------")
+		local maxstep = 1000000
 
 		---@type table<string,component>
 		local dirty = {}
@@ -335,7 +342,7 @@ do
 		if count == 0 then
 			error("must have at least one component with zero inputs")
 		end
-		print(self.time)
+		--prt(self.time)
 		repeat
 			local nextdirty = {}
 			local nextcount = 0
@@ -352,7 +359,7 @@ do
 						add_trace(self, output.name, self.time, value)
 						output.value = value
 						output.timestamp = self.time
-						print(output.timestamp .. ":" .. output.name .. ":" .. output.value)
+						--				prt(output.timestamp .. ":" .. output.name .. ":" .. output.value)
 						for _, conn in pairs(output.connections) do
 							if not nextdirty[conn.b.component.name] then
 								nextdirty[conn.b.component.name] = conn.b.component
@@ -367,14 +374,14 @@ do
 									add_trace(self, conn.b.name, self.time, value)
 								end
 								conn.b.value = value
-								print(conn.b.timestamp .. ":" .. conn.b.name .. ":" .. conn.b.value)
+								--					prt(conn.b.timestamp .. ":" .. conn.b.name .. ":" .. conn.b.value)
 							else
 								conn.b.timestamp = self.time
 								if conn.b.value ~= value then
 									if conn.b.value == signal.unknown or conn.b.value == signal.z then
 										add_trace(self, conn.b.name, self.time, value)
 										conn.b.value = value
-										print(conn.b.timestamp .. ":" .. conn.b.name .. ":" .. conn.b.value)
+										--							prt(conn.b.timestamp .. ":" .. conn.b.name .. ":" .. conn.b.value)
 									elseif
 										conn.b.value == signal.low and value == signal.high
 										or value == signal.low and conn.b.value == signal.high
@@ -383,7 +390,7 @@ do
 									else
 										conn.b.value = value
 										add_trace(self, conn.b.name, self.time, value)
-										print(conn.b.timestamp .. ":" .. conn.b.name .. ":" .. conn.b.value)
+										--							prt(conn.b.timestamp .. ":" .. conn.b.name .. ":" .. conn.b.value)
 									end
 								end
 							end
@@ -393,6 +400,10 @@ do
 			end
 			dirty = nextdirty
 			count = nextcount
+			maxstep = maxstep - 1
+			if maxstep == 0 then
+				error("circuit failed to stabilize")
+			end
 		until count == 0
 		return self
 	end
@@ -403,39 +414,56 @@ do
 
 	local sim = simulation.new()
 
-	local base = 32
+	local base = 20
 	sim
-		:or_gate("top_or")
-		:or_gate("bottom_or")
-		:not_gate("top_not")
-		:not_gate("bottom_not")
-		:add_component("RESET", 0, 1, function(ts)
-			local mod = ts % (base * 4)
-			return (mod < base) and signal.high or signal.low
+		:add_component("CLOCK", 0, 1, function(ts)
+			if ts < 5 then
+				return signal.low
+			end
+			ts = ts - 5
+			ts = ts % base
+			return (ts < base / 2) and signal.high or signal.low
 		end)
-		:add_component("SET", 0, 1, function(ts)
-			local mod = ts % (base * 4)
-			return mod >= (base * 2) and mod < (base * 3) and signal.high or signal.low
+		:add_component("DATA", 0, 1, function(ts)
+			if ts < 5 then
+				return signal.low
+			end
+			ts = ts - 5
+			ts = (ts / 2 + 1) % base
+			if ts >= base / 4 and ts < base / 4 * 3 then
+				return signal.high
+			else
+				return signal.low
+			end
 		end)
-		:add_component("OUTPUT", 1, 0, function()
-			--	print(ts .. ":Q:" .. v)
-		end)
-		:add_component("INVERTED_OUTPUT", 1, 0, function()
-			--	print(ts .. ":_Q:" .. v)
-		end)
-		:connect("top_or", 1, "top_not", 1)
-		:connect("bottom_or", 1, "bottom_not", 1)
-		:connect("bottom_not", 1, "top_or", 2)
-		:connect("top_not", 1, "bottom_or", 1)
-		:connect("RESET", 1, "top_or", 1)
-		:connect("SET", 1, "bottom_or", 2)
-		:connect("top_not", 1, "OUTPUT", 1)
-		:connect("bottom_not", 1, "INVERTED_OUTPUT", 1)
-		:not_gate("YYYYY")
-		:and_gate("ZZZZZ")
-		:connect("SET", 1, "YYYYY", 1)
-		:connect("SET", 1, "ZZZZZ", 1)
-		:connect("YYYYY", 1, "ZZZZZ", 2)
+		:buffer_gate("OUTPUT")
+		:not_gate("h")
+		:buffer_gate("j")
+		:buffer_gate("k")
+		:and_gate("i")
+		:connect("CLOCK", 1, "h", 1)
+		:connect("CLOCK", 1, "i", 1)
+		:connect("h", 1, "j", 1)
+		:connect("h", 1, "i", 2)
+		:not_gate("g")
+		:connect("DATA", 1, "g", 1)
+		:and_gate("e")
+		:connect("DATA", 1, "e", 1)
+		:connect("i", 1, "e", 2)
+		:and_gate("f")
+		:connect("DATA", 1, "f", 1)
+		:connect("g", 1, "f", 2)
+		:or_gate("a")
+		:connect("e", 1, "a", 1)
+		:or_gate("b")
+		:connect("f", 1, "b", 2)
+		:not_gate("c")
+		:connect("a", 1, "c", 1)
+		:not_gate("d")
+		:connect("b", 1, "d", 1)
+		:connect("c", 1, "b", 1)
+		:connect("d", 1, "a", 2)
+		:connect("d", 1, "OUTPUT", 1)
 
 	for _ = 1, base * 4 do
 		sim:step()
@@ -465,10 +493,6 @@ do
 		max = math.max(max, x:len())
 	end
 	max = max + 5
-	--	for i, x in ipairs(traces) do
-	--		local l = x:len()
-	--		traces[i] = x .. string.rep(x:sub(l, l), max - l)
-	--	end
 
 	table.sort(traces)
 	local first = true
