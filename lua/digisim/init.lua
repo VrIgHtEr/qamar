@@ -432,7 +432,7 @@ do
 
 	local sim = simulation.new()
 
-	local base = 32
+	local base = 40
 	sim
 		:add_component("CLK", 0, 1, function(ts)
 			ts = ts % base
@@ -452,6 +452,9 @@ do
 			end
 			return signal.high
 		end)
+		:buffer_gate("x1")
+		:buffer_gate("x2")
+		:buffer_gate("x3")
 		:not_gate("nt")
 		:not_gate("nd")
 		:not_gate("nr")
@@ -468,7 +471,6 @@ do
 		:connect("A_RST", 1, "s", 1)
 		:connect("nr", 1, "r", 2)
 		:connect("CLK", 1, "nt", 1)
-		:connect("nt", 1, "ct", 1)
 		:connect("CLK", 1, "ct", 2)
 		:connect("ct", 1, "cr", 1)
 		:connect("ct", 1, "cs", 2)
@@ -483,6 +485,10 @@ do
 		:connect("as", 1, "Q_", 1)
 		:connect("Q", 1, "as", 1)
 		:connect("Q_", 1, "ar", 2)
+		:connect("nt", 1, "x1", 1)
+		:connect("x1", 1, "x2", 1)
+		:connect("x2", 1, "x3", 1)
+		:connect("x3", 1, "ct", 1)
 
 	for _ = 1, base * 4 do
 		sim:step()
