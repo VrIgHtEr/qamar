@@ -3,6 +3,7 @@
 ---@field connections table<string,connection>
 ---@field queue deque
 ---@field time number
+---@field trace table<string,sample[]>
 local simulation = {}
 local queue = require("qamar.util.deque")
 
@@ -17,14 +18,14 @@ local signal = {
 }
 
 do
+	---@class pin
+	---@field name string
+	---@field value signal
+	---@field timestamp number
+	---@field component component
+	---@field connections table<string,connection>
 	local pin = {}
 	do
-		---@class pin
-		---@field name string
-		---@field value signal
-		---@field timestamp number
-		---@field component component
-		---@field connections table<string,connection>
 		local MT = { __index = pin }
 
 		function pin.new(name, comp)
@@ -39,13 +40,13 @@ do
 		end
 	end
 
+	---@class component
+	---@field name string
+	---@field inputs pin[]
+	---@field outputs pin[]
+	---@field step function
 	local component = {}
 	do
-		---@class component
-		---@field name string
-		---@field inputs pin[]
-		---@field outputs pin[]
-		---@field step function
 		local MT = { __index = component }
 
 		function component.new(name, inputs, outputs, handler)
@@ -97,12 +98,13 @@ do
 			return ret
 		end
 	end
+
+	---@class connection
+	---@field name string
+	---@field a pin
+	---@field b pin
 	local connection = {}
 	do
-		---@class connection
-		---@field name string
-		---@field a pin
-		---@field b pin
 		local MT = { __index = connection }
 
 		---@param name string
@@ -130,6 +132,7 @@ do
 			time = 0,
 			next_connection_id = 0,
 			queue = queue(),
+			trace = {},
 		}, MT)
 		return ret
 	end
@@ -192,7 +195,132 @@ do
 		end)
 	end
 
+	---@class sample
+	---@field time number
+	---@field value signal
+
+	local function add_trace(sim, name, time, sig)
+		local trace = sim.trace[name]
+		if not trace then
+			trace = {}
+			sim.trace[name] = trace
+		end
+		table.insert(trace, { time = time, value = sig })
+	end
+
+	local chars = {
+		unknown = "░",
+		full_z = "█",
+		full_low = "▄",
+		full_high = "▀",
+		z_low = "▚",
+		z_high = "▞",
+		left_half = "▌",
+		low_high = "▛",
+		high_low = "▙",
+	}
+
+	function simulation:get_trace(name, maxtime)
+		local trace = self.trace[name]
+		if trace then
+			maxtime = maxtime or trace[#trace].time + 1
+			local ret = {}
+			local char = chars.unknown
+			local sig = signal.unknown
+			local time = 0
+			for _, t in ipairs(trace) do
+				while time < t.time do
+					time = time + 1
+					if sig == signal.unknown then
+						char = chars.unknown
+					elseif sig == signal.z then
+						char = chars.full_z
+					elseif sig == signal.low then
+						char = chars.full_low
+					elseif sig == signal.high then
+						char = chars.full_high
+					else
+						error("invalid value")
+					end
+					ret[time] = char
+				end
+				time = time + 1
+				if sig == signal.unknown then
+					if t.value == signal.unknown then
+						char = chars.unknown
+					elseif t.value == signal.z then
+						char = chars.full_z
+					elseif t.value == signal.low then
+						char = chars.full_low
+					elseif t.value == signal.high then
+						char = chars.full_high
+					else
+						error("invalid value")
+					end
+				elseif sig == signal.z then
+					if t.value == signal.unknown then
+						char = chars.unknown
+					elseif t.value == signal.z then
+						char = chars.full_z
+					elseif t.value == signal.low then
+						char = chars.z_low
+					elseif t.value == signal.high then
+						char = chars.z_high
+					else
+						error("invalid value")
+					end
+				elseif sig == signal.low then
+					if t.value == signal.unknown then
+						char = chars.unknown
+					elseif t.value == signal.z then
+						char = chars.left_half
+					elseif t.value == signal.low then
+						char = chars.full_low
+					elseif t.value == signal.high then
+						char = chars.low_high
+					else
+						error("invalid value")
+					end
+				elseif sig == signal.high then
+					if t.value == signal.unknown then
+						char = chars.unknown
+					elseif t.value == signal.z then
+						char = chars.left_half
+					elseif t.value == signal.low then
+						char = chars.high_low
+					elseif t.value == signal.high then
+						char = chars.full_high
+					else
+						error("invalid value")
+					end
+				else
+					error("invalid value")
+				end
+				sig = t.value
+				ret[time] = char
+			end
+			while time < maxtime do
+				time = time + 1
+				if sig == signal.unknown then
+					char = chars.unknown
+				elseif sig == signal.z then
+					char = chars.full_z
+				elseif sig == signal.low then
+					char = chars.full_low
+				elseif sig == signal.high then
+					char = chars.full_high
+				else
+					error("invalid value")
+				end
+				ret[time] = char
+			end
+			return table.concat(ret)
+		end
+		return ""
+	end
+
 	function simulation:step()
+		local print = function(_) end
 		print("---------------------------------------------------------")
 
 		---@type table<string,component>
@@ -211,6 +339,7 @@ do
 		repeat
 			local nextdirty = {}
 			local nextcount = 0
+			self.time = self.time + 1
 			for _, c in pairs(dirty) do
 				local inputs = {}
 				for i, x in ipairs(c.inputs) do
@@ -220,37 +349,42 @@ do
 				for i, value in ipairs(outputs) do
 					local output = c.outputs[i]
 					if output.value ~= value then
+						add_trace(self, output.name, self.time, value)
 						output.value = value
-						output.timestamp = self.time + 1
+						output.timestamp = self.time
 						print(output.timestamp .. ":" .. output.name .. ":" .. output.value)
 						for _, conn in pairs(output.connections) do
 							if not nextdirty[conn.b.component.name] then
 								nextdirty[conn.b.component.name] = conn.b.component
 								nextcount = nextcount + 1
 							end
-							if conn.b.timestamp > self.time + 1 then
+							if conn.b.timestamp > self.time then
 								error("future time")
 							end
 							if conn.b.timestamp <= self.time then
-								conn.b.timestamp = self.time + 1
+								conn.b.timestamp = self.time
+								if conn.b.value ~= value then
+									add_trace(self, conn.b.name, self.time, value)
+								end
 								conn.b.value = value
 								print(conn.b.timestamp .. ":" .. conn.b.name .. ":" .. conn.b.value)
 							else
-								conn.b.timestamp = self.time + 1
-								if
-									conn.b.value == value
-									or conn.b.value == signal.unknown
-									or conn.b.value == signal.z
-								then
-									conn.b.value = value
-								elseif
-									conn.b.value == signal.low and value == signal.high
-									or value == signal.low and conn.b.value == signal.high
-								then
-									error("mixed signals!!!")
-								else
-									conn.b.value = value
-									print(conn.b.timestamp .. ":" .. conn.b.name .. ":" .. conn.b.value)
+								conn.b.timestamp = self.time
+								if conn.b.value ~= value then
+									if conn.b.value == signal.unknown or conn.b.value == signal.z then
+										add_trace(self, conn.b.name, self.time, value)
+										conn.b.value = value
+										print(conn.b.timestamp .. ":" .. conn.b.name .. ":" .. conn.b.value)
+									elseif
+										conn.b.value == signal.low and value == signal.high
+										or value == signal.low and conn.b.value == signal.high
+									then
+										error("mixed signals!!!")
+									else
+										conn.b.value = value
+										add_trace(self, conn.b.name, self.time, value)
+										print(conn.b.timestamp .. ":" .. conn.b.name .. ":" .. conn.b.value)
+									end
 								end
 							end
 						end
@@ -259,7 +393,6 @@ do
 			end
 			dirty = nextdirty
 			count = nextcount
-			self.time = self.time + 1
 		until count == 0
 		return self
 	end
@@ -270,7 +403,7 @@ do
 
 	local sim = simulation.new()
 
-	local base = 8
+	local base = 32
 	sim
 		:or_gate("top_or")
 		:or_gate("bottom_or")
@@ -298,38 +431,55 @@ do
 		:connect("SET", 1, "bottom_or", 2)
 		:connect("top_not", 1, "OUTPUT", 1)
 		:connect("bottom_not", 1, "INVERTED_OUTPUT", 1)
-		:step()
-		:step()
-		:step()
-		:step()
-		:step()
-		:step()
-		:step()
-		:step()
-		:step()
-		:step()
-		:step()
-		:step()
-		:step()
-		:step()
-		:step()
-		:step()
-		:step()
-		:step()
-		:step()
-		:step()
-		:step()
-		:step()
-		:step()
-		:step()
-		:step()
-		:step()
-		:step()
-		:step()
-		:step()
-		:step()
-		:step()
-		:step()
+		:not_gate("YYYYY")
+		:and_gate("ZZZZZ")
+		:connect("SET", 1, "YYYYY", 1)
+		:connect("SET", 1, "ZZZZZ", 1)
+		:connect("YYYYY", 1, "ZZZZZ", 2)
+
+	for _ = 1, base * 4 do
+		sim:step()
+	end
+
+	local max = 0
+	local maxtime = 0
+	for k, t in pairs(sim.trace) do
+		if k:sub(1, 1) ~= "[" then
+			max = math.max(max, k:len())
+			maxtime = math.max(maxtime, t[#t].time)
+		end
+	end
+	maxtime = maxtime + base
+	max = max + 2
+	local traces = {}
+	for k in pairs(sim.trace) do
+		if k:sub(1, 1) ~= "[" then
+			table.insert(
+				traces,
+				table.concat({ k, ": ", string.rep(" ", max - (k:len() + 2)), sim:get_trace(k, maxtime) })
+			)
+		end
+	end
+	max = 0
+	for _, x in ipairs(traces) do
+		max = math.max(max, x:len())
+	end
+	max = max + 5
+	--	for i, x in ipairs(traces) do
+	--		local l = x:len()
+	--		traces[i] = x .. string.rep(x:sub(l, l), max - l)
+	--	end
+
+	table.sort(traces)
+	local first = true
+	for _, x in ipairs(traces) do
+		if first then
+			first = false
+		else
+			print("---")
+		end
+		print(x)
+	end
 end
 
 return simulation
