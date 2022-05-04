@@ -1,14 +1,14 @@
 if jit and jit["opt"] and jit["opt"].start then
 	jit["opt"].start(3)
 	jit["opt"].start(
-		"maxtrace=10000",
+		"maxtrace=1000000",
 		"hotloop=1",
-		"maxmcode=16384",
+		"maxmcode=262144",
 		"hotexit=1",
 		"maxirconst=10000",
-		"maxrecord=100000",
-		"maxside=10000",
-		"maxsnap=10000"
+		"maxrecord=1000000",
+		"maxside=100000",
+		"maxsnap=100000"
 	)
 end
 

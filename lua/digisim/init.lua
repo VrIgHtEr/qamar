@@ -76,7 +76,7 @@ do
 				local parts = { ... }
 				for i = 1, #parts do
 					if parts[i] == signal.unknown or parts[i] == signal.z then
-						parts[i] = math.random(0, 1)
+						parts[i] = signal.low -- math.random(0, 1)
 					end
 				end
 				local o = { handler(timestamp, unpack(parts)) }
@@ -326,27 +326,31 @@ do
 	end
 
 	function simulation:step()
-		--local prt = function(_) end
-		--prt("---------------------------------------------------------")
-		local maxstep = 1000000
+		local prt = print --function(_) end
+		prt("---------------------------------------------------------")
+		local maxstep = 10000
 
 		---@type table<string,component>
 		local dirty = {}
+		local roots = {}
 		local count = 0
 		for name, x in pairs(self.components) do
 			if #x.inputs == 0 then
-				dirty[name] = x
+				roots[name] = x
 				count = count + 1
 			end
 		end
 		if count == 0 then
 			error("must have at least one component with zero inputs")
 		end
-		--prt(self.time)
+		prt(self.time)
 		repeat
 			local nextdirty = {}
 			local nextcount = 0
 			self.time = self.time + 1
+			for k, v in pairs(roots) do
+				dirty[k] = v
+			end
 			for _, c in pairs(dirty) do
 				local inputs = {}
 				for i, x in ipairs(c.inputs) do
@@ -359,7 +363,7 @@ do
 						add_trace(self, output.name, self.time, value)
 						output.value = value
 						output.timestamp = self.time
-						--				prt(output.timestamp .. ":" .. output.name .. ":" .. output.value)
+						prt(output.timestamp .. ":" .. vim.inspect(inputs) .. ":" .. output.name .. ":" .. output.value)
 						for _, conn in pairs(output.connections) do
 							if not nextdirty[conn.b.component.name] then
 								nextdirty[conn.b.component.name] = conn.b.component
@@ -374,14 +378,14 @@ do
 									add_trace(self, conn.b.name, self.time, value)
 								end
 								conn.b.value = value
-								--					prt(conn.b.timestamp .. ":" .. conn.b.name .. ":" .. conn.b.value)
+								prt(string.rep(" ", tostring(conn.b.timestamp):len()) .. " " .. conn.b.name)
 							else
 								conn.b.timestamp = self.time
 								if conn.b.value ~= value then
 									if conn.b.value == signal.unknown or conn.b.value == signal.z then
 										add_trace(self, conn.b.name, self.time, value)
 										conn.b.value = value
-										--							prt(conn.b.timestamp .. ":" .. conn.b.name .. ":" .. conn.b.value)
+										prt(string.rep(" ", tostring(conn.b.timestamp):len()) .. " " .. conn.b.name)
 									elseif
 										conn.b.value == signal.low and value == signal.high
 										or value == signal.low and conn.b.value == signal.high
@@ -390,10 +394,23 @@ do
 									else
 										conn.b.value = value
 										add_trace(self, conn.b.name, self.time, value)
-										--							prt(conn.b.timestamp .. ":" .. conn.b.name .. ":" .. conn.b.value)
+										prt(string.rep(" ", tostring(conn.b.timestamp):len()) .. " " .. conn.b.name)
 									end
 								end
 							end
+						end
+					else
+						if #output.component.inputs > 0 then
+							prt(
+								self.time
+									.. ":"
+									.. vim.inspect(inputs)
+									.. ":"
+									.. output.name
+									.. ":"
+									.. output.value
+									.. ":SAME"
+							)
 						end
 					end
 				end
@@ -411,59 +428,61 @@ end
 
 do
 	vim.api.nvim_exec("mes clear", true)
+	local start = 8
 
 	local sim = simulation.new()
 
-	local base = 20
+	local base = 32
 	sim
-		:add_component("CLOCK", 0, 1, function(ts)
-			if ts < 5 then
-				return signal.low
-			end
-			ts = ts - 5
+		:add_component("CLK", 0, 1, function(ts)
 			ts = ts % base
 			return (ts < base / 2) and signal.high or signal.low
 		end)
 		:add_component("DATA", 0, 1, function(ts)
-			if ts < 5 then
-				return signal.low
-			end
-			ts = ts - 5
 			ts = (ts / 2 + 1) % base
 			if ts >= base / 4 and ts < base / 4 * 3 then
-				return signal.high
-			else
 				return signal.low
+			else
+				return signal.high
 			end
 		end)
-		:buffer_gate("OUTPUT")
-		:not_gate("h")
-		:buffer_gate("j")
-		:buffer_gate("k")
-		:and_gate("i")
-		:connect("CLOCK", 1, "h", 1)
-		:connect("CLOCK", 1, "i", 1)
-		:connect("h", 1, "j", 1)
-		:connect("h", 1, "i", 2)
-		:not_gate("g")
-		:connect("DATA", 1, "g", 1)
-		:and_gate("e")
-		:connect("DATA", 1, "e", 1)
-		:connect("i", 1, "e", 2)
-		:and_gate("f")
-		:connect("DATA", 1, "f", 1)
-		:connect("g", 1, "f", 2)
-		:or_gate("a")
-		:connect("e", 1, "a", 1)
-		:or_gate("b")
-		:connect("f", 1, "b", 2)
-		:not_gate("c")
-		:connect("a", 1, "c", 1)
-		:not_gate("d")
-		:connect("b", 1, "d", 1)
-		:connect("c", 1, "b", 1)
-		:connect("d", 1, "a", 2)
-		:connect("d", 1, "OUTPUT", 1)
+		:add_component("A_RST", 0, 1, function(time)
+			if time < start then
+				return signal.low
+			end
+			return signal.high
+		end)
+		:not_gate("nt")
+		:not_gate("nd")
+		:not_gate("nr")
+		:not_gate("Q")
+		:not_gate("Q_")
+		:and_gate("ct")
+		:and_gate("cr")
+		:and_gate("cs")
+		:and_gate("s")
+		:or_gate("r")
+		:or_gate("ar")
+		:or_gate("as")
+		:connect("A_RST", 1, "nr", 1)
+		:connect("A_RST", 1, "s", 1)
+		:connect("nr", 1, "r", 2)
+		:connect("CLK", 1, "nt", 1)
+		:connect("nt", 1, "ct", 1)
+		:connect("CLK", 1, "ct", 2)
+		:connect("ct", 1, "cr", 1)
+		:connect("ct", 1, "cs", 2)
+		:connect("cr", 1, "r", 1)
+		:connect("cs", 1, "s", 2)
+		:connect("DATA", 1, "nd", 1)
+		:connect("nd", 1, "cr", 2)
+		:connect("DATA", 1, "cs", 1)
+		:connect("r", 1, "ar", 1)
+		:connect("s", 1, "as", 2)
+		:connect("ar", 1, "Q", 1)
+		:connect("as", 1, "Q_", 1)
+		:connect("Q", 1, "as", 1)
+		:connect("Q_", 1, "ar", 2)
 
 	for _ = 1, base * 4 do
 		sim:step()
@@ -496,14 +515,22 @@ do
 
 	table.sort(traces)
 	local first = true
+	local lines = {}
 	for _, x in ipairs(traces) do
 		if first then
 			first = false
 		else
-			print("---")
+			table.insert(lines, "---")
+			--			print("---")
 		end
-		print(x)
+		table.insert(lines, x)
+		--		print(x)
 	end
+
+	vim.api.nvim_buf_set_text(vim.api.nvim_get_current_buf(), -1, 0, -1, 0, lines)
 end
 
 return simulation
+
+--[[
+]]
