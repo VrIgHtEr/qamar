@@ -76,7 +76,7 @@ do
 				local parts = { ... }
 				for i = 1, #parts do
 					if parts[i] == signal.unknown or parts[i] == signal.z then
-						parts[i] = signal.low -- math.random(0, 1)
+						parts[i] = math.random(0, 1)
 					end
 				end
 				local o = { handler(timestamp, unpack(parts)) }
@@ -326,7 +326,7 @@ do
 	end
 
 	function simulation:step()
-		local prt = print --function(_) end
+		local prt = function(_) end
 		prt("---------------------------------------------------------")
 		local maxstep = 10000
 
