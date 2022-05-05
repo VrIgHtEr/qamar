@@ -46,6 +46,7 @@ do
 	---@field outputs pin[]
 	---@field step function
 	---@field trace boolean
+	---@field trace_inputs boolean
 	local component = {}
 	do
 		local MT = { __index = component }
@@ -166,7 +167,7 @@ do
 		return self
 	end
 
-	function simulation:add_component(name, inputs, outputs, handler, trace)
+	function simulation:add_component(name, inputs, outputs, handler, trace, trace_inputs)
 		if type(name) ~= "string" or not name:match("^[a-zA-Z_][a-zA-Z0-9_]*$") then
 			error("invalid name")
 		end
@@ -175,32 +176,33 @@ do
 		end
 		local c = component.new(name, inputs, outputs, handler)
 		c.trace = trace and true or false
+		c.trace_inputs = trace_inputs and true or false
 		self.components[name] = c
 		return self
 	end
 
-	function simulation:and_gate(name, trace)
+	function simulation:and_gate(name, trace, trace_inputs)
 		return self:add_component(name, 2, 1, function(_, a, b)
 			return (a == signal.high and b == signal.high) and signal.high or signal.low
-		end, trace)
+		end, trace, trace_inputs)
 	end
 
-	function simulation:or_gate(name, trace)
+	function simulation:or_gate(name, trace, trace_inputs)
 		return self:add_component(name, 2, 1, function(_, a, b)
 			return (a == signal.high or b == signal.high) and signal.high or signal.low
-		end, trace)
+		end, trace, trace_inputs)
 	end
 
-	function simulation:not_gate(name, trace)
+	function simulation:not_gate(name, trace, trace_inputs)
 		return self:add_component(name, 1, 1, function(_, a)
 			return a == signal.low and signal.high or signal.low
-		end, trace)
+		end, trace, trace_inputs)
 	end
 
-	function simulation:buffer_gate(name, trace)
+	function simulation:buffer_gate(name, trace, trace_inputs)
 		return self:add_component(name, 1, 1, function(_, a)
 			return a
-		end, trace)
+		end, trace, trace_inputs)
 	end
 
 	---@class sample
@@ -378,7 +380,7 @@ do
 							end
 							if conn.b.timestamp <= self.time then
 								conn.b.timestamp = self.time
-								if conn.b.value ~= value and conn.b.component.trace then
+								if conn.b.value ~= value and conn.b.component.trace_inputs then
 									add_trace(self, conn.b.name, self.time, value)
 								end
 								conn.b.value = value
@@ -387,7 +389,7 @@ do
 								conn.b.timestamp = self.time
 								if conn.b.value ~= value then
 									if conn.b.value == signal.unknown or conn.b.value == signal.z then
-										if conn.b.component.trace then
+										if conn.b.component.trace_inputs then
 											add_trace(self, conn.b.name, self.time, value)
 										end
 										conn.b.value = value
@@ -399,7 +401,7 @@ do
 										error("mixed signals!!!")
 									else
 										conn.b.value = value
-										if conn.b.component.trace then
+										if conn.b.component.trace_inputs then
 											add_trace(self, conn.b.name, self.time, value)
 										end
 										--prt(string.rep(" ", tostring(conn.b.timestamp):len()) .. " " .. conn.b.name)
@@ -408,9 +410,7 @@ do
 							end
 						end
 					else
-						if #output.component.inputs > 0 then
-							--prt( self.time .. ":" .. vim.inspect(inputs) .. ":" .. output.name .. ":" .. output.value .. ":SAME")
-						end
+						--if #output.component.inputs > 0 then prt( self.time .. ":" .. vim.inspect(inputs) .. ":" .. output.name .. ":" .. output.value .. ":SAME") end
 					end
 				end
 			end
