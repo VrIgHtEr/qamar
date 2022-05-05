@@ -175,7 +175,7 @@ do
 			error("component already exists: " .. name)
 		end
 		local c = component.new(name, inputs, outputs, handler)
-		c.trace = trace and true or false
+		c.trace = trace and true or false or true
 		c.trace_inputs = trace_inputs and true or false
 		self.components[name] = c
 		return self
@@ -525,8 +525,10 @@ do
 		:connect("b5", 1, "b4", 1)
 		:gate_buffer("b6")
 		:connect("b6", 1, "b5", 1)
+		:gate_buffer("b7")
+		:connect("b7", 1, "b6", 1)
 		:gate_not("nc")
-		:connect("nc", 1, "b6", 1)
+		:connect("nc", 1, "b7", 1)
 		:connect("CLK", 1, "nc", 1)
 
 	for _ = 1, base * 4 do
