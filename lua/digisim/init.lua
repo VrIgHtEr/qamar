@@ -1,4 +1,4 @@
-local DEBUG_TRACE_ALL_OUTPUTS = false
+local DEBUG_TRACE_ALL_OUTPUTS = true
 
 local STARTUP_TICKS = 16
 local CLOCK_PERIOD_TICKS = 32
@@ -196,9 +196,7 @@ do
 			error("component has no outputs")
 		end
 		if not output then
-			if #ca.outputs > 1 then
-				error("output not specified and component has multiple outputs")
-			end
+			-- if #ca.outputs > 1 then error("output not specified and component has multiple outputs") end
 			output = 1
 		end
 		if #cb.inputs == 0 then
@@ -588,6 +586,50 @@ do
 		:new_and("CLK_FALLING", true)
 		:_("nclk_", "CLK_FALLING")
 		:_("CLK_", "CLK_FALLING")
+
+	-- slave SR latch
+	circuit
+		:new_nand("Q")
+		:new_nand("Q_")
+		:_("Q", "Q_")
+		:_("Q_", "Q")
+		:new_nand("S")
+		:new_nand("S_")
+		:_("S", "Q")
+		:_("S_", "Q_")
+		:_("CLK_FALLING", "S")
+		:_("CLK_FALLING", "S_")
+
+	-- master SR latch
+	circuit
+		:new_nand("M")
+		:new_nand("M_")
+		:_("M", "M_")
+		:_("M_", "M")
+		:_("M", "S")
+		:_("M_", "S_")
+		:new_nand("C")
+		:new_nand("C_")
+		:_("C", "M")
+		:_("C_", "M_")
+		:_("CLK_RISING", "C")
+		:_("CLK_RISING", "C_")
+		:new_and("J")
+		:new_and("K")
+		:_("J", "C")
+		:_("K", "C_")
+		:_("Q", "K")
+		:_("Q_", "J")
+
+	-- data pin
+	circuit:add_component("DATA", 0, 1, function(time)
+		return time * 0.5 % CLOCK_PERIOD_TICKS < CLOCK_PERIOD_TICKS / 2 and signal.low or signal.high
+	end, true)
+
+	-- connect data pin to jk flip flop
+	circuit:new_not("ND"):_("DATA", "ND")
+	circuit:_("DATA", "J")
+	circuit:_("ND", "K")
 
 	for _ = 1, CLOCK_PERIOD_TICKS * 3 do
 		circuit:step()
