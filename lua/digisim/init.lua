@@ -1,3 +1,8 @@
+local DEBUG_TRACE_ALL_OUTPUTS = false
+
+local STARTUP_TICKS = 16
+local CLOCK_PERIOD_TICKS = 32
+
 ---@class simulation
 ---@field components table<string,component>
 ---@field connections table<string,connection>
@@ -139,6 +144,80 @@ do
 		return ret
 	end
 
+	function simulation:_(a, output, b, input)
+		local args
+		if input ~= nil then
+			args = 4
+		elseif b ~= nil then
+			args = 3
+		elseif output ~= nil then
+			args = 2
+		elseif a ~= nil then
+			args = 1
+		else
+			args = 0
+		end
+		if args < 2 then
+			error("invalid number of arguments")
+		end
+		if type(a) ~= "string" then
+			error("invalid argument type")
+		end
+		if args == 2 then
+			b, output = output, nil
+		elseif args == 3 then
+			if type(output) == "number" then
+				if type(b) ~= "string" then
+					error("invalid argument type")
+				end
+			elseif type(output) == "string" then
+				input = b
+				b = output
+				output = nil
+				if type(input) ~= "number" then
+					error("invalid argument type")
+				end
+			else
+				error("invalid argument type")
+			end
+		else
+			if type(b) ~= "string" or type(output) ~= "number" or type(input) ~= "number" then
+				error("invalid argument type")
+			end
+		end
+		local ca, cb = self.components[a], self.components[b]
+		if not ca then
+			error("component not found: " .. a)
+		end
+		if not cb then
+			error("component not found: " .. b)
+		end
+		if #ca.outputs == 0 then
+			error("component has no outputs")
+		end
+		if not output then
+			if #ca.outputs > 1 then
+				error("output not specified and component has multiple outputs")
+			end
+			output = 1
+		end
+		if #cb.inputs == 0 then
+			error("component has no inputs")
+		end
+		if not input then
+			for i, x in ipairs(cb.inputs) do
+				if vim.tbl_count(x.connections) == 0 then
+					input = i
+					break
+				end
+			end
+			if not input then
+				error("could not find unused input")
+			end
+		end
+		return self:connect(a, output, b, input)
+	end
+
 	---@param a string
 	---@param b string
 	---@param output number
@@ -175,57 +254,57 @@ do
 			error("component already exists: " .. name)
 		end
 		local c = component.new(name, inputs, outputs, handler)
-		c.trace = trace and true or false or true
+		c.trace = trace and true or false or DEBUG_TRACE_ALL_OUTPUTS
 		c.trace_inputs = trace_inputs and true or false
 		self.components[name] = c
 		return self
 	end
 
-	function simulation:gate_nand(name, trace, trace_inputs)
+	function simulation:new_nand(name, trace, trace_inputs)
 		return self:add_component(name, 2, 1, function(_, a, b)
 			return (a == signal.high and b == signal.high) and signal.low or signal.high
 		end, trace, trace_inputs)
 	end
 
-	function simulation:gate_nor(name, trace, trace_inputs)
+	function simulation:new_nor(name, trace, trace_inputs)
 		return self:add_component(name, 2, 1, function(_, a, b)
 			return (a == signal.high or b == signal.high) and signal.low or signal.high
 		end, trace, trace_inputs)
 	end
 
-	function simulation:gate_xnor(name, trace, trace_inputs)
+	function simulation:new_xnor(name, trace, trace_inputs)
 		return self:add_component(name, 2, 1, function(_, a, b)
 			return (a == signal.high and b == signal.low or a == signal.low and b == signal.high) and signal.low
 				or signal.high
 		end, trace, trace_inputs)
 	end
 
-	function simulation:gate_and(name, trace, trace_inputs)
+	function simulation:new_and(name, trace, trace_inputs)
 		return self:add_component(name, 2, 1, function(_, a, b)
 			return (a == signal.high and b == signal.high) and signal.high or signal.low
 		end, trace, trace_inputs)
 	end
 
-	function simulation:gate_xor(name, trace, trace_inputs)
+	function simulation:new_xor(name, trace, trace_inputs)
 		return self:add_component(name, 2, 1, function(_, a, b)
 			return (a == signal.high and b == signal.low or a == signal.low and b == signal.high) and signal.high
 				or signal.low
 		end, trace, trace_inputs)
 	end
 
-	function simulation:gate_or(name, trace, trace_inputs)
+	function simulation:new_or(name, trace, trace_inputs)
 		return self:add_component(name, 2, 1, function(_, a, b)
 			return (a == signal.high or b == signal.high) and signal.high or signal.low
 		end, trace, trace_inputs)
 	end
 
-	function simulation:gate_not(name, trace, trace_inputs)
+	function simulation:new_not(name, trace, trace_inputs)
 		return self:add_component(name, 1, 1, function(_, a)
 			return a == signal.low and signal.high or signal.low
 		end, trace, trace_inputs)
 	end
 
-	function simulation:gate_buffer(name, trace, trace_inputs)
+	function simulation:new_buffer(name, trace, trace_inputs)
 		return self:add_component(name, 1, 1, function(_, a)
 			return a
 		end, trace, trace_inputs)
@@ -453,104 +532,83 @@ end
 
 do
 	vim.api.nvim_exec("mes clear", true)
-	local start = 16
 
-	local sim = simulation.new()
+	local circuit = simulation.new()
 
-	local base = 40
-	sim
-		:add_component("CLK", 0, 1, function(ts)
-			ts = ts % base
-			return ts < base / 2 and signal.low or signal.high
-		end, true)
-		:add_component("DATA", 0, 1, function(ts)
-			ts = (ts / 2) % base
-			return ts >= base / 4 and ts < base / 4 * 3 and signal.high or signal.low
-		end, true)
-		:add_component("RST_", 0, 1, function(time)
-			return time < start and signal.low or signal.high
-		end, true)
-		:add_component("TGL", 0, 1, function()
-			return signal.low
-		end, true)
-		:gate_and("ir")
-		:gate_and("is")
-		:gate_or("ar")
-		:gate_or("as")
-		:connect("ir", 1, "ar", 1)
-		:connect("is", 1, "as", 2)
-		:gate_not("Q", true)
-		:gate_not("Q_", true)
-		:connect("ar", 1, "Q", 1)
-		:connect("as", 1, "Q_", 1)
-		:connect("Q", 1, "as", 1)
-		:connect("Q_", 1, "ar", 2)
-		:connect("Q", 1, "ir", 1)
-		:connect("Q_", 1, "is", 2)
-		:gate_or("j")
-		:gate_and("k")
-		:connect("j", 1, "ir", 2)
-		:connect("k", 1, "is", 1)
-		:gate_not("nr")
-		:connect("nr", 1, "j", 1)
-		:connect("RST_", 1, "nr", 1)
-		:connect("RST_", 1, "k", 1)
-		:gate_or("tr")
-		:connect("tr", 1, "j", 2)
-		:connect("TGL", 1, "tr", 2)
-		:gate_or("ts")
-		:connect("ts", 1, "k", 2)
-		:connect("TGL", 1, "ts", 2)
-		:gate_and("dr")
-		:connect("dr", 1, "tr", 1)
-		:gate_and("ds")
-		:connect("ds", 1, "ts", 1)
-		:gate_not("nd")
-		:connect("nd", 1, "dr", 1)
-		:connect("DATA", 1, "nd", 1)
-		:connect("DATA", 1, "ds", 1)
-		:gate_and("e", true)
-		:connect("e", 1, "dr", 2)
-		:connect("e", 1, "ds", 2)
-		:connect("CLK", 1, "e", 1)
-		:gate_buffer("b1")
-		:connect("b1", 1, "e", 2)
-		:gate_buffer("b2")
-		:connect("b2", 1, "b1", 1)
-		:gate_buffer("b3")
-		:connect("b3", 1, "b2", 1)
-		:gate_buffer("b4")
-		:connect("b4", 1, "b3", 1)
-		:gate_buffer("b5")
-		:connect("b5", 1, "b4", 1)
-		:gate_buffer("b6")
-		:connect("b6", 1, "b5", 1)
-		:gate_buffer("b7")
-		:connect("b7", 1, "b6", 1)
-		:gate_not("nc")
-		:connect("nc", 1, "b7", 1)
-		:connect("CLK", 1, "nc", 1)
+	-- ~RST - inverted reset signal. Only low for the first "startup_ticks" ticks. High otherwise
+	circuit:add_component("RST_", 0, 1, function(time)
+		return time < STARTUP_TICKS and signal.low or signal.high
+	end, true)
 
-	for _ = 1, base * 4 do
-		sim:step()
+	-- CLK - clock with period "clock_period_ticks"
+	circuit:add_component("CLK", 0, 1, function(ts)
+		ts = ts % CLOCK_PERIOD_TICKS
+		return ts < CLOCK_PERIOD_TICKS / 2 and signal.low or signal.high
+	end, true)
+
+	-- ~CLK - inverted clock
+	circuit:new_not("CLK_"):_("CLK", "CLK_")
+
+	-- CLK_RISING - clock rising edge detector
+	circuit
+		:new_buffer("clk1")
+		:_("CLK", "clk1")
+		:new_buffer("clk2")
+		:_("clk1", "clk2")
+		:new_buffer("clk3")
+		:_("clk2", "clk3")
+		:new_buffer("clk4")
+		:_("clk3", "clk4")
+		:new_buffer("clk5")
+		:_("clk4", "clk5")
+		:new_buffer("clk6")
+		:_("clk5", "clk6")
+		:new_not("nclk")
+		:_("clk6", "nclk")
+		:new_and("CLK_RISING", true)
+		:_("nclk", "CLK_RISING")
+		:_("CLK", "CLK_RISING")
+
+	-- CLK_FALLING - clock falling edge detector
+	circuit
+		:new_buffer("clk1_")
+		:_("CLK_", "clk1_")
+		:new_buffer("clk2_")
+		:_("clk1_", "clk2_")
+		:new_buffer("clk3_")
+		:_("clk2_", "clk3_")
+		:new_buffer("clk4_")
+		:_("clk3_", "clk4_")
+		:new_buffer("clk5_")
+		:_("clk4_", "clk5_")
+		:new_buffer("clk6_")
+		:_("clk5_", "clk6_")
+		:new_not("nclk_")
+		:_("clk6_", "nclk_")
+		:new_and("CLK_FALLING", true)
+		:_("nclk_", "CLK_FALLING")
+		:_("CLK_", "CLK_FALLING")
+
+	for _ = 1, CLOCK_PERIOD_TICKS * 3 do
+		circuit:step()
 	end
 
 	local max = 0
 	local maxtime = 0
-	for k, t in pairs(sim.trace) do
+	for k, t in pairs(circuit.trace) do
 		if k:sub(1, 1) ~= "[" then
 			max = math.max(max, k:len())
 			maxtime = math.max(maxtime, t[#t].time)
 		end
 	end
-	maxtime = maxtime + base
+	maxtime = maxtime + CLOCK_PERIOD_TICKS
 	max = max + 2
 	local traces = {}
-	for k in pairs(sim.trace) do
+	for k in pairs(circuit.trace) do
 		if k:sub(1, 1) ~= "[" then
 			table.insert(
 				traces,
-				table.concat({ k, ": ", string.rep(" ", max - (k:len() + 2)), sim:get_trace(k, maxtime) })
+				table.concat({ k, ": ", string.rep(" ", max - (k:len() + 2)), circuit:get_trace(k, maxtime) })
 			)
 		end
 	end
