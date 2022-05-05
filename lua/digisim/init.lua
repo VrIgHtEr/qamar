@@ -45,6 +45,7 @@ do
 	---@field inputs pin[]
 	---@field outputs pin[]
 	---@field step function
+	---@field trace boolean
 	local component = {}
 	do
 		local MT = { __index = component }
@@ -165,7 +166,7 @@ do
 		return self
 	end
 
-	function simulation:add_component(name, inputs, outputs, handler)
+	function simulation:add_component(name, inputs, outputs, handler, trace)
 		if type(name) ~= "string" or not name:match("^[a-zA-Z_][a-zA-Z0-9_]*$") then
 			error("invalid name")
 		end
@@ -173,32 +174,33 @@ do
 			error("component already exists: " .. name)
 		end
 		local c = component.new(name, inputs, outputs, handler)
+		c.trace = trace and true or false
 		self.components[name] = c
 		return self
 	end
 
-	function simulation:and_gate(name)
+	function simulation:and_gate(name, trace)
 		return self:add_component(name, 2, 1, function(_, a, b)
 			return (a == signal.high and b == signal.high) and signal.high or signal.low
-		end)
+		end, trace)
 	end
 
-	function simulation:or_gate(name)
+	function simulation:or_gate(name, trace)
 		return self:add_component(name, 2, 1, function(_, a, b)
 			return (a == signal.high or b == signal.high) and signal.high or signal.low
-		end)
+		end, trace)
 	end
 
-	function simulation:not_gate(name)
+	function simulation:not_gate(name, trace)
 		return self:add_component(name, 1, 1, function(_, a)
 			return a == signal.low and signal.high or signal.low
-		end)
+		end, trace)
 	end
 
-	function simulation:buffer_gate(name)
+	function simulation:buffer_gate(name, trace)
 		return self:add_component(name, 1, 1, function(_, a)
 			return a
-		end)
+		end, trace)
 	end
 
 	---@class sample
@@ -326,8 +328,8 @@ do
 	end
 
 	function simulation:step()
-		local prt = function(_) end
-		prt("---------------------------------------------------------")
+		--local prt = function(_) end
+		--prt("---------------------------------------------------------")
 		local maxstep = 10000
 
 		---@type table<string,component>
@@ -343,7 +345,7 @@ do
 		if count == 0 then
 			error("must have at least one component with zero inputs")
 		end
-		prt(self.time)
+		--prt(self.time)
 		repeat
 			local nextdirty = {}
 			local nextcount = 0
@@ -360,10 +362,12 @@ do
 				for i, value in ipairs(outputs) do
 					local output = c.outputs[i]
 					if output.value ~= value then
-						add_trace(self, output.name, self.time, value)
+						if c.trace then
+							add_trace(self, output.name, self.time, value)
+						end
 						output.value = value
 						output.timestamp = self.time
-						prt(output.timestamp .. ":" .. vim.inspect(inputs) .. ":" .. output.name .. ":" .. output.value)
+						--prt(output.timestamp .. ":" .. vim.inspect(inputs) .. ":" .. output.name .. ":" .. output.value)
 						for _, conn in pairs(output.connections) do
 							if not nextdirty[conn.b.component.name] then
 								nextdirty[conn.b.component.name] = conn.b.component
@@ -374,18 +378,20 @@ do
 							end
 							if conn.b.timestamp <= self.time then
 								conn.b.timestamp = self.time
-								if conn.b.value ~= value then
+								if conn.b.value ~= value and conn.b.component.trace then
 									add_trace(self, conn.b.name, self.time, value)
 								end
 								conn.b.value = value
-								prt(string.rep(" ", tostring(conn.b.timestamp):len()) .. " " .. conn.b.name)
+								--prt(string.rep(" ", tostring(conn.b.timestamp):len()) .. " " .. conn.b.name)
 							else
 								conn.b.timestamp = self.time
 								if conn.b.value ~= value then
 									if conn.b.value == signal.unknown or conn.b.value == signal.z then
-										add_trace(self, conn.b.name, self.time, value)
+										if conn.b.component.trace then
+											add_trace(self, conn.b.name, self.time, value)
+										end
 										conn.b.value = value
-										prt(string.rep(" ", tostring(conn.b.timestamp):len()) .. " " .. conn.b.name)
+										--prt(string.rep(" ", tostring(conn.b.timestamp):len()) .. " " .. conn.b.name)
 									elseif
 										conn.b.value == signal.low and value == signal.high
 										or value == signal.low and conn.b.value == signal.high
@@ -393,24 +399,17 @@ do
 										error("mixed signals!!!")
 									else
 										conn.b.value = value
-										add_trace(self, conn.b.name, self.time, value)
-										prt(string.rep(" ", tostring(conn.b.timestamp):len()) .. " " .. conn.b.name)
+										if conn.b.component.trace then
+											add_trace(self, conn.b.name, self.time, value)
+										end
+										--prt(string.rep(" ", tostring(conn.b.timestamp):len()) .. " " .. conn.b.name)
 									end
 								end
 							end
 						end
 					else
 						if #output.component.inputs > 0 then
-							prt(
-								self.time
-									.. ":"
-									.. vim.inspect(inputs)
-									.. ":"
-									.. output.name
-									.. ":"
-									.. output.value
-									.. ":SAME"
-							)
+							--prt( self.time .. ":" .. vim.inspect(inputs) .. ":" .. output.name .. ":" .. output.value .. ":SAME")
 						end
 					end
 				end
@@ -436,21 +435,14 @@ do
 	sim
 		:add_component("CLK", 0, 1, function(ts)
 			ts = ts % base
-			return (ts < base / 2) and signal.high or signal.low
+			return ts < base / 2 and signal.low or signal.high
 		end)
 		:add_component("DATA", 0, 1, function(ts)
-			ts = (ts / 2 + 1) % base
-			if ts >= base / 4 and ts < base / 4 * 3 then
-				return signal.low
-			else
-				return signal.high
-			end
-		end)
-		:add_component("A_RST", 0, 1, function(time)
-			if time < start then
-				return signal.low
-			end
-			return signal.high
+			ts = (ts / 2) % base
+			return ts >= base / 4 and ts < base / 4 * 3 and signal.low or signal.high
+		end, true)
+		:add_component("RST", 0, 1, function(time)
+			return time < start and signal.low or signal.high
 		end)
 		:buffer_gate("x1")
 		:buffer_gate("x2")
@@ -458,17 +450,17 @@ do
 		:not_gate("nt")
 		:not_gate("nd")
 		:not_gate("nr")
-		:not_gate("Q")
+		:not_gate("Q", true)
 		:not_gate("Q_")
-		:and_gate("ct")
+		:and_gate("ct", true)
 		:and_gate("cr")
 		:and_gate("cs")
 		:and_gate("s")
 		:or_gate("r")
 		:or_gate("ar")
 		:or_gate("as")
-		:connect("A_RST", 1, "nr", 1)
-		:connect("A_RST", 1, "s", 1)
+		:connect("RST", 1, "nr", 1)
+		:connect("RST", 1, "s", 1)
 		:connect("nr", 1, "r", 2)
 		:connect("CLK", 1, "nt", 1)
 		:connect("CLK", 1, "ct", 2)
@@ -526,13 +518,14 @@ do
 		if first then
 			first = false
 		else
-			table.insert(lines, "---")
-			--			print("---")
+			table.insert(lines, "--")
+			--			print("--")
 		end
-		table.insert(lines, x)
+		table.insert(lines, "--" .. x)
 		--		print(x)
 	end
 
+	table.insert(lines, "")
 	vim.api.nvim_buf_set_text(vim.api.nvim_get_current_buf(), -1, 0, -1, 0, lines)
 end
 
