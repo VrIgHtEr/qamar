@@ -1,6 +1,6 @@
-local DEBUG_TRACE_ALL_OUTPUTS = true
+local DEBUG_TRACE_ALL_OUTPUTS = false
 
-local STARTUP_TICKS = 16
+local STARTUP_TICKS = 12
 local CLOCK_PERIOD_TICKS = 32
 
 ---@class simulation
@@ -589,8 +589,8 @@ do
 
 	-- slave SR latch
 	circuit
-		:new_nand("Q")
-		:new_nand("Q_")
+		:new_nand("Q", true)
+		:new_nand("Q_", true)
 		:_("Q", "Q_")
 		:_("Q_", "Q")
 		:new_nand("S")
