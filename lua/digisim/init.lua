@@ -181,25 +181,51 @@ do
 		return self
 	end
 
-	function simulation:and_gate(name, trace, trace_inputs)
+	function simulation:gate_nand(name, trace, trace_inputs)
+		return self:add_component(name, 2, 1, function(_, a, b)
+			return (a == signal.high and b == signal.high) and signal.low or signal.high
+		end, trace, trace_inputs)
+	end
+
+	function simulation:gate_nor(name, trace, trace_inputs)
+		return self:add_component(name, 2, 1, function(_, a, b)
+			return (a == signal.high or b == signal.high) and signal.low or signal.high
+		end, trace, trace_inputs)
+	end
+
+	function simulation:gate_xnor(name, trace, trace_inputs)
+		return self:add_component(name, 2, 1, function(_, a, b)
+			return (a == signal.high and b == signal.low or a == signal.low and b == signal.high) and signal.low
+				or signal.high
+		end, trace, trace_inputs)
+	end
+
+	function simulation:gate_and(name, trace, trace_inputs)
 		return self:add_component(name, 2, 1, function(_, a, b)
 			return (a == signal.high and b == signal.high) and signal.high or signal.low
 		end, trace, trace_inputs)
 	end
 
-	function simulation:or_gate(name, trace, trace_inputs)
+	function simulation:gate_xor(name, trace, trace_inputs)
+		return self:add_component(name, 2, 1, function(_, a, b)
+			return (a == signal.high and b == signal.low or a == signal.low and b == signal.high) and signal.high
+				or signal.low
+		end, trace, trace_inputs)
+	end
+
+	function simulation:gate_or(name, trace, trace_inputs)
 		return self:add_component(name, 2, 1, function(_, a, b)
 			return (a == signal.high or b == signal.high) and signal.high or signal.low
 		end, trace, trace_inputs)
 	end
 
-	function simulation:not_gate(name, trace, trace_inputs)
+	function simulation:gate_not(name, trace, trace_inputs)
 		return self:add_component(name, 1, 1, function(_, a)
 			return a == signal.low and signal.high or signal.low
 		end, trace, trace_inputs)
 	end
 
-	function simulation:buffer_gate(name, trace, trace_inputs)
+	function simulation:gate_buffer(name, trace, trace_inputs)
 		return self:add_component(name, 1, 1, function(_, a)
 			return a
 		end, trace, trace_inputs)
@@ -436,51 +462,68 @@ do
 		:add_component("CLK", 0, 1, function(ts)
 			ts = ts % base
 			return ts < base / 2 and signal.low or signal.high
-		end)
+		end, true)
 		:add_component("DATA", 0, 1, function(ts)
 			ts = (ts / 2) % base
 			return ts >= base / 4 and ts < base / 4 * 3 and signal.low or signal.high
 		end, true)
-		:add_component("RST", 0, 1, function(time)
+		:add_component("RST_", 0, 1, function(time)
 			return time < start and signal.low or signal.high
-		end)
-		:buffer_gate("x1")
-		:buffer_gate("x2")
-		:buffer_gate("x3")
-		:not_gate("nt")
-		:not_gate("nd")
-		:not_gate("nr")
-		:not_gate("Q", true)
-		:not_gate("Q_")
-		:and_gate("ct", true)
-		:and_gate("cr")
-		:and_gate("cs")
-		:and_gate("s")
-		:or_gate("r")
-		:or_gate("ar")
-		:or_gate("as")
-		:connect("RST", 1, "nr", 1)
-		:connect("RST", 1, "s", 1)
-		:connect("nr", 1, "r", 2)
-		:connect("CLK", 1, "nt", 1)
-		:connect("CLK", 1, "ct", 2)
-		:connect("ct", 1, "cr", 1)
-		:connect("ct", 1, "cs", 2)
-		:connect("cr", 1, "r", 1)
-		:connect("cs", 1, "s", 2)
-		:connect("DATA", 1, "nd", 1)
-		:connect("nd", 1, "cr", 2)
-		:connect("DATA", 1, "cs", 1)
-		:connect("r", 1, "ar", 1)
-		:connect("s", 1, "as", 2)
+		end, true)
+		:add_component("TGL", 0, 1, function()
+			return signal.low
+		end, true)
+		:gate_and("ir")
+		:gate_and("is")
+		:gate_or("ar")
+		:gate_or("as")
+		:connect("ir", 1, "ar", 1)
+		:connect("is", 1, "as", 2)
+		:gate_not("Q", true)
+		:gate_not("Q_", true)
 		:connect("ar", 1, "Q", 1)
 		:connect("as", 1, "Q_", 1)
 		:connect("Q", 1, "as", 1)
 		:connect("Q_", 1, "ar", 2)
-		:connect("nt", 1, "x1", 1)
-		:connect("x1", 1, "x2", 1)
-		:connect("x2", 1, "x3", 1)
-		:connect("x3", 1, "ct", 1)
+		:connect("Q", 1, "ir", 1)
+		:connect("Q_", 1, "is", 2)
+		:gate_or("j")
+		:gate_and("k")
+		:connect("j", 1, "ir", 2)
+		:connect("k", 1, "is", 1)
+		:gate_not("nr")
+		:connect("nr", 1, "j", 1)
+		:connect("RST_", 1, "nr", 1)
+		:connect("RST_", 1, "k", 1)
+		:gate_or("tr")
+		:connect("tr", 1, "j", 2)
+		:connect("TGL", 1, "tr", 2)
+		:gate_or("ts")
+		:connect("ts", 1, "k", 2)
+		:connect("TGL", 1, "ts", 2)
+		:gate_and("dr")
+		:connect("dr", 1, "tr", 1)
+		:gate_and("ds")
+		:connect("ds", 1, "ts", 1)
+		:gate_not("nd")
+		:connect("nd", 1, "dr", 1)
+		:connect("DATA", 1, "nd", 1)
+		:connect("DATA", 1, "ds", 1)
+		:gate_and("e")
+		:connect("e", 1, "dr", 2)
+		:connect("e", 1, "ds", 2)
+		:connect("CLK", 1, "e", 1)
+		:gate_buffer("b1")
+		:connect("b1", 1, "e", 2)
+		:gate_buffer("b2")
+		:connect("b2", 1, "b1", 1)
+		:gate_buffer("b3")
+		:connect("b3", 1, "b2", 1)
+		:gate_buffer("b4")
+		:connect("b4", 1, "b3", 1)
+		:gate_not("nc")
+		:connect("nc", 1, "b4", 1)
+		:connect("CLK", 1, "nc", 1)
 
 	for _ = 1, base * 4 do
 		sim:step()
