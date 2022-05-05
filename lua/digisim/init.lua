@@ -1,7 +1,7 @@
 local DEBUG_TRACE_ALL_OUTPUTS = false
 
 local STARTUP_TICKS = 12
-local CLOCK_PERIOD_TICKS = 32
+local CLOCK_PERIOD_TICKS = 48
 
 ---@class simulation
 ---@field components table<string,component>
@@ -526,6 +526,49 @@ do
 		until count == 0
 		return self
 	end
+	function simulation.print(circuit)
+		local max = 0
+		local maxtime = 0
+		for k, t in pairs(circuit.trace) do
+			if k:sub(1, 1) ~= "[" then
+				max = math.max(max, k:len())
+				maxtime = math.max(maxtime, t[#t].time)
+			end
+		end
+		maxtime = maxtime + CLOCK_PERIOD_TICKS
+		max = max + 2
+		local traces = {}
+		for k in pairs(circuit.trace) do
+			if k:sub(1, 1) ~= "[" then
+				table.insert(
+					traces,
+					table.concat({ k, ": ", string.rep(" ", max - (k:len() + 2)), circuit:get_trace(k, maxtime) })
+				)
+			end
+		end
+		max = 0
+		for _, x in ipairs(traces) do
+			max = math.max(max, x:len())
+		end
+		max = max + 5
+
+		table.sort(traces)
+		local first = true
+		local lines = {}
+		for _, x in ipairs(traces) do
+			if first then
+				first = false
+			else
+				table.insert(lines, "--")
+				--			print("--")
+			end
+			table.insert(lines, "--" .. x)
+			--		print(x)
+		end
+
+		table.insert(lines, "")
+		vim.api.nvim_buf_set_text(vim.api.nvim_get_current_buf(), -1, 0, -1, 0, lines)
+	end
 end
 
 do
@@ -590,7 +633,7 @@ do
 	-- slave SR latch
 	circuit
 		:new_nand("Q", true)
-		:new_nand("Q_", true)
+		:new_nand("Q_")
 		:_("Q", "Q_")
 		:_("Q_", "Q")
 		:new_nand("S")
@@ -635,47 +678,7 @@ do
 		circuit:step()
 	end
 
-	local max = 0
-	local maxtime = 0
-	for k, t in pairs(circuit.trace) do
-		if k:sub(1, 1) ~= "[" then
-			max = math.max(max, k:len())
-			maxtime = math.max(maxtime, t[#t].time)
-		end
-	end
-	maxtime = maxtime + CLOCK_PERIOD_TICKS
-	max = max + 2
-	local traces = {}
-	for k in pairs(circuit.trace) do
-		if k:sub(1, 1) ~= "[" then
-			table.insert(
-				traces,
-				table.concat({ k, ": ", string.rep(" ", max - (k:len() + 2)), circuit:get_trace(k, maxtime) })
-			)
-		end
-	end
-	max = 0
-	for _, x in ipairs(traces) do
-		max = math.max(max, x:len())
-	end
-	max = max + 5
-
-	table.sort(traces)
-	local first = true
-	local lines = {}
-	for _, x in ipairs(traces) do
-		if first then
-			first = false
-		else
-			table.insert(lines, "--")
-			--			print("--")
-		end
-		table.insert(lines, "--" .. x)
-		--		print(x)
-	end
-
-	table.insert(lines, "")
-	vim.api.nvim_buf_set_text(vim.api.nvim_get_current_buf(), -1, 0, -1, 0, lines)
+	circuit:print()
 end
 
 return simulation
