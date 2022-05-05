@@ -453,7 +453,7 @@ end
 
 do
 	vim.api.nvim_exec("mes clear", true)
-	local start = 8
+	local start = 16
 
 	local sim = simulation.new()
 
@@ -465,7 +465,7 @@ do
 		end, true)
 		:add_component("DATA", 0, 1, function(ts)
 			ts = (ts / 2) % base
-			return ts >= base / 4 and ts < base / 4 * 3 and signal.low or signal.high
+			return ts >= base / 4 and ts < base / 4 * 3 and signal.high or signal.low
 		end, true)
 		:add_component("RST_", 0, 1, function(time)
 			return time < start and signal.low or signal.high
@@ -509,7 +509,7 @@ do
 		:connect("nd", 1, "dr", 1)
 		:connect("DATA", 1, "nd", 1)
 		:connect("DATA", 1, "ds", 1)
-		:gate_and("e")
+		:gate_and("e", true)
 		:connect("e", 1, "dr", 2)
 		:connect("e", 1, "ds", 2)
 		:connect("CLK", 1, "e", 1)
@@ -521,8 +521,12 @@ do
 		:connect("b3", 1, "b2", 1)
 		:gate_buffer("b4")
 		:connect("b4", 1, "b3", 1)
+		:gate_buffer("b5")
+		:connect("b5", 1, "b4", 1)
+		:gate_buffer("b6")
+		:connect("b6", 1, "b5", 1)
 		:gate_not("nc")
-		:connect("nc", 1, "b4", 1)
+		:connect("nc", 1, "b6", 1)
 		:connect("CLK", 1, "nc", 1)
 
 	for _ = 1, base * 4 do
