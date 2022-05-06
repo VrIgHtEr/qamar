@@ -3,13 +3,14 @@ local constants = require("digisim.constants")
 local component = require("digisim.component")
 local connection = require("digisim.connection")
 local signal = require("digisim.signal")
+local vcd = require("digisim.trace.vcd")
 
 ---@class simulation
 ---@field components table<string,component>
 ---@field connections table<string,connection>
 ---@field queue deque
 ---@field time number
----@field trace table<string,sample[]>
+---@field trace vcd
 local simulation = {}
 local MT = { __index = simulation }
 
@@ -20,7 +21,7 @@ function simulation.new()
 		time = 0,
 		next_connection_id = 0,
 		queue = queue(),
-		trace = {},
+		trace = vcd.new(),
 	}, MT)
 	return ret
 end
@@ -79,13 +80,12 @@ end
 ---@field time number
 ---@field value signal
 
+---@param sim simulation
+---@param name string
+---@param time number
+---@param sig signal
 local function add_trace(sim, name, time, sig)
-	local trace = sim.trace[name]
-	if not trace then
-		trace = {}
-		sim.trace[name] = trace
-	end
-	table.insert(trace, { time = time, value = sig })
+	sim.trace:trace(name, time, sig)
 end
 
 function simulation:step()

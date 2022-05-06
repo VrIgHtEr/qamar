@@ -3,6 +3,11 @@ local signal = require("digisim.signal")
 local simulation = require("digisim.simulation")
 
 function print(circuit)
+	do
+		io.stdout:write(tostring(circuit.trace))
+		io.stdout:write("\n")
+		return
+	end
 	local max = 0
 	local maxtime = 0
 	for k, t in pairs(circuit.trace) do

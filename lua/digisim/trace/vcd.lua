@@ -98,7 +98,7 @@ function vcd:trace(name, time, sig)
 		self.data[self.index] = "#" .. tostring(time)
 	end
 	self.index = self.index + 1
-	self.data[self.index] = tostring(sig) .. " " .. trace.identifier
+	self.data[self.index] = tostring(sig) .. "" .. trace.identifier
 end
 
 return vcd
