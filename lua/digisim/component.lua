@@ -7,7 +7,6 @@ local pin = require("digisim.pin")
 ---@field outputs pin[]
 ---@field step function
 ---@field trace boolean
----@field trace_inputs boolean
 local component = {}
 local MT = { __index = component }
 

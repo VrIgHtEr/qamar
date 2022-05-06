@@ -26,7 +26,7 @@ function simulation.new()
 	return ret
 end
 
-function simulation:add_component(name, inputs, outputs, handler, trace, trace_inputs)
+function simulation:add_component(name, inputs, outputs, handler, trace)
 	if type(name) ~= "string" or not name:match("^[a-zA-Z_][a-zA-Z0-9_]*$") then
 		error("invalid name")
 	end
@@ -35,22 +35,25 @@ function simulation:add_component(name, inputs, outputs, handler, trace, trace_i
 	end
 	local c = component.new(name, inputs, outputs, handler)
 	c.trace = trace and true or false or constants.DEBUG_TRACE_ALL_OUTPUTS
-	c.trace_inputs = trace_inputs and true or false
 	self.components[name] = c
 	return self
 end
 
-function simulation:register_component(name, constructor)
+function simulation:register_component(name, inputs, outputs, constructor)
 	if type(name) ~= "string" or not name:match("^[a-zA-Z_][a-zA-Z0-9_]*$") then
 		error("invalid name")
 	end
 	if self["new_" .. name] then
 		error("Component already registered: " .. name)
 	end
-	self["new_" .. name] = function(s, n, trace, trace_inputs)
-		local c = constructor(s, n, trace, trace_inputs)
-		s.components[n] = c
+	self["new_" .. name] = function(s, n, trace)
+		if s.components[n] then
+			error("component already exists")
+		end
+		local c = component.new(n, inputs, outputs, function() end)
 		c.step = nil
+		s.components[n] = c
+		constructor(s, c, trace)
 		return s
 	end
 	return self
@@ -150,7 +153,7 @@ function simulation:step()
 						--end
 
 						for _, x in pairs(output.net.pins) do
-							if x ~= output then
+							if x ~= output and x.component.step then
 								if not nextdirty[x.component.name] then
 									nextdirty[x.component.name] = x.component
 									nextcount = nextcount + 1
@@ -247,54 +250,54 @@ function simulation:_(a, output, b, input)
 	return self:connect(a, output, b, input)
 end
 
-function simulation:new_nand(name, trace, trace_inputs)
+function simulation:new_nand(name, trace)
 	return self:add_component(name, 2, 1, function(_, a, b)
 		return (a == signal.high and b == signal.high) and signal.low or signal.high
-	end, trace, trace_inputs)
+	end, trace)
 end
 
-function simulation:new_nor(name, trace, trace_inputs)
+function simulation:new_nor(name, trace)
 	return self:add_component(name, 2, 1, function(_, a, b)
 		return (a == signal.high or b == signal.high) and signal.low or signal.high
-	end, trace, trace_inputs)
+	end, trace)
 end
 
-function simulation:new_xnor(name, trace, trace_inputs)
+function simulation:new_xnor(name, trace)
 	return self:add_component(name, 2, 1, function(_, a, b)
 		return (a == signal.high and b == signal.low or a == signal.low and b == signal.high) and signal.low
 			or signal.high
-	end, trace, trace_inputs)
+	end, trace)
 end
 
-function simulation:new_and(name, trace, trace_inputs)
+function simulation:new_and(name, trace)
 	return self:add_component(name, 2, 1, function(_, a, b)
 		return (a == signal.high and b == signal.high) and signal.high or signal.low
-	end, trace, trace_inputs)
+	end, trace)
 end
 
-function simulation:new_xor(name, trace, trace_inputs)
+function simulation:new_xor(name, trace)
 	return self:add_component(name, 2, 1, function(_, a, b)
 		return (a == signal.high and b == signal.low or a == signal.low and b == signal.high) and signal.high
 			or signal.low
-	end, trace, trace_inputs)
+	end, trace)
 end
 
-function simulation:new_or(name, trace, trace_inputs)
+function simulation:new_or(name, trace)
 	return self:add_component(name, 2, 1, function(_, a, b)
 		return (a == signal.high or b == signal.high) and signal.high or signal.low
-	end, trace, trace_inputs)
+	end, trace)
 end
 
-function simulation:new_not(name, trace, trace_inputs)
+function simulation:new_not(name, trace)
 	return self:add_component(name, 1, 1, function(_, a)
 		return a == signal.low and signal.high or signal.low
-	end, trace, trace_inputs)
+	end, trace)
 end
 
-function simulation:new_buffer(name, trace, trace_inputs)
+function simulation:new_buffer(name, trace)
 	return self:add_component(name, 1, 1, function(_, a)
 		return a
-	end, trace, trace_inputs)
+	end, trace)
 end
 
 local chars = {
