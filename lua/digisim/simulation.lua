@@ -153,7 +153,7 @@ function simulation:step()
 						--end
 
 						for _, x in pairs(output.net.pins) do
-							if x ~= output and x.component.step then
+							if x ~= output and x.is_input and x.component.step then
 								if not nextdirty[x.component.name] then
 									nextdirty[x.component.name] = x.component
 									nextcount = nextcount + 1
@@ -298,117 +298,6 @@ function simulation:new_buffer(name, trace)
 	return self:add_component(name, 1, 1, function(_, a)
 		return a
 	end, trace)
-end
-
-local chars = {
-	unknown = "░",
-	full_z = "█",
-	full_low = "▄",
-	full_high = "▀",
-	z_low = "▚",
-	z_high = "▞",
-	left_half = "▌",
-	low_high = "▛",
-	high_low = "▙",
-}
-
-function simulation:get_trace(name, maxtime)
-	local trace = self.trace[name]
-	if trace then
-		maxtime = maxtime or trace[#trace].time + 1
-		local ret = {}
-		local char = chars.unknown
-		local sig = signal.unknown
-		local time = 0
-		for _, t in ipairs(trace) do
-			while time < t.time do
-				time = time + 1
-				if sig == signal.unknown then
-					char = chars.unknown
-				elseif sig == signal.z then
-					char = chars.full_z
-				elseif sig == signal.low then
-					char = chars.full_low
-				elseif sig == signal.high then
-					char = chars.full_high
-				else
-					error("invalid value")
-				end
-				ret[time] = char
-			end
-			time = time + 1
-			if sig == signal.unknown then
-				if t.value == signal.unknown then
-					char = chars.unknown
-				elseif t.value == signal.z then
-					char = chars.full_z
-				elseif t.value == signal.low then
-					char = chars.full_low
-				elseif t.value == signal.high then
-					char = chars.full_high
-				else
-					error("invalid value")
-				end
-			elseif sig == signal.z then
-				if t.value == signal.unknown then
-					char = chars.unknown
-				elseif t.value == signal.z then
-					char = chars.full_z
-				elseif t.value == signal.low then
-					char = chars.z_low
-				elseif t.value == signal.high then
-					char = chars.z_high
-				else
-					error("invalid value")
-				end
-			elseif sig == signal.low then
-				if t.value == signal.unknown then
-					char = chars.unknown
-				elseif t.value == signal.z then
-					char = chars.left_half
-				elseif t.value == signal.low then
-					char = chars.full_low
-				elseif t.value == signal.high then
-					char = chars.low_high
-				else
-					error("invalid value")
-				end
-			elseif sig == signal.high then
-				if t.value == signal.unknown then
-					char = chars.unknown
-				elseif t.value == signal.z then
-					char = chars.left_half
-				elseif t.value == signal.low then
-					char = chars.high_low
-				elseif t.value == signal.high then
-					char = chars.full_high
-				else
-					error("invalid value")
-				end
-			else
-				error("invalid value")
-			end
-			sig = t.value
-			ret[time] = char
-		end
-		while time < maxtime do
-			time = time + 1
-			if sig == signal.unknown then
-				char = chars.unknown
-			elseif sig == signal.z then
-				char = chars.full_z
-			elseif sig == signal.low then
-				char = chars.full_low
-			elseif sig == signal.high then
-				char = chars.full_high
-			else
-				error("invalid value")
-			end
-			ret[time] = char
-		end
-		return table.concat(ret)
-	end
-	return ""
 end
 
 return simulation

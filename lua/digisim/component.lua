@@ -27,10 +27,10 @@ function component.new(name, inputs, outputs, handler)
 		outputs = {},
 	}, MT)
 	for i = 1, inputs do
-		ret.inputs[i] = pin.new("[" .. i .. "]" .. name, ret)
+		ret.inputs[i] = pin.new("[" .. i .. "]" .. name, ret, true)
 	end
 	for i = 1, outputs do
-		ret.outputs[i] = pin.new(name .. "[" .. i .. "]", ret)
+		ret.outputs[i] = pin.new(name .. "[" .. i .. "]", ret, false)
 	end
 
 	function ret.step(timestamp, ...)
