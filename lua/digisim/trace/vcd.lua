@@ -13,32 +13,6 @@ local signal = require("digisim.signal")
 local vcd = {}
 local MT = {
 	__index = vcd,
-	__tostring = function(self)
-		local lines = {
-			"$date",
-			"    Date text",
-			"$end",
-			"$version",
-			"    digisim",
-			"$end",
-			"$comment",
-			"$end",
-			"$timescale 1ps $end",
-			"$scope module logic $end",
-		}
-		local idx = #lines
-		for name, trace in pairs(self.traces) do
-			idx, lines[idx + 1] = idx + 1, "$var wire 1 " .. trace.identifier .. " " .. name .. " $end"
-		end
-		idx, lines[idx + 1] = idx + 1, "$upscope $end"
-		idx, lines[idx + 1] = idx + 1, "$enddefinitions $end"
-		idx, lines[idx + 1] = idx + 1, "$dumpvars"
-		idx, lines[idx + 1] = idx + 1, "$end"
-		for i, x in ipairs(self.data) do
-			lines[idx + i] = x
-		end
-		return table.concat(lines, "\n")
-	end,
 }
 
 function vcd.new()
@@ -48,6 +22,7 @@ function vcd.new()
 		data = {},
 		index = 0,
 		id = { 32 },
+		state = 0,
 	}, MT)
 	return ret
 end
@@ -81,24 +56,56 @@ end
 ---@param name string
 ---@return trace
 local function new_trace(self, name)
+	if self.state == 0 then
+		io.stdout:write([[
+$date
+Date text
+$end
+$version
+digisim
+$end
+$comment
+$end
+$timescale 1ps $end
+$scope module logic $end
+]])
+		self.state = 1
+	end
+	if self.state ~= 1 then
+		error("cannot add new trace after starting trace")
+	end
 	local ret = {
 		identifier = next_identifier(self),
 		value = signal.unknown,
 	}
+	io.stdout:write("$var wire 1 " .. ret.identifier .. " " .. name .. " $end\n")
 	self.traces[name] = ret
 	return ret
 end
 
+function vcd:get(name)
+	return self.traces[name] or new_trace(self, name)
+end
+
 function vcd:trace(name, time, sig)
-	local trace = self.traces[name] or new_trace(self, name)
+	if self.state == 1 then
+		self.state = 2
+		io.stdout:write([[
+$upscope $end
+$enddefinitions $end
+$dumpvars
+$end
+]])
+	end
+	local trace = self:get(name)
 	trace.value = sig
 	if time > self.time then
 		self.time = time
 		self.index = self.index + 1
-		self.data[self.index] = "#" .. tostring(time)
+		io.stdout:write("#" .. tostring(time) .. "\n")
 	end
 	self.index = self.index + 1
-	self.data[self.index] = tostring(sig) .. "" .. trace.identifier
+	io.stdout:write(tostring(sig) .. "" .. trace.identifier .. "\n")
 end
 
 return vcd

@@ -159,8 +159,6 @@ do
 	for _ = 1, constants.CLOCK_PERIOD_TICKS * 4 do
 		circuit:step()
 	end
-
-	print(circuit)
 end
 
 return simulation

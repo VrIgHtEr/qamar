@@ -35,6 +35,11 @@ function simulation:add_component(name, inputs, outputs, handler, trace)
 	end
 	local c = component.new(name, inputs, outputs, handler)
 	c.trace = trace and true or false or constants.DEBUG_TRACE_ALL_OUTPUTS
+	if c.trace then
+		for _, o in ipairs(c.outputs) do
+			self.trace:get(o.name)
+		end
+	end
 	self.components[name] = c
 	return self
 end
