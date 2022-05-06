@@ -5,11 +5,13 @@ local parser = require("qamar.parser")
 local function scandir(directory)
 	local i, t, popen = 0, {}, io.popen
 	local proc = popen('find "' .. directory .. '" -type f -name "*.lua"')
-	for filename in proc:lines() do
-		i = i + 1
-		t[i] = filename
+	if proc then
+		for filename in proc:lines() do
+			i = i + 1
+			t[i] = filename
+		end
+		proc:close()
 	end
-	proc:close()
 	return t
 end
 
@@ -201,6 +203,10 @@ local function parse_everything()
 end
 
 function qamar.run()
+	require("digisim")
+	do
+		return
+	end
 	math.randomseed(os.time())
 	for _ = 1, 3 do
 		parse_everything()
