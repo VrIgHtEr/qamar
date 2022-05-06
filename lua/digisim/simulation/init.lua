@@ -40,6 +40,22 @@ function simulation:add_component(name, inputs, outputs, handler, trace, trace_i
 	return self
 end
 
+function simulation:register_component(name, constructor)
+	if type(name) ~= "string" or not name:match("^[a-zA-Z_][a-zA-Z0-9_]*$") then
+		error("invalid name")
+	end
+	if self["new_" .. name] then
+		error("Component already registered: " .. name)
+	end
+	self["new_" .. name] = function(s, n, trace, trace_inputs)
+		local c = constructor(s, n, trace, trace_inputs)
+		s.components[n] = c
+		c.step = nil
+		return s
+	end
+	return self
+end
+
 local function tbl_count(x)
 	local amt = -#x
 	for _ in pairs(x) do
@@ -115,61 +131,63 @@ function simulation:step()
 			dirty[k] = v
 		end
 		for _, c in pairs(dirty) do
-			local inputs = {}
-			for i, x in ipairs(c.inputs) do
-				inputs[i] = x.value
-			end
-			local outputs = { c.step(self.time, unpack(inputs)) }
-			for i, value in ipairs(outputs) do
-				local output = c.outputs[i]
-				if output.value ~= value then
-					if c.trace then
-						add_trace(self, output.name, self.time, value)
-					end
-					output.value = value
-					output.timestamp = self.time
-					--prt(output.timestamp .. ":" .. vim.inspect(inputs) .. ":" .. output.name .. ":" .. output.value)
-					for _, conn in pairs(output.connections) do
-						if not nextdirty[conn.b.component.name] then
-							nextdirty[conn.b.component.name] = conn.b.component
-							nextcount = nextcount + 1
+			if c.step then
+				local inputs = {}
+				for i, x in ipairs(c.inputs) do
+					inputs[i] = x.value
+				end
+				local outputs = { c.step(self.time, unpack(inputs)) }
+				for i, value in ipairs(outputs) do
+					local output = c.outputs[i]
+					if output.value ~= value then
+						if c.trace then
+							add_trace(self, output.name, self.time, value)
 						end
-						if conn.b.timestamp > self.time then
-							error("future time")
-						end
-						if conn.b.timestamp <= self.time then
-							conn.b.timestamp = self.time
-							if conn.b.value ~= value and conn.b.component.trace_inputs then
-								add_trace(self, conn.b.name, self.time, value)
+						output.value = value
+						output.timestamp = self.time
+						--prt(output.timestamp .. ":" .. vim.inspect(inputs) .. ":" .. output.name .. ":" .. output.value)
+						for _, conn in pairs(output.connections) do
+							if not nextdirty[conn.b.component.name] then
+								nextdirty[conn.b.component.name] = conn.b.component
+								nextcount = nextcount + 1
 							end
-							conn.b.value = value
-							--prt(string.rep(" ", tostring(conn.b.timestamp):len()) .. " " .. conn.b.name)
-						else
-							conn.b.timestamp = self.time
-							if conn.b.value ~= value then
-								if conn.b.value == signal.unknown or conn.b.value == signal.z then
-									if conn.b.component.trace_inputs then
-										add_trace(self, conn.b.name, self.time, value)
+							if conn.b.timestamp > self.time then
+								error("future time")
+							end
+							if conn.b.timestamp <= self.time then
+								conn.b.timestamp = self.time
+								if conn.b.value ~= value and conn.b.component.trace_inputs then
+									add_trace(self, conn.b.name, self.time, value)
+								end
+								conn.b.value = value
+								--prt(string.rep(" ", tostring(conn.b.timestamp):len()) .. " " .. conn.b.name)
+							else
+								conn.b.timestamp = self.time
+								if conn.b.value ~= value then
+									if conn.b.value == signal.unknown or conn.b.value == signal.z then
+										if conn.b.component.trace_inputs then
+											add_trace(self, conn.b.name, self.time, value)
+										end
+										conn.b.value = value
+										--prt(string.rep(" ", tostring(conn.b.timestamp):len()) .. " " .. conn.b.name)
+									elseif
+										conn.b.value == signal.low and value == signal.high
+										or value == signal.low and conn.b.value == signal.high
+									then
+										error("mixed signals!!!")
+									else
+										conn.b.value = value
+										if conn.b.component.trace_inputs then
+											add_trace(self, conn.b.name, self.time, value)
+										end
+										--prt(string.rep(" ", tostring(conn.b.timestamp):len()) .. " " .. conn.b.name)
 									end
-									conn.b.value = value
-									--prt(string.rep(" ", tostring(conn.b.timestamp):len()) .. " " .. conn.b.name)
-								elseif
-									conn.b.value == signal.low and value == signal.high
-									or value == signal.low and conn.b.value == signal.high
-								then
-									error("mixed signals!!!")
-								else
-									conn.b.value = value
-									if conn.b.component.trace_inputs then
-										add_trace(self, conn.b.name, self.time, value)
-									end
-									--prt(string.rep(" ", tostring(conn.b.timestamp):len()) .. " " .. conn.b.name)
 								end
 							end
 						end
+					else
+						--if #output.component.inputs > 0 then prt( self.time .. ":" .. vim.inspect(inputs) .. ":" .. output.name .. ":" .. output.value .. ":SAME") end
 					end
-				else
-					--if #output.component.inputs > 0 then prt( self.time .. ":" .. vim.inspect(inputs) .. ":" .. output.name .. ":" .. output.value .. ":SAME") end
 				end
 			end
 		end

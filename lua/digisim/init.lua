@@ -156,7 +156,7 @@ do
 	circuit:_("DATA", "J")
 	circuit:_("ND", "K")
 
-	for _ = 1, constants.CLOCK_PERIOD_TICKS * 2 do
+	for _ = 1, constants.CLOCK_PERIOD_TICKS * 4 do
 		circuit:step()
 	end
 
