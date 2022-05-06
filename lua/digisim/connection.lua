@@ -17,6 +17,12 @@ function connection.new(name, a, b)
 	}, MT)
 	a.connections[name] = ret
 	b.connections[name] = ret
+	if a.net ~= b.net then
+		if a.net.num_pins < b.net.num_pins then
+			a, b = b, a
+		end
+		a.net:merge(b.net)
+	end
 	return ret
 end
 
