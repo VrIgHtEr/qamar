@@ -139,10 +139,15 @@ function simulation:step()
 			dirty[k] = v
 		end
 		for _, c in pairs(dirty) do
+			for _, x in ipairs(c.inputs) do
+				x.net.latched_value = x.net.value
+			end
+		end
+		for _, c in pairs(dirty) do
 			if c.step then
 				local inputs = {}
 				for i, x in ipairs(c.inputs) do
-					inputs[i] = x.net.value
+					inputs[i] = x.net.latched_value
 				end
 				local outputs = { c.step(self.time, unpack(inputs)) }
 				for i, value in ipairs(outputs) do

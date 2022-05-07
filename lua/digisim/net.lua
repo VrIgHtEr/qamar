@@ -6,6 +6,7 @@ local signal = require("digisim.signal")
 ---@field num_pins pin[]
 ---@field timestamp number
 ---@field value signal
+---@field latched_value signal
 local net = {}
 local MT = { __index = net }
 
