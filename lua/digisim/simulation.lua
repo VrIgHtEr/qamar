@@ -100,6 +100,54 @@ function simulation:connect(a, output, b, input)
 	return self
 end
 
+---@param a string
+---@param b string
+---@param output number
+---@param input number
+---@return simulation
+function simulation:alias_input(a, output, b, input)
+	local ca, cb = self.components[a], self.components[b]
+	if not ca then
+		error("component not found: " .. a)
+	end
+	if not cb then
+		error("component not found: " .. b)
+	end
+	local o, i = ca.inputs[output], cb.inputs[input]
+	if not o then
+		error("input not found " .. "[" .. tostring(output) .. "]" .. a)
+	end
+	if not i then
+		error("input not found " .. "[" .. tostring(input) .. "]" .. b)
+	end
+	o.net:merge(i.net)
+	return self
+end
+
+---@param a string
+---@param b string
+---@param output number
+---@param input number
+---@return simulation
+function simulation:alias_output(a, output, b, input)
+	local ca, cb = self.components[a], self.components[b]
+	if not ca then
+		error("component not found: " .. a)
+	end
+	if not cb then
+		error("component not found: " .. b)
+	end
+	local o, i = ca.outputs[output], cb.outputs[input]
+	if not o then
+		error("output not found " .. "[" .. tostring(output) .. "]" .. a)
+	end
+	if not i then
+		error("output not found " .. "[" .. tostring(input) .. "]" .. b)
+	end
+	o.net:merge(i.net)
+	return self
+end
+
 ---@class sample
 ---@field time number
 ---@field value signal
@@ -309,5 +357,56 @@ function simulation:new_buffer(name, trace)
 		return a
 	end, trace)
 end
+
+simulation:register_component("edge_detector", 1, 2, function(circuit, c, trace)
+	local n = c.name
+
+	-- ~CLK - inverted clock
+	circuit:new_not(n .. "___CLK_", trace)
+	circuit:alias_input(n, 1, n .. "___CLK_", 1)
+
+	-- CLK_RISING - clock rising edge detector
+	circuit
+		:new_buffer(n .. "___clk1", trace)
+		:alias_input(n, 1, n .. "___clk1", 1)
+		:new_buffer(n .. "___clk2", trace)
+		:_(n .. "___clk1", n .. "___clk2")
+		:new_buffer(n .. "___clk3", trace)
+		:_(n .. "___clk2", n .. "___clk3")
+		:new_buffer(n .. "___clk4", trace)
+		:_(n .. "___clk3", n .. "___clk4")
+		:new_buffer(n .. "___clk5", trace)
+		:_(n .. "___clk4", n .. "___clk5")
+		:new_buffer(n .. "___clk6", trace)
+		:_(n .. "___clk5", n .. "___clk6")
+		:new_not(n .. "___nclk", trace)
+		:_(n .. "___clk6", n .. "___nclk")
+		:new_and(n .. "___CLK_RISING", true, trace)
+		:alias_input(n, 1, n .. "___CLK_RISING", 1)
+		:_(n .. "___nclk", n .. "___CLK_RISING", 2)
+
+	-- CLK_FALLING - clock falling edge detector
+	circuit
+		:new_buffer(n .. "___clk1_", trace)
+		:_(n .. "___CLK_", n .. "___clk1_")
+		:new_buffer(n .. "___clk2_", trace)
+		:_(n .. "___clk1_", n .. "___clk2_")
+		:new_buffer(n .. "___clk3_", trace)
+		:_(n .. "___clk2_", n .. "___clk3_")
+		:new_buffer(n .. "___clk4_", trace)
+		:_(n .. "___clk3_", n .. "___clk4_")
+		:new_buffer(n .. "___clk5_", trace)
+		:_(n .. "___clk4_", n .. "___clk5_")
+		:new_buffer(n .. "___clk6_", trace)
+		:_(n .. "___clk5_", n .. "___clk6_")
+		:new_not(n .. "___nclk_", trace)
+		:_(n .. "___clk6_", n .. "___nclk_")
+		:new_and(n .. "___CLK_FALLING", true, trace)
+		:_(n .. "___nclk_", n .. "___CLK_FALLING")
+		:_(n .. "___CLK_", n .. "___CLK_FALLING")
+
+	circuit:alias_output(n, 1, n .. "___CLK_RISING", 1)
+	circuit:alias_output(n, 2, n .. "___CLK_FALLING", 1)
+end)
 
 return simulation

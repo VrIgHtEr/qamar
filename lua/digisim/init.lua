@@ -68,6 +68,8 @@ do
 		return ts < constants.CLOCK_PERIOD_TICKS / 2 and signal.low or signal.high
 	end, true)
 
+	circuit:new_edge_detector("ECLK", true):_("CLK", "ECLK")
+
 	-- ~CLK - inverted clock
 	circuit:new_not("CLK_"):_("CLK", "CLK_")
 
