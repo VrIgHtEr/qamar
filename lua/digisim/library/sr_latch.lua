@@ -1,3 +1,6 @@
+---@class simulation
+---@field new_sr_latch function
+
 ---@param simulation simulation
 return function(simulation)
 	simulation:register_component(
@@ -6,13 +9,13 @@ return function(simulation)
 		2,
 		---@param circuit simulation
 		---@param name string
-		---@param trace boolean
-		function(circuit, name, trace)
+		---@param opts boolean
+		function(circuit, name, opts)
 			local na = name .. "___a"
 			local nb = name .. "___b"
 			circuit
-				:new_nand(na, trace)
-				:new_nand(nb, trace)
+				:new_nand(na, opts)
+				:new_nand(nb, opts)
 				:_(na, nb, 1)
 				:_(nb, na, 2)
 				:alias_input(name, 2, na, 1)

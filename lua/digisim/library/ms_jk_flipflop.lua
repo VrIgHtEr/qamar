@@ -1,3 +1,6 @@
+---@class simulation
+---@field new_ms_jk_flipflop function
+
 ---@param simulation simulation
 return function(simulation)
 	simulation:register_component(
@@ -6,8 +9,8 @@ return function(simulation)
 		2,
 		---@param circuit simulation
 		---@param name string
-		---@param trace boolean
-		function(circuit, name, trace)
+		---@param opts boolean
+		function(circuit, name, opts)
 			local q = name .. "___q"
 			local m = name .. "___m"
 			local qj = name .. "___qj"
@@ -18,7 +21,7 @@ return function(simulation)
 			local lk = name .. "___lk"
 
 			circuit
-				:new_sr_latch(q, trace)
+				:new_sr_latch(q, opts)
 				:new_sr_latch(m)
 				:alias_output(q, 1, name, 1)
 				:alias_output(q, 2, name, 2)

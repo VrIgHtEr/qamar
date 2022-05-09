@@ -26,15 +26,20 @@ function simulation.new()
 	return ret
 end
 
-function simulation:add_component(name, inputs, outputs, handler, trace)
+function simulation:add_component(name, inputs, outputs, handler, opts)
 	if type(name) ~= "string" or not name:match("^[a-zA-Z_][a-zA-Z0-9_]*$") then
 		error("invalid name")
 	end
 	if self.components[name] then
 		error("component already exists: " .. name)
 	end
+	if opts == nil then
+		opts = {}
+	elseif type(opts) ~= "table" then
+		error("invalid opts type")
+	end
 	local c = component.new(name, inputs, outputs, handler)
-	c.trace = trace and true or false or constants.DEBUG_TRACE_ALL_OUTPUTS
+	c.trace = opts.trace and true or false or constants.DEBUG_TRACE_ALL_OUTPUTS
 	if c.trace then
 		for _, o in ipairs(c.outputs) do
 			self.trace:get(o.name)
@@ -51,14 +56,14 @@ function simulation:register_component(name, inputs, outputs, constructor)
 	if self["new_" .. name] then
 		error("Component already registered: " .. name)
 	end
-	self["new_" .. name] = function(s, n, trace)
+	self["new_" .. name] = function(s, n, opts)
 		if s.components[n] then
 			error("component already exists")
 		end
 		local c = component.new(n, inputs, outputs, function() end)
 		c.step = nil
 		s.components[n] = c
-		constructor(s, c.name, trace)
+		constructor(s, c.name, opts)
 		return s
 	end
 	return self
@@ -147,10 +152,6 @@ function simulation:alias_output(a, output, b, input)
 	o.net:merge(i.net)
 	return self
 end
-
----@class sample
----@field time number
----@field value signal
 
 ---@param sim simulation
 ---@param name string
@@ -308,54 +309,54 @@ function simulation:_(a, output, b, input)
 	return self:connect(a, output, b, input)
 end
 
-function simulation:new_nand(name, trace)
+function simulation:new_nand(name, opts)
 	return self:add_component(name, 2, 1, function(_, a, b)
 		return (a == signal.high and b == signal.high) and signal.low or signal.high
-	end, trace)
+	end, opts)
 end
 
-function simulation:new_nor(name, trace)
+function simulation:new_nor(name, opts)
 	return self:add_component(name, 2, 1, function(_, a, b)
 		return (a == signal.high or b == signal.high) and signal.low or signal.high
-	end, trace)
+	end, opts)
 end
 
-function simulation:new_xnor(name, trace)
+function simulation:new_xnor(name, opts)
 	return self:add_component(name, 2, 1, function(_, a, b)
 		return (a == signal.high and b == signal.low or a == signal.low and b == signal.high) and signal.low
 			or signal.high
-	end, trace)
+	end, opts)
 end
 
-function simulation:new_and(name, trace)
+function simulation:new_and(name, opts)
 	return self:add_component(name, 2, 1, function(_, a, b)
 		return (a == signal.high and b == signal.high) and signal.high or signal.low
-	end, trace)
+	end, opts)
 end
 
-function simulation:new_xor(name, trace)
+function simulation:new_xor(name, opts)
 	return self:add_component(name, 2, 1, function(_, a, b)
 		return (a == signal.high and b == signal.low or a == signal.low and b == signal.high) and signal.high
 			or signal.low
-	end, trace)
+	end, opts)
 end
 
-function simulation:new_or(name, trace)
+function simulation:new_or(name, opts)
 	return self:add_component(name, 2, 1, function(_, a, b)
 		return (a == signal.high or b == signal.high) and signal.high or signal.low
-	end, trace)
+	end, opts)
 end
 
-function simulation:new_not(name, trace)
+function simulation:new_not(name, opts)
 	return self:add_component(name, 1, 1, function(_, a)
 		return a == signal.low and signal.high or signal.low
-	end, trace)
+	end, opts)
 end
 
-function simulation:new_buffer(name, trace)
+function simulation:new_buffer(name, opts)
 	return self:add_component(name, 1, 1, function(_, a)
 		return a
-	end, trace)
+	end, opts)
 end
 
 require("digisim.library")(simulation)

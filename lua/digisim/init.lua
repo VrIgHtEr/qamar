@@ -60,22 +60,19 @@ do
 	-- ~RST - inverted reset signal. Only low for the first "startup_ticks" ticks. High otherwise
 	circuit:add_component("RST_", 0, 1, function(time)
 		return time < constants.STARTUP_TICKS and signal.low or signal.high
-	end, true)
+	end, { trace = true })
 
 	-- CLK - clock with period "clock_period_ticks"
-	circuit:add_component("CLK", 0, 1, function(ts)
-		ts = ts % constants.CLOCK_PERIOD_TICKS
-		return ts < constants.CLOCK_PERIOD_TICKS / 2 and signal.low or signal.high
-	end, true)
+	circuit:new_clock("CLK", { period = constants.CLOCK_PERIOD_TICKS })
 
-	circuit:new_edge_detector("ECLK", true):_("CLK", "ECLK")
+	circuit:new_edge_detector("ECLK", { trace = true, chain_length = 3 }):_("CLK", "ECLK")
 	circuit:new_ms_jk_flipflop("FF"):_("ECLK", 1, "FF", 3):_("ECLK", 2, "FF", 4)
 
 	-- data pin
 	circuit:add_component("DATA", 0, 1, function(time)
 		return time * 0.5 % constants.CLOCK_PERIOD_TICKS < constants.CLOCK_PERIOD_TICKS / 2 and signal.low
 			or signal.high
-	end, true)
+	end, { trace = true })
 
 	-- connect data pin to jk flip flop
 	circuit:new_not("ND"):_("DATA", "ND")
@@ -88,6 +85,3 @@ do
 end
 
 return simulation
-
---[[
-]]
