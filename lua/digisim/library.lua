@@ -27,7 +27,6 @@ return function(simulation)
 		if idx > 0 then
 			path = path:sub(1, idx)
 		end
-		io.stderr:write(path .. "\n")
 		for _, x in ipairs(list_files(path .. "library")) do
 			if x:match("^.*[.]lua$") then
 				require("digisim.library." .. x:sub(1, x:len() - 4))(simulation)
