@@ -27,7 +27,7 @@ function simulation.new()
 end
 
 function simulation:add_component(name, inputs, outputs, handler, opts)
-	if type(name) ~= "string" or not name:match("^[a-zA-Z_][a-zA-Z0-9_]*$") then
+	if type(name) ~= "string" then
 		error("invalid name")
 	end
 	if self.components[name] then
@@ -40,7 +40,7 @@ function simulation:add_component(name, inputs, outputs, handler, opts)
 	end
 	local c = component.new(name, inputs, outputs, handler)
 	c.trace = opts.trace and true or false or constants.DEBUG_TRACE_ALL_OUTPUTS
-	if c.trace then
+	if c.trace and handler then
 		for _, o in ipairs(c.outputs) do
 			self.trace:get(o.name)
 		end
@@ -49,7 +49,7 @@ function simulation:add_component(name, inputs, outputs, handler, opts)
 	return self
 end
 
-function simulation:register_component(name, inputs, outputs, constructor)
+function simulation:register_component(name, constructor)
 	if type(name) ~= "string" or not name:match("^[a-zA-Z_][a-zA-Z0-9_]*$") then
 		error("invalid name")
 	end
@@ -60,10 +60,7 @@ function simulation:register_component(name, inputs, outputs, constructor)
 		if s.components[n] then
 			error("component already exists")
 		end
-		local c = component.new(n, inputs, outputs, function() end)
-		c.step = nil
-		s.components[n] = c
-		constructor(s, c.name, opts)
+		constructor(s, n, opts)
 		return s
 	end
 	return self

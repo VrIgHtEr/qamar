@@ -5,12 +5,11 @@
 return function(simulation)
 	simulation:register_component(
 		"half_adder",
-		2,
-		2,
 		---@param circuit simulation
 		---@param name string
 		---@param opts boolean
 		function(circuit, name, opts)
+			circuit:add_component(name, 2, 2)
 			local s = name .. "___s"
 			local c = name .. "___c"
 			circuit

@@ -5,12 +5,11 @@
 return function(simulation)
 	simulation:register_component(
 		"gated_sr_latch",
-		3,
-		2,
 		---@param circuit simulation
 		---@param name string
 		---@param opts boolean
 		function(circuit, name, opts)
+			circuit:add_component(name, 3, 2)
 			local nl = name .. "___l"
 			local na = name .. "___a"
 			local nb = name .. "___b"

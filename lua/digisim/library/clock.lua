@@ -7,8 +7,6 @@ local signal = require("digisim.signal")
 return function(simulation)
 	simulation:register_component(
 		"clock",
-		0,
-		1,
 		---@param circuit simulation
 		---@param name string
 		---@param opts boolean
@@ -23,12 +21,11 @@ return function(simulation)
 			if period < 2 then
 				error("clock period too small")
 			end
-			-- CLK - clock with period "clock_period_ticks"
-			circuit:add_component(name .. "___component", 0, 1, function(ts)
+			io.stderr:write(name .. "\n")
+			circuit:add_component(name, 0, 1, function(ts)
 				ts = ts % period
 				return ts < period / 2 and signal.low or signal.high
 			end, { trace = opts.trace and true or false })
-			circuit:alias_output(name, 1, name .. "___component", 1)
 		end
 	)
 end

@@ -7,8 +7,6 @@ local signal = require("digisim.signal")
 return function(simulation)
 	simulation:register_component(
 		"reset",
-		0,
-		1,
 		---@param circuit simulation
 		---@param name string
 		---@param opts boolean
@@ -23,10 +21,9 @@ return function(simulation)
 			if period < 1 then
 				error("reset period too small")
 			end
-			circuit:add_component(name .. "___component", 0, 1, function(time)
+			circuit:add_component(name, 0, 1, function(time)
 				return time < period and signal.low or signal.high
 			end, { trace = opts.trace and true or false })
-			circuit:alias_output(name, 1, name .. "___component", 1)
 		end
 	)
 end

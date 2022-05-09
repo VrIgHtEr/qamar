@@ -5,12 +5,11 @@
 return function(simulation)
 	simulation:register_component(
 		"jk_flipflop",
-		3,
-		2,
 		---@param circuit simulation
 		---@param name string
 		---@param opts boolean
 		function(circuit, name, opts)
+			circuit:add_component(name, 3, 2)
 			local nl = name .. "___l"
 			local nj = name .. "___nj"
 			local nk = name .. "___nk"

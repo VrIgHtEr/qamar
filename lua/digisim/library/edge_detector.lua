@@ -3,7 +3,9 @@
 
 ---@param simulation simulation
 return function(simulation)
-	simulation:register_component("edge_detector", 1, 2, function(circuit, name, opts)
+	simulation:register_component("edge_detector", function(circuit, name, opts)
+		circuit:add_component(name, 1, 2)
+
 		-- ~CLK - inverted clock
 		circuit:new_not(name .. "___CLK_", opts)
 		circuit:alias_input(name, 1, name .. "___CLK_", 1)
