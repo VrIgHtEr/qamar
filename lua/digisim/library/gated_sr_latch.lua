@@ -10,9 +10,9 @@ return function(simulation)
 		---@param opts boolean
 		function(circuit, name, opts)
 			circuit:add_component(name, 3, 2)
-			local nl = name .. "___l"
-			local na = name .. "___a"
-			local nb = name .. "___b"
+			local nl = name .. ".l"
+			local na = name .. ".a"
+			local nb = name .. ".b"
 			circuit
 				:new_sr_latch(nl, opts)
 				:new_and(na)

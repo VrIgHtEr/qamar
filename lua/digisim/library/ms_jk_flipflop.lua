@@ -10,14 +10,14 @@ return function(simulation)
 		---@param opts boolean
 		function(circuit, name, opts)
 			circuit:add_component(name, 4, 2)
-			local q = name .. "___q"
-			local m = name .. "___m"
-			local qj = name .. "___qj"
-			local qk = name .. "___qk"
-			local mj = name .. "___mj"
-			local mk = name .. "___mk"
-			local lj = name .. "___lj"
-			local lk = name .. "___lk"
+			local q = name .. ".q"
+			local m = name .. ".m"
+			local qj = name .. ".qj"
+			local qk = name .. ".qk"
+			local mj = name .. ".mj"
+			local mk = name .. ".mk"
+			local lj = name .. ".lj"
+			local lk = name .. ".lk"
 
 			circuit
 				:new_sr_latch(q, opts)

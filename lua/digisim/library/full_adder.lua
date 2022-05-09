@@ -11,10 +11,10 @@ return function(simulation)
 		function(circuit, name, opts)
 			circuit:add_component(name, 3, 2)
 
-			local h = name .. "___h"
-			local s = name .. "___s"
-			local ca = name .. "___ca"
-			local c = name .. "___c"
+			local h = name .. ".h"
+			local s = name .. ".s"
+			local ca = name .. ".ca"
+			local c = name .. ".c"
 			circuit
 				:new_half_adder(h)
 				:alias_input(name, 1, h, 1)

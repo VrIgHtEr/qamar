@@ -10,8 +10,8 @@ return function(simulation)
 		---@param opts boolean
 		function(circuit, name, opts)
 			circuit:add_component(name, 2, 2)
-			local s = name .. "___s"
-			local c = name .. "___c"
+			local s = name .. ".s"
+			local c = name .. ".c"
 			circuit
 				:new_xor(s, opts)
 				:new_and(c, opts)

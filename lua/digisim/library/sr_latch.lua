@@ -10,8 +10,8 @@ return function(simulation)
 		---@param opts boolean
 		function(circuit, name, opts)
 			circuit:add_component(name, 2, 2)
-			local na = name .. "___a"
-			local nb = name .. "___b"
+			local na = name .. ".a"
+			local nb = name .. ".b"
 			circuit
 				:new_nand(na, opts)
 				:new_nand(nb, opts)
