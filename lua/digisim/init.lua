@@ -69,83 +69,7 @@ do
 	end, true)
 
 	circuit:new_edge_detector("ECLK", true):_("CLK", "ECLK")
-
-	-- ~CLK - inverted clock
-	circuit:new_not("CLK_"):_("CLK", "CLK_")
-
-	-- CLK_RISING - clock rising edge detector
-	circuit
-		:new_buffer("clk1")
-		:_("CLK", "clk1")
-		:new_buffer("clk2")
-		:_("clk1", "clk2")
-		:new_buffer("clk3")
-		:_("clk2", "clk3")
-		:new_buffer("clk4")
-		:_("clk3", "clk4")
-		:new_buffer("clk5")
-		:_("clk4", "clk5")
-		:new_buffer("clk6")
-		:_("clk5", "clk6")
-		:new_not("nclk")
-		:_("clk6", "nclk")
-		:new_and("CLK_RISING", true)
-		:_("nclk", "CLK_RISING")
-		:_("CLK", "CLK_RISING")
-
-	-- CLK_FALLING - clock falling edge detector
-	circuit
-		:new_buffer("clk1_")
-		:_("CLK_", "clk1_")
-		:new_buffer("clk2_")
-		:_("clk1_", "clk2_")
-		:new_buffer("clk3_")
-		:_("clk2_", "clk3_")
-		:new_buffer("clk4_")
-		:_("clk3_", "clk4_")
-		:new_buffer("clk5_")
-		:_("clk4_", "clk5_")
-		:new_buffer("clk6_")
-		:_("clk5_", "clk6_")
-		:new_not("nclk_")
-		:_("clk6_", "nclk_")
-		:new_and("CLK_FALLING", true)
-		:_("nclk_", "CLK_FALLING")
-		:_("CLK_", "CLK_FALLING")
-
-	-- slave SR latch
-	circuit
-		:new_nand("Q", true)
-		:new_nand("Q_")
-		:_("Q", "Q_")
-		:_("Q_", "Q")
-		:new_nand("S")
-		:new_nand("S_")
-		:_("S", "Q")
-		:_("S_", "Q_")
-		:_("CLK_FALLING", "S")
-		:_("CLK_FALLING", "S_")
-
-	-- master SR latch
-	circuit
-		:new_nand("M")
-		:new_nand("M_")
-		:_("M", "M_")
-		:_("M_", "M")
-		:_("M", "S")
-		:_("M_", "S_")
-		:new_nand("C")
-		:new_nand("C_")
-		:_("C", "M")
-		:_("C_", "M_")
-		:_("CLK_RISING", "C")
-		:_("CLK_RISING", "C_")
-		:new_and("J")
-		:new_and("K")
-		:_("J", "C")
-		:_("K", "C_")
-		:_("Q", "K")
-		:_("Q_", "J")
+	circuit:new_ms_jk_flipflop("FF"):_("ECLK", 1, "FF", 3):_("ECLK", 2, "FF", 4)
 
 	-- data pin
 	circuit:add_component("DATA", 0, 1, function(time)
@@ -155,8 +79,8 @@ do
 
 	-- connect data pin to jk flip flop
 	circuit:new_not("ND"):_("DATA", "ND")
-	circuit:_("DATA", "J")
-	circuit:_("ND", "K")
+	circuit:_("DATA", "FF", 1)
+	circuit:_("ND", "FF", 2)
 
 	for _ = 1, constants.CLOCK_PERIOD_TICKS * 4 do
 		circuit:step()
