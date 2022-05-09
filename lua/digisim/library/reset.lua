@@ -1,12 +1,12 @@
 ---@class simulation
----@field new_clock function
+---@field new_reset function
 
 local signal = require("digisim.signal")
 
 ---@param simulation simulation
 return function(simulation)
 	simulation:register_component(
-		"clock",
+		"reset",
 		0,
 		1,
 		---@param circuit simulation
@@ -15,18 +15,16 @@ return function(simulation)
 		function(circuit, name, opts)
 			local period = opts.period
 			if period == nil then
-				period = 2
+				period = 1
 			end
 			if type(period) ~= "number" then
-				error("invalid clock period type")
+				error("invalid reset period type")
 			end
-			if period < 2 then
-				error("clock period too small")
+			if period < 1 then
+				error("reset period too small")
 			end
-			-- CLK - clock with period "clock_period_ticks"
-			circuit:add_component(name .. "___component", 0, 1, function(ts)
-				ts = ts % period
-				return ts < period / 2 and signal.low or signal.high
+			circuit:add_component(name .. "___component", 0, 1, function(time)
+				return time < period and signal.low or signal.high
 			end, { trace = opts.trace and true or false })
 			circuit:alias_output(name, 1, name .. "___component", 1)
 		end

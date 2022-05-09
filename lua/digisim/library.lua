@@ -6,4 +6,5 @@ return function(simulation)
 	require("digisim.library.jk_flipflop")(simulation)
 	require("digisim.library.ms_jk_flipflop")(simulation)
 	require("digisim.library.clock")(simulation)
+	require("digisim.library.reset")(simulation)
 end
