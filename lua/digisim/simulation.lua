@@ -2,7 +2,7 @@ local queue = require("qamar.util.deque")
 local constants = require("digisim.constants")
 local component = require("digisim.component")
 local connection = require("digisim.connection")
-local vcd = require("digisim.trace.vcd")
+local vcd = require("digisim.vcd")
 
 ---@class simulation
 ---@field components table<string,component>
