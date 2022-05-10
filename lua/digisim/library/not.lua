@@ -12,7 +12,7 @@ return function(simulation)
 		---@param opts boolean
 		function(self, name, opts)
 			opts = opts or {}
-			opts.names = { inputs = { "a" }, outputs = { "~q" } }
+			opts.names = { inputs = { "a" }, outputs = { "q" } }
 			return self:add_component(name, 1, 1, function(_, a)
 				return a == signal.low and signal.high or signal.low
 			end, opts)

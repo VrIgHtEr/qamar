@@ -9,11 +9,11 @@ return function(simulation)
 		circuit:add_component(name, 1, 2, nil, opts)
 
 		-- ~CLK - inverted clock
-		circuit:new_not(name .. ".CLK_")
-		circuit:alias_input(name, 1, name .. ".CLK_", 1)
+		circuit:new_not(name .. ".~clk")
+		circuit:c(name, "clk", name .. ".~clk", "q")
 
 		-- CLK_RISING - clock rising edge detector
-		circuit:new_not(name .. ".clk1"):alias_input(name, 1, name .. ".clk1", 1)
+		circuit:new_not(name .. ".clk1"):c(name, "clk", name .. ".clk1", "a")
 
 		local chain_length = opts.chain_length or 3
 		if type(chain_length) ~= "number" then
@@ -22,25 +22,25 @@ return function(simulation)
 
 		for i = 2, chain_length do
 			circuit:new_buffer(name .. ".clk" .. i)
-			circuit:_(name .. ".clk" .. (i - 1), name .. ".clk" .. i)
+			circuit:c(name .. ".clk" .. (i - 1), "q", name .. ".clk" .. i, "a")
 		end
 		circuit
 			:new_and(name .. ".CLK_RISING")
-			:alias_input(name, 1, name .. ".CLK_RISING", 1)
-			:_(name .. ".clk" .. chain_length, name .. ".CLK_RISING", 2)
+			:c(name, "clk", name .. ".CLK_RISING", "a")
+			:c(name .. ".clk" .. chain_length, "q", name .. ".CLK_RISING", "b")
 
 		-- CLK_FALLING - clock falling edge detector
-		circuit:new_not(name .. ".clk1_"):_(name .. ".CLK_", name .. ".clk1_")
+		circuit:new_not(name .. ".clk1_"):c(name .. ".~clk", "q", name .. ".clk1_", "a")
 		for i = 2, chain_length do
 			circuit:new_buffer(name .. ".clk" .. i .. "_")
-			circuit:_(name .. ".clk" .. (i - 1) .. "_", name .. ".clk" .. i .. "_")
+			circuit:c(name .. ".clk" .. (i - 1) .. "_", "q", name .. ".clk" .. i .. "_", "a")
 		end
 		circuit
 			:new_and(name .. ".CLK_FALLING")
-			:_(name .. ".clk" .. chain_length .. "_", name .. ".CLK_FALLING")
-			:_(name .. ".CLK_", name .. ".CLK_FALLING")
+			:c(name .. ".clk" .. chain_length .. "_", "q", name .. ".CLK_FALLING", "a")
+			:c(name .. ".~clk", "q", name .. ".CLK_FALLING", "b")
 
-		circuit:alias_output(name, 1, name .. ".CLK_RISING", 1)
-		circuit:alias_output(name, 2, name .. ".CLK_FALLING", 1)
+		circuit:c(name, "rising", name .. ".CLK_RISING", "q")
+		circuit:c(name, "falling", name .. ".CLK_FALLING", "q")
 	end)
 end

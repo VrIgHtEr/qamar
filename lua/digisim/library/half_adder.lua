@@ -17,12 +17,12 @@ return function(simulation)
 			circuit
 				:new_xor(s)
 				:new_and(c)
-				:alias_output(s, 1, name, 1)
-				:alias_output(c, 1, name, 2)
-				:alias_input(name, 1, s, 1)
-				:alias_input(name, 2, s, 2)
-				:alias_input(name, 1, c, 1)
-				:alias_input(name, 2, c, 2)
+				:c(s, "q", name, "sum")
+				:c(c, "q", name, "carry")
+				:c(name, "a", s, "a")
+				:c(name, "b", s, "b")
+				:c(name, "a", c, "a")
+				:c(name, "b", c, "b")
 		end
 	)
 end

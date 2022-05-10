@@ -17,12 +17,12 @@ return function(simulation)
 			circuit
 				:new_nand(na)
 				:new_nand(nb)
-				:_(na, nb, 1)
-				:_(nb, na, 2)
-				:alias_input(name, 2, na, 1)
-				:alias_input(name, 1, nb, 2)
-				:alias_output(na, 1, name, 1)
-				:alias_output(nb, 1, name, 2)
+				:c(na, "q", nb, "a")
+				:c(nb, "q", na, "b")
+				:c(name, "r", na, "a")
+				:c(name, "s", nb, "b")
+				:c(name, "q", na, "q")
+				:c(name, "~q", nb, "q")
 		end
 	)
 end

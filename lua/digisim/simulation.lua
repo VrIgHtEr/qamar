@@ -89,14 +89,6 @@ function simulation:register_component(name, constructor)
 	return self
 end
 
-local function tbl_count(x)
-	local amt = -#x
-	for _ in pairs(x) do
-		amt = amt + 1
-	end
-	return amt
-end
-
 ---@param a string
 ---@param b string
 ---@param output number
@@ -156,60 +148,6 @@ function simulation:c(a, pina, b, pinb)
 		error("connection already exists: " .. na)
 	end
 	self.connections[na] = connection.new(na, o, i)
-	return self
-end
-
----@param a string
----@param b string
----@param output number
----@param input number
----@return simulation
-function simulation:alias_input(a, output, b, input)
-	if self.simulation_started then
-		error("simulation started - cannot add new component")
-	end
-	local ca, cb = self.components[a], self.components[b]
-	if not ca then
-		error("component not found: " .. a)
-	end
-	if not cb then
-		error("component not found: " .. b)
-	end
-	local o, i = ca.inputs[output], cb.inputs[input]
-	if not o then
-		error("input not found " .. "[" .. tostring(output) .. "]" .. a)
-	end
-	if not i then
-		error("input not found " .. "[" .. tostring(input) .. "]" .. b)
-	end
-	o.net:merge(i.net)
-	return self
-end
-
----@param a string
----@param b string
----@param output number
----@param input number
----@return simulation
-function simulation:alias_output(a, output, b, input)
-	if self.simulation_started then
-		error("simulation started - cannot add new component")
-	end
-	local ca, cb = self.components[a], self.components[b]
-	if not ca then
-		error("component not found: " .. a)
-	end
-	if not cb then
-		error("component not found: " .. b)
-	end
-	local o, i = ca.outputs[output], cb.outputs[input]
-	if not o then
-		error("output not found " .. "[" .. tostring(output) .. "]" .. a)
-	end
-	if not i then
-		error("output not found " .. "[" .. tostring(input) .. "]" .. b)
-	end
-	o.net:merge(i.net)
 	return self
 end
 
@@ -301,80 +239,6 @@ function simulation:step()
 		end
 	until count == 0
 	return self, ticks
-end
-
-function simulation:_(a, output, b, input)
-	local args
-	if input ~= nil then
-		args = 4
-	elseif b ~= nil then
-		args = 3
-	elseif output ~= nil then
-		args = 2
-	elseif a ~= nil then
-		args = 1
-	else
-		args = 0
-	end
-	if args < 2 then
-		error("invalid number of arguments")
-	end
-	if type(a) ~= "string" then
-		error("invalid argument type")
-	end
-	if args == 2 then
-		b, output = output, nil
-	elseif args == 3 then
-		if type(output) == "number" then
-			if type(b) ~= "string" then
-				error("invalid argument type")
-			end
-		elseif type(output) == "string" then
-			input = b
-			b = output
-			output = nil
-			if type(input) ~= "number" then
-				error("invalid argument type")
-			end
-		else
-			error("invalid argument type")
-		end
-	else
-		if type(b) ~= "string" or type(output) ~= "number" or type(input) ~= "number" then
-			error("invalid argument type")
-		end
-	end
-	local ca, cb = self.components[a], self.components[b]
-	if not ca then
-		error("component not found: " .. a)
-	end
-	if not cb then
-		error("component not found: " .. b)
-	end
-	if #ca.outputs == 0 then
-		error("component has no outputs")
-	end
-	if not output then
-		if #ca.outputs > 1 then
-			error("output not specified and component has multiple outputs")
-		end
-		output = 1
-	end
-	if #cb.inputs == 0 then
-		error("component has no inputs")
-	end
-	if not input then
-		for i, x in ipairs(cb.inputs) do
-			if tbl_count(x.connections) == 0 then
-				input = i
-				break
-			end
-		end
-		if not input then
-			error("could not find unused input")
-		end
-	end
-	return self:connect(a, output, b, input)
 end
 
 require("digisim.library")(simulation)

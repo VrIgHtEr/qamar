@@ -32,20 +32,20 @@ return function(simulation)
 			local n = name .. "."
 
 			circuit:new_full_adder(n .. 0)
-			circuit:alias_input(name, 1, n .. 0, 1)
-			circuit:alias_input(name, width + 1, n .. 0, 2)
-			circuit:alias_input(name, width * 2 + 1, n .. 0, 3)
-			circuit:alias_output(name, 1, n .. 0, 1)
+			circuit:c(name, opts.names.inputs[1], n .. 0, "a")
+			circuit:c(name, opts.names.inputs[width + 1], n .. 0, "b")
+			circuit:c(name, opts.names.inputs[width * 2 + 1], n .. 0, "c")
+			circuit:c(name, opts.names.outputs[1], n .. 0, "sum")
 
 			for i = 1, width - 1 do
 				circuit:new_full_adder(n .. i)
-				circuit:alias_input(name, i + 1, n .. i, 1)
-				circuit:alias_input(name, width + i + 1, n .. i, 2)
-				circuit:alias_output(name, i + 1, n .. i, 1)
-				circuit:_(n .. (i - 1), 2, n .. i, 3)
+				circuit:c(name, opts.names.inputs[i + 1], n .. i, "a")
+				circuit:c(name, opts.names.inputs[width + i + 1], n .. i, "b")
+				circuit:c(name, opts.names.outputs[i + 1], n .. i, "sum")
+				circuit:c(n .. (i - 1), "carry", n .. i, "c")
 			end
 
-			circuit:alias_output(name, width + 1, n .. (width - 1), 2)
+			circuit:c(name, opts.names.outputs[width + 1], n .. (width - 1), "carry")
 		end
 	)
 end
