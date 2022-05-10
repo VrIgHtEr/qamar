@@ -38,7 +38,7 @@ function component.new(name, inputs, outputs, handler)
 			local parts = { ... }
 			for i = 1, #parts do
 				if parts[i] == signal.unknown or parts[i] == signal.z then
-					parts[i] = math.random(0, 1)
+					parts[i] = 0 --math.random(0, 1)
 				end
 			end
 			local o = { handler(timestamp, unpack(parts)) }

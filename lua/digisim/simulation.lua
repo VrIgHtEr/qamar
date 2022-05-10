@@ -162,6 +162,7 @@ function simulation:step()
 	--local prt = function(_) end
 	--prt("---------------------------------------------------------")
 	local maxstep = 10000
+	local ticks = 0
 
 	---@type table<string,component>
 	local dirty = {}
@@ -227,11 +228,12 @@ function simulation:step()
 		dirty = nextdirty
 		count = nextcount
 		maxstep = maxstep - 1
+		ticks = ticks + 1
 		if maxstep == 0 then
 			error("circuit failed to stabilize")
 		end
 	until count == 0
-	return self
+	return self, ticks
 end
 
 function simulation:_(a, output, b, input)

@@ -65,16 +65,31 @@ do
 
 	circuit:new_reset("RST_", { trace = true, period = constants.STARTUP_TICKS })
 	circuit:new_clock("CLK", { period = constants.CLOCK_PERIOD_TICKS })
-	circuit:new_edge_detector("ECLK", { trace = true, chain_length = 3 }):_("CLK", "ECLK")
+	circuit:new_edge_detector("ECLK", { trace = true, chain_length = 4 }):_("CLK", "ECLK")
 	circuit:new_ms_jk_flipflop("FF"):_("ECLK", 1, "FF", 3):_("ECLK", 2, "FF", 4)
 
 	circuit:new_not("ND"):_("DATA", "ND")
 	circuit:_("DATA", "FF", 1)
 	circuit:_("ND", "FF", 2)
 
-	for _ = 1, constants.CLOCK_PERIOD_TICKS * 4 do
-		circuit:step()
+	circuit:new_n_bit_adder("ADDER", { width = 4 })
+	circuit:new_clock("A0", { period = 256 + math.random(0, 128) }):_("A0", "ADDER", 1)
+	circuit:new_clock("A1", { period = 256 + math.random(0, 128) }):_("A1", "ADDER", 2)
+	circuit:new_clock("A2", { period = 256 + math.random(0, 128) }):_("A2", "ADDER", 3)
+	circuit:new_clock("A3", { period = 256 + math.random(0, 128) }):_("A3", "ADDER", 4)
+	circuit:new_clock("B0", { period = 256 + math.random(0, 128) }):_("B0", "ADDER", 5)
+	circuit:new_clock("B1", { period = 256 + math.random(0, 128) }):_("B1", "ADDER", 6)
+	circuit:new_clock("B2", { period = 256 + math.random(0, 128) }):_("B2", "ADDER", 7)
+	circuit:new_clock("B3", { period = 256 + math.random(0, 128) }):_("B3", "ADDER", 8)
+	circuit:new_clock("C", { period = 1024 }):_("C", "ADDER", 9)
+
+	local max = 0
+	for _ = 1, constants.CLOCK_PERIOD_TICKS * 512 do
+		local x
+		_, x = circuit:step()
+		max = math.max(max, x)
 	end
+	io.stderr:write("max delay: " .. max .. "\n")
 end
 
 return simulation
