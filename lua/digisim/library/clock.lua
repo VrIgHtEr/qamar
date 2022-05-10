@@ -11,6 +11,7 @@ return function(simulation)
 		---@param name string
 		---@param opts boolean
 		function(circuit, name, opts)
+			opts = opts or { period = 2 }
 			opts.names = { inputs = {}, outputs = { "q" } }
 			local period = opts.period
 			if period == nil then

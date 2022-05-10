@@ -1,6 +1,7 @@
 local signal = require("digisim.signal")
 
 ---@class net
+---@field name string
 ---@field parent net
 ---@field pins table<string,pin>
 ---@field num_pins pin[]

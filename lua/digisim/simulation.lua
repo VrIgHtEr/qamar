@@ -2,7 +2,6 @@ local queue = require("qamar.util.deque")
 local constants = require("digisim.constants")
 local component = require("digisim.component")
 local connection = require("digisim.connection")
-local signal = require("digisim.signal")
 local vcd = require("digisim.trace.vcd")
 
 ---@class simulation
@@ -11,6 +10,7 @@ local vcd = require("digisim.trace.vcd")
 ---@field queue deque
 ---@field time number
 ---@field trace vcd
+---@field simulation_started boolean
 local simulation = {}
 local MT = { __index = simulation }
 
@@ -22,8 +22,30 @@ function simulation.new()
 		next_connection_id = 0,
 		queue = queue(),
 		trace = vcd.new(),
+		simulation_started = false,
 	}, MT)
 	return ret
+end
+
+function simulation:update_net_names()
+	for _, v in pairs(self.components) do
+		for _, x in ipairs(v.inputs) do
+			x.net.name = ""
+		end
+		for _, x in ipairs(v.outputs) do
+			x.net.name = ""
+		end
+	end
+	for _, v in pairs(self.components) do
+		if v.trace then
+			for _, x in ipairs(v.inputs) do
+				x.net.name = x.name
+			end
+			for _, x in ipairs(v.outputs) do
+				x.net.name = x.name
+			end
+		end
+	end
 end
 
 function simulation:add_component(name, inputs, outputs, handler, opts)
@@ -159,6 +181,10 @@ local function add_trace(sim, name, time, sig)
 end
 
 function simulation:step()
+	if not self.simulation_started then
+		self:update_net_names()
+		self.simulation_started = true
+	end
 	--local prt = function(_) end
 	--prt("---------------------------------------------------------")
 	local maxstep = 10000

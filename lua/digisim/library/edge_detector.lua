@@ -4,6 +4,7 @@
 ---@param simulation simulation
 return function(simulation)
 	simulation:register_component("edge_detector", function(circuit, name, opts)
+		opts = opts or {}
 		opts.names = { inputs = { "clk" }, outputs = { "rising", "falling" } }
 		circuit:add_component(name, 1, 2, nil, opts)
 

@@ -11,6 +11,7 @@ return function(simulation)
 		---@param name string
 		---@param opts boolean
 		function(self, name, opts)
+			opts = opts or {}
 			opts.names = { inputs = { "a" }, outputs = { "q" } }
 			return self:add_component(name, 1, 1, function(_, a)
 				return a == signal.low and signal.low or signal.high

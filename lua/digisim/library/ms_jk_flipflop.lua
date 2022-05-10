@@ -9,6 +9,7 @@ return function(simulation)
 		---@param name string
 		---@param opts boolean
 		function(circuit, name, opts)
+			opts = opts or {}
 			opts.names = { inputs = { "j", "k", "clock_rising", "clock_falling" }, outputs = { "q", "~q" } }
 			circuit:add_component(name, 4, 2, nil, opts)
 			local q = name .. ".q"

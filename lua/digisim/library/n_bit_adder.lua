@@ -9,6 +9,7 @@ return function(simulation)
 		---@param name string
 		---@param opts boolean
 		function(circuit, name, opts)
+			opts = opts or { width = 1 }
 			local width = opts.width or 1
 			if type(width) ~= "number" then
 				error("invalid width type")
