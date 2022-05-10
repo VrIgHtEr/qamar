@@ -36,6 +36,8 @@ function simulation:update_net_names()
 			x.net.name = ""
 		end
 	end
+	---@type table<net,boolean>
+	local nets = {}
 	for _, v in pairs(self.components) do
 		if v.trace then
 			for _, x in ipairs(v.inputs) do
@@ -43,8 +45,12 @@ function simulation:update_net_names()
 			end
 			for _, x in ipairs(v.outputs) do
 				x.net.name = x.name
+				nets[x.net] = true
 			end
 		end
+	end
+	for net in pairs(nets) do
+		self.trace:get(net.name)
 	end
 end
 
@@ -62,11 +68,6 @@ function simulation:add_component(name, inputs, outputs, handler, opts)
 	end
 	local c = component.new(name, inputs, outputs, handler, { names = opts.names })
 	c.trace = opts.trace and true or false or constants.DEBUG_TRACE_ALL_OUTPUTS
-	if c.trace and handler then
-		for _, o in ipairs(c.outputs) do
-			self.trace:get(o.name)
-		end
-	end
 	self.components[name] = c
 	return self
 end
@@ -230,7 +231,7 @@ function simulation:step()
 						output.net.value = value
 						output.net.timestamp = self.time
 						if c.trace then
-							add_trace(self, output.name, self.time, value)
+							add_trace(self, output.net.name, self.time, value)
 						end
 						--else
 						--end

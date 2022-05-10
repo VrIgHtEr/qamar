@@ -9,7 +9,7 @@ return function(simulation)
 		circuit:add_component(name, 1, 2, nil, opts)
 
 		-- ~CLK - inverted clock
-		circuit:new_not(name .. ".CLK_", opts)
+		circuit:new_not(name .. ".CLK_")
 		circuit:alias_input(name, 1, name .. ".CLK_", 1)
 
 		-- CLK_RISING - clock rising edge detector
