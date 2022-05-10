@@ -3,44 +3,43 @@
 
 ---@param simulation simulation
 return function(simulation)
-	simulation:register_component("edge_detector", function(circuit, name, opts)
+	simulation:register_component("edge_detector", function(circuit, eclk, opts)
 		opts = opts or {}
 		opts.names = { inputs = { "clk" }, outputs = { "rising", "falling" } }
-		circuit:add_component(name, 1, 2, nil, opts)
+		circuit:add_component(eclk, 1, 2, nil, opts)
+
+		local iclk = eclk .. ".~clk"
+		local c = eclk .. ".clk"
+		local ic = eclk .. ".~clk"
+		local rising = eclk .. ".rising"
+		local falling = eclk .. ".falling"
 
 		-- ~CLK - inverted clock
-		circuit:new_not(name .. ".~clk")
-		circuit:c(name, "clk", name .. ".~clk", "q")
+		circuit:new_not(iclk)
+		circuit:c(eclk, "clk", iclk, "a")
 
 		-- CLK_RISING - clock rising edge detector
-		circuit:new_not(name .. ".clk1"):c(name, "clk", name .. ".clk1", "a")
-
+		circuit:new_not(c .. 1):c(eclk, "clk", c .. 1, "a")
 		local chain_length = opts.chain_length or 3
 		if type(chain_length) ~= "number" then
 			error("invalid chain_length type")
 		end
 
 		for i = 2, chain_length do
-			circuit:new_buffer(name .. ".clk" .. i)
-			circuit:c(name .. ".clk" .. (i - 1), "q", name .. ".clk" .. i, "a")
+			circuit:new_buffer(c .. i)
+			circuit:c(c .. (i - 1), "q", c .. i, "a")
 		end
-		circuit
-			:new_and(name .. ".CLK_RISING")
-			:c(name, "clk", name .. ".CLK_RISING", "a")
-			:c(name .. ".clk" .. chain_length, "q", name .. ".CLK_RISING", "b")
+		circuit:new_and(rising):c(eclk, "clk", rising, "a"):c(c .. chain_length, "q", rising, "b")
 
 		-- CLK_FALLING - clock falling edge detector
-		circuit:new_not(name .. ".clk1_"):c(name .. ".~clk", "q", name .. ".clk1_", "a")
+		circuit:new_not(ic .. 1):c(iclk, "q", ic .. 1, "a")
 		for i = 2, chain_length do
-			circuit:new_buffer(name .. ".clk" .. i .. "_")
-			circuit:c(name .. ".clk" .. (i - 1) .. "_", "q", name .. ".clk" .. i .. "_", "a")
+			circuit:new_buffer(ic .. i)
+			circuit:c(ic .. (i - 1), "q", ic .. i, "a")
 		end
-		circuit
-			:new_and(name .. ".CLK_FALLING")
-			:c(name .. ".clk" .. chain_length .. "_", "q", name .. ".CLK_FALLING", "a")
-			:c(name .. ".~clk", "q", name .. ".CLK_FALLING", "b")
+		circuit:new_and(falling):c(ic .. chain_length, "q", falling, "a"):c(iclk, "q", falling, "b")
 
-		circuit:c(name, "rising", name .. ".CLK_RISING", "q")
-		circuit:c(name, "falling", name .. ".CLK_FALLING", "q")
+		circuit:c(eclk, "rising", rising, "q")
+		circuit:c(eclk, "falling", falling, "q")
 	end)
 end

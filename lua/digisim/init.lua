@@ -57,12 +57,7 @@ do
 
 	local circuit = simulation.new()
 
-	-- data pin
-	circuit:add_component("DATA", 0, 1, function(time)
-		return time * 0.5 % constants.CLOCK_PERIOD_TICKS < constants.CLOCK_PERIOD_TICKS / 2 and signal.low
-			or signal.high
-	end, { names = { inputs = {}, outputs = { "q" } }, trace = true })
-
+	circuit:new_clock("DATA", { period = constants.CLOCK_PERIOD_TICKS * 2, trace = true })
 	circuit:new_reset("RST_", { period = constants.STARTUP_TICKS, trace = true })
 	circuit:new_clock("CLK", { period = constants.CLOCK_PERIOD_TICKS, trace = true })
 	circuit:new_edge_detector("ECLK", { chain_length = 4, trace = true }):c("CLK", "q", "ECLK", "clk")
@@ -76,23 +71,37 @@ do
 	circuit:c("ND", "q", "FF", "k")
 
 	circuit:new_n_bit_adder("ADDER", { width = 8, trace = true })
-	circuit:new_clock("A0", { period = 256 + math.random(0, 128), trace = true }):c("A0", "q", "ADDER", "a0")
-	circuit:new_clock("A1", { period = 256 + math.random(0, 128), trace = true }):c("A1", "q", "ADDER", "a1")
-	circuit:new_clock("A2", { period = 256 + math.random(0, 128), trace = true }):c("A2", "q", "ADDER", "a2")
-	circuit:new_clock("A3", { period = 256 + math.random(0, 128), trace = true }):c("A3", "q", "ADDER", "a3")
-	circuit:new_clock("A4", { period = 256 + math.random(0, 128), trace = true }):c("A4", "q", "ADDER", "a4")
-	circuit:new_clock("A5", { period = 256 + math.random(0, 128), trace = true }):c("A5", "q", "ADDER", "a5")
-	circuit:new_clock("A6", { period = 256 + math.random(0, 128), trace = true }):c("A6", "q", "ADDER", "a6")
-	circuit:new_clock("A7", { period = 256 + math.random(0, 128), trace = true }):c("A7", "q", "ADDER", "a7")
-	circuit:new_clock("B0", { period = 256 + math.random(0, 128), trace = true }):c("B0", "q", "ADDER", "b0")
-	circuit:new_clock("B1", { period = 256 + math.random(0, 128), trace = true }):c("B1", "q", "ADDER", "b1")
-	circuit:new_clock("B2", { period = 256 + math.random(0, 128), trace = true }):c("B2", "q", "ADDER", "b2")
-	circuit:new_clock("B3", { period = 256 + math.random(0, 128), trace = true }):c("B3", "q", "ADDER", "b3")
-	circuit:new_clock("B4", { period = 256 + math.random(0, 128), trace = true }):c("B4", "q", "ADDER", "b4")
-	circuit:new_clock("B5", { period = 256 + math.random(0, 128), trace = true }):c("B5", "q", "ADDER", "b5")
-	circuit:new_clock("B6", { period = 256 + math.random(0, 128), trace = true }):c("B6", "q", "ADDER", "b6")
-	circuit:new_clock("B7", { period = 256 + math.random(0, 128), trace = true }):c("B7", "q", "ADDER", "b7")
-	circuit:new_clock("C", { period = 1024, trace = true }):c("C", "q", "ADDER", "cin")
+	local function create_random_input(name)
+		local value = signal.low
+		local last = 0
+		circuit
+			:add_component(name, 0, 1, function(time)
+				time = math.floor(time / constants.CLOCK_PERIOD_TICKS)
+				if time ~= last then
+					last = time
+					value = math.random(0, 1)
+				end
+				return value
+			end, { trace = true, names = { outputs = { "q" } } })
+			:c(name, "q", "ADDER", name)
+	end
+	create_random_input("a0")
+	create_random_input("a1")
+	create_random_input("a2")
+	create_random_input("a3")
+	create_random_input("a4")
+	create_random_input("a5")
+	create_random_input("a6")
+	create_random_input("a7")
+	create_random_input("b0")
+	create_random_input("b1")
+	create_random_input("b2")
+	create_random_input("b3")
+	create_random_input("b4")
+	create_random_input("b5")
+	create_random_input("b6")
+	create_random_input("b7")
+	circuit:new_clock("C", { period = constants.CLOCK_PERIOD_TICKS, trace = true }):c("C", "q", "ADDER", "cin")
 
 	circuit:new_sr_latch("TEST", { trace = true }):c("ND", "q", "TEST", "s"):c("DATA", "q", "TEST", "r")
 
