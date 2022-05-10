@@ -1,6 +1,7 @@
 local net = require("digisim.net")
 
 ---@class pin
+---@field num number
 ---@field name string
 ---@field net net
 ---@field component component
@@ -9,13 +10,14 @@ local net = require("digisim.net")
 local pin = {}
 local MT = { __index = pin }
 
-function pin.new(name, comp, is_input)
+function pin.new(num, name, comp, is_input)
 	local ret = setmetatable({
 		name = name,
 		net = net.new(),
 		connections = {},
 		component = comp,
 		is_input = is_input and true or false,
+		num = num,
 	}, MT)
 	ret.net:add_pin(ret)
 	return ret

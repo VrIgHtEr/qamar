@@ -127,6 +127,37 @@ function simulation:connect(a, output, b, input)
 	self.connections[na] = connection.new(na, o, i)
 	return self
 end
+--
+---@param a string
+---@param b string
+---@param pina string
+---@param pinb string
+---@return simulation
+function simulation:c(a, pina, b, pinb)
+	if self.simulation_started then
+		error("simulation started - cannot add new component")
+	end
+	local ca, cb = self.components[a], self.components[b]
+	if not ca then
+		error("component not found: " .. a)
+	end
+	if not cb then
+		error("component not found: " .. b)
+	end
+	local o, i = ca.pins[pina], cb.pins[pinb]
+	if not o then
+		error("pin not found " .. a .. "." .. pina)
+	end
+	if not i then
+		error("pin not found " .. b .. "." .. pinb)
+	end
+	local na = a .. "[" .. o.num .. "]" .. "[" .. i.num .. "]" .. b
+	if self.connections[na] then
+		error("connection already exists: " .. na)
+	end
+	self.connections[na] = connection.new(na, o, i)
+	return self
+end
 
 ---@param a string
 ---@param b string
