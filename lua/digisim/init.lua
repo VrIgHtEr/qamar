@@ -101,9 +101,14 @@ do
 	create_random_input("b5")
 	create_random_input("b6")
 	create_random_input("b7")
+
 	circuit:new_clock("C", { period = constants.CLOCK_PERIOD_TICKS, trace = true }):c("C", "q", "ADDER", "cin")
 
-	circuit:new_sr_latch("TEST", { trace = true }):c("ND", "q", "TEST", "s"):c("DATA", "q", "TEST", "r")
+	circuit
+		:new_full_adder("TEST", { trace = true })
+		:c("a0", "q", "TEST", "a")
+		:c("b0", "q", "TEST", "b")
+		:c("C", "q", "TEST", "c")
 
 	local max = 0
 	for _ = 1, constants.CLOCK_PERIOD_TICKS * 512 do
