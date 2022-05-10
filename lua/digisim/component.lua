@@ -1,3 +1,4 @@
+---@diagnostic disable: need-check-nil
 local signal = require("digisim.signal")
 local pin = require("digisim.pin")
 
@@ -12,10 +13,10 @@ local component = {}
 local MT = { __index = component }
 
 function component.new(name, inputs, outputs, handler, opts)
-	opts = opts or {}
 	if type(name) ~= "string" or name == "" then
 		error("invalid name")
 	end
+	opts = opts or {}
 	if opts == nil then
 		if type(handler) == "table" then
 			handler, opts = nil, handler
