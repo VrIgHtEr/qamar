@@ -91,6 +91,8 @@ do
 	circuit:new_clock("B7", { period = 256 + math.random(0, 128), trace = true }):_("B7", "ADDER", 16)
 	circuit:new_clock("C", { period = 1024, trace = true }):_("C", "ADDER", 17)
 
+	circuit:new_sr_latch("TEST", { trace = true }):_("ND", "TEST", 1):_("DATA", "TEST", 2)
+
 	local max = 0
 	for _ = 1, constants.CLOCK_PERIOD_TICKS * 512 do
 		local x

@@ -30,10 +30,10 @@ end
 function simulation:update_net_names()
 	for _, v in pairs(self.components) do
 		for _, x in ipairs(v.inputs) do
-			x.net.name = ""
+			x.net.name = nil
 		end
 		for _, x in ipairs(v.outputs) do
-			x.net.name = ""
+			x.net.name = nil
 		end
 	end
 	---@type table<net,boolean>
@@ -52,6 +52,9 @@ function simulation:update_net_names()
 end
 
 function simulation:add_component(name, inputs, outputs, handler, opts)
+	if self.simulation_started then
+		error("simulation started - cannot add new component")
+	end
 	if type(name) ~= "string" then
 		error("invalid name")
 	end
@@ -100,6 +103,9 @@ end
 ---@param input number
 ---@return simulation
 function simulation:connect(a, output, b, input)
+	if self.simulation_started then
+		error("simulation started - cannot add new component")
+	end
 	local ca, cb = self.components[a], self.components[b]
 	if not ca then
 		error("component not found: " .. a)
@@ -128,6 +134,9 @@ end
 ---@param input number
 ---@return simulation
 function simulation:alias_input(a, output, b, input)
+	if self.simulation_started then
+		error("simulation started - cannot add new component")
+	end
 	local ca, cb = self.components[a], self.components[b]
 	if not ca then
 		error("component not found: " .. a)
@@ -152,6 +161,9 @@ end
 ---@param input number
 ---@return simulation
 function simulation:alias_output(a, output, b, input)
+	if self.simulation_started then
+		error("simulation started - cannot add new component")
+	end
 	local ca, cb = self.components[a], self.components[b]
 	if not ca then
 		error("component not found: " .. a)
@@ -227,7 +239,7 @@ function simulation:step()
 						--if output.net.timestamp <= self.time then
 						output.net.value = value
 						output.net.timestamp = self.time
-						if c.trace then
+						if output.net.name ~= nil then
 							add_trace(self, output.net.name, self.time, value)
 						end
 						--else
