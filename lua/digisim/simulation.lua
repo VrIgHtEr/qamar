@@ -288,7 +288,9 @@ function simulation:_(a, output, b, input)
 		error("component has no outputs")
 	end
 	if not output then
-		-- if #ca.outputs > 1 then error("output not specified and component has multiple outputs") end
+		if #ca.outputs > 1 then
+			error("output not specified and component has multiple outputs")
+		end
 		output = 1
 	end
 	if #cb.inputs == 0 then
@@ -306,56 +308,6 @@ function simulation:_(a, output, b, input)
 		end
 	end
 	return self:connect(a, output, b, input)
-end
-
-function simulation:new_nand(name, opts)
-	return self:add_component(name, 2, 1, function(_, a, b)
-		return (a == signal.high and b == signal.high) and signal.low or signal.high
-	end, opts)
-end
-
-function simulation:new_nor(name, opts)
-	return self:add_component(name, 2, 1, function(_, a, b)
-		return (a == signal.high or b == signal.high) and signal.low or signal.high
-	end, opts)
-end
-
-function simulation:new_xnor(name, opts)
-	return self:add_component(name, 2, 1, function(_, a, b)
-		return (a == signal.high and b == signal.low or a == signal.low and b == signal.high) and signal.low
-			or signal.high
-	end, opts)
-end
-
-function simulation:new_and(name, opts)
-	return self:add_component(name, 2, 1, function(_, a, b)
-		return (a == signal.high and b == signal.high) and signal.high or signal.low
-	end, opts)
-end
-
-function simulation:new_xor(name, opts)
-	return self:add_component(name, 2, 1, function(_, a, b)
-		return (a == signal.high and b == signal.low or a == signal.low and b == signal.high) and signal.high
-			or signal.low
-	end, opts)
-end
-
-function simulation:new_or(name, opts)
-	return self:add_component(name, 2, 1, function(_, a, b)
-		return (a == signal.high or b == signal.high) and signal.high or signal.low
-	end, opts)
-end
-
-function simulation:new_not(name, opts)
-	return self:add_component(name, 1, 1, function(_, a)
-		return a == signal.low and signal.high or signal.low
-	end, opts)
-end
-
-function simulation:new_buffer(name, opts)
-	return self:add_component(name, 1, 1, function(_, a)
-		return a
-	end, opts)
 end
 
 require("digisim.library")(simulation)
