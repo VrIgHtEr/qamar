@@ -40,9 +40,6 @@ function simulation:update_net_names()
 	local nets = {}
 	for _, v in pairs(self.components) do
 		if v.trace then
-			for _, x in ipairs(v.inputs) do
-				x.net.name = x.name
-			end
 			for _, x in ipairs(v.outputs) do
 				x.net.name = x.name
 				nets[x.net] = true
