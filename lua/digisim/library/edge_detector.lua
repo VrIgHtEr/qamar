@@ -4,14 +4,15 @@
 ---@param simulation simulation
 return function(simulation)
 	simulation:register_component("edge_detector", function(circuit, name, opts)
-		circuit:add_component(name, 1, 2)
+		opts.names = { inputs = { "clk" }, outputs = { "rising", "falling" } }
+		circuit:add_component(name, 1, 2, nil, opts)
 
 		-- ~CLK - inverted clock
 		circuit:new_not(name .. ".CLK_", opts)
 		circuit:alias_input(name, 1, name .. ".CLK_", 1)
 
 		-- CLK_RISING - clock rising edge detector
-		circuit:new_not(name .. ".clk1", opts):alias_input(name, 1, name .. ".clk1", 1)
+		circuit:new_not(name .. ".clk1"):alias_input(name, 1, name .. ".clk1", 1)
 
 		local chain_length = opts.chain_length or 3
 		if type(chain_length) ~= "number" then
@@ -19,22 +20,22 @@ return function(simulation)
 		end
 
 		for i = 2, chain_length do
-			circuit:new_buffer(name .. ".clk" .. i, opts)
+			circuit:new_buffer(name .. ".clk" .. i)
 			circuit:_(name .. ".clk" .. (i - 1), name .. ".clk" .. i)
 		end
 		circuit
-			:new_and(name .. ".CLK_RISING", opts)
+			:new_and(name .. ".CLK_RISING")
 			:alias_input(name, 1, name .. ".CLK_RISING", 1)
 			:_(name .. ".clk" .. chain_length, name .. ".CLK_RISING", 2)
 
 		-- CLK_FALLING - clock falling edge detector
-		circuit:new_not(name .. ".clk1_", opts):_(name .. ".CLK_", name .. ".clk1_")
+		circuit:new_not(name .. ".clk1_"):_(name .. ".CLK_", name .. ".clk1_")
 		for i = 2, chain_length do
-			circuit:new_buffer(name .. ".clk" .. i .. "_", opts)
+			circuit:new_buffer(name .. ".clk" .. i .. "_")
 			circuit:_(name .. ".clk" .. (i - 1) .. "_", name .. ".clk" .. i .. "_")
 		end
 		circuit
-			:new_and(name .. ".CLK_FALLING", opts)
+			:new_and(name .. ".CLK_FALLING")
 			:_(name .. ".clk" .. chain_length .. "_", name .. ".CLK_FALLING")
 			:_(name .. ".CLK_", name .. ".CLK_FALLING")
 

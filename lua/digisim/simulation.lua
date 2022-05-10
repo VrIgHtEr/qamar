@@ -38,7 +38,7 @@ function simulation:add_component(name, inputs, outputs, handler, opts)
 	elseif type(opts) ~= "table" then
 		error("invalid opts type")
 	end
-	local c = component.new(name, inputs, outputs, handler)
+	local c = component.new(name, inputs, outputs, handler, { names = opts.names })
 	c.trace = opts.trace and true or false or constants.DEBUG_TRACE_ALL_OUTPUTS
 	if c.trace and handler then
 		for _, o in ipairs(c.outputs) do

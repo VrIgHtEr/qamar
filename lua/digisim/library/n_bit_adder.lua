@@ -16,6 +16,16 @@ return function(simulation)
 			if width < 1 then
 				error("invalid width")
 			end
+			opts.names = { inputs = {}, outputs = {} }
+			for i = 1, width do
+				opts.names.inputs[i] = "a" .. (i - 1)
+				opts.names.outputs[i] = "c" .. (i - 1)
+			end
+			for i = 1, width do
+				opts.names.inputs[i + width] = "b" .. (i - 1)
+			end
+			opts.names.inputs[width * 2 + 1] = "cin"
+			opts.names.outputs[width + 1] = "cout"
 
 			circuit:add_component(name, width * 2 + 1, width + 1)
 			local n = name .. "."

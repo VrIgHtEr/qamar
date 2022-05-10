@@ -11,6 +11,7 @@ return function(simulation)
 		---@param name string
 		---@param opts boolean
 		function(circuit, name, opts)
+			opts.names = { inputs = {}, outputs = { "q" } }
 			local period = opts.period
 			if period == nil then
 				period = 2
@@ -24,7 +25,7 @@ return function(simulation)
 			circuit:add_component(name, 0, 1, function(ts)
 				ts = ts % period
 				return ts < period / 2 and signal.low or signal.high
-			end, { trace = opts.trace and true or false })
+			end, opts)
 		end
 	)
 end

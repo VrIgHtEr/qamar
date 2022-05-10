@@ -9,12 +9,13 @@ return function(simulation)
 		---@param name string
 		---@param opts boolean
 		function(circuit, name, opts)
-			circuit:add_component(name, 3, 2)
+			opts.names = { inputs = { "a", "b", "e" }, outputs = { "q", "~q" } }
+			circuit:add_component(name, 3, 2, nil, opts)
 			local nl = name .. ".l"
 			local na = name .. ".a"
 			local nb = name .. ".b"
 			circuit
-				:new_sr_latch(nl, opts)
+				:new_sr_latch(nl)
 				:new_and(na)
 				:new_and(nb)
 				:_(na, nl, 1)

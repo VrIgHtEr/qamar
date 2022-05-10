@@ -9,7 +9,8 @@ return function(simulation)
 		---@param name string
 		---@param opts boolean
 		function(circuit, name, opts)
-			circuit:add_component(name, 3, 2)
+			opts.names = { inputs = { "a", "b", "c" }, outputs = { "sum", "carry" } }
+			circuit:add_component(name, 3, 2, nil, opts)
 
 			local h = name .. ".h"
 			local s = name .. ".s"
@@ -19,13 +20,13 @@ return function(simulation)
 				:new_half_adder(h)
 				:alias_input(name, 1, h, 1)
 				:alias_input(name, 2, h, 2)
-				:new_xor(s, opts)
+				:new_xor(s)
 				:new_and(ca)
 				:_(h, 1, s, 1)
 				:_(h, 1, ca, 1)
 				:alias_input(name, 3, s, 2)
 				:alias_input(name, 3, ca, 2)
-				:new_or(c, opts)
+				:new_or(c)
 				:_(ca, c)
 				:_(h, 2, c)
 				:alias_output(s, 1, name, 1)

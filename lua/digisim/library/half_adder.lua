@@ -9,12 +9,13 @@ return function(simulation)
 		---@param name string
 		---@param opts boolean
 		function(circuit, name, opts)
-			circuit:add_component(name, 2, 2)
+			opts.names = { inputs = { "a", "b" }, outputs = { "sum", "carry" } }
+			circuit:add_component(name, 2, 2, nil, opts)
 			local s = name .. ".s"
 			local c = name .. ".c"
 			circuit
-				:new_xor(s, opts)
-				:new_and(c, opts)
+				:new_xor(s)
+				:new_and(c)
 				:alias_output(s, 1, name, 1)
 				:alias_output(c, 1, name, 2)
 				:alias_input(name, 1, s, 1)
