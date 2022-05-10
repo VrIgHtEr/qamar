@@ -72,7 +72,7 @@ do
 	circuit:_("DATA", "FF", 1)
 	circuit:_("ND", "FF", 2)
 
-	circuit:new_n_bit_adder("ADDER", { width = 8 })
+	circuit:new_n_bit_adder("ADDER", { width = 8, trace = true })
 	circuit:new_clock("A0", { period = 256 + math.random(0, 128), trace = true }):_("A0", "ADDER", 1)
 	circuit:new_clock("A1", { period = 256 + math.random(0, 128), trace = true }):_("A1", "ADDER", 2)
 	circuit:new_clock("A2", { period = 256 + math.random(0, 128), trace = true }):_("A2", "ADDER", 3)
