@@ -30,9 +30,11 @@ function net:add_pin(pin)
 end
 
 function net:merge(n)
-	for _, v in pairs(n.pins) do
-		self:add_pin(v)
-		v.net = self
+	if n ~= self then
+		for _, v in pairs(n.pins) do
+			self:add_pin(v)
+			v.net = self
+		end
 	end
 end
 
