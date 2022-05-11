@@ -70,7 +70,7 @@ do
 	circuit:c("DATA", "q", "FF", "j")
 	circuit:c("ND", "q", "FF", "k")
 
-	circuit:new_n_bit_adder("ADDER", { width = 8, trace = true })
+	circuit:new_n_bit_adder("adder", { width = 8, trace = true })
 	local function create_random_input(name)
 		local value = signal.low
 		local last = 0
@@ -83,7 +83,7 @@ do
 				end
 				return value
 			end, { trace = true, names = { outputs = { "q" } } })
-			:c(name, "q", "ADDER", name)
+			:c(name, "q", "adder", name)
 	end
 	create_random_input("a0")
 	create_random_input("a1")
@@ -102,13 +102,7 @@ do
 	create_random_input("b6")
 	create_random_input("b7")
 
-	circuit:new_clock("C", { period = constants.CLOCK_PERIOD_TICKS, trace = true }):c("C", "q", "ADDER", "cin")
-
-	circuit
-		:new_full_adder("TEST", { trace = true })
-		:c("a0", "q", "TEST", "a")
-		:c("b0", "q", "TEST", "b")
-		:c("C", "q", "TEST", "c")
+	circuit:new_clock("C", { period = constants.CLOCK_PERIOD_TICKS, trace = true }):c("C", "q", "adder", "cin")
 
 	local max = 0
 	for _ = 1, constants.CLOCK_PERIOD_TICKS * 512 do
