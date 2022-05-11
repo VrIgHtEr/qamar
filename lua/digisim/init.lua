@@ -45,7 +45,7 @@ do
 	circuit:new_mux("A", { width = 8, trace = true })
 
 	local max = 0
-	for _ = 1, constants.CLOCK_PERIOD_TICKS * 512 do
+	for _ = 1, constants.CLOCK_PERIOD_TICKS * 1024 do
 		local x
 		_, x = circuit:step()
 		max = math.max(max, x)

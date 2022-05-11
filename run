@@ -1,2 +1,2 @@
 #!/bin/env sh
-build/linux-release/qamar|gtkwave -v $@
+build/linux-release/qamar | shmidcat | gtkwave -v -I $@
