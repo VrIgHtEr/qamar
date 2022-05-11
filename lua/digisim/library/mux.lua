@@ -25,16 +25,19 @@ return function(simulation)
 			end
 			circuit:add_component(name, nil, opts)
 
-			local zero = name .. ".a"
-			local one = name .. ".b"
+			local zero = name .. ".lo"
+			local one = name .. ".hi"
 			local inv = name .. ".n"
+			local o = name .. ".o"
 
 			if width == 1 then
 				circuit
 					:new_and(zero)
 					:new_and(one)
-					:c(zero, "q", one, "q")
-					:c(one, "q", name, "q")
+					:new_or(o)
+					:c(zero, "q", o, "a")
+					:c(one, "q", o, "b")
+					:c(o, "q", name, "q")
 					:new_not(inv)
 					:c(inv, "q", zero, "a")
 					:c(name, "a0", inv, "a")
@@ -63,8 +66,10 @@ return function(simulation)
 					:c(name, "a" .. (width - 1), inv, "a")
 					:c(inv, "q", az, "b")
 					:c(name, "a" .. (width - 1), ao, "b")
-					:c(az, "q", ao, "q")
-					:c(ao, "q", name, "q")
+					:new_or(o)
+					:c(az, "q", o, "a")
+					:c(ao, "q", o, "b")
+					:c(o, "q", name, "q")
 			end
 		end
 	)
