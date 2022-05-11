@@ -1,12 +1,12 @@
 ---@diagnostic disable: need-check-nil
 local signal = require("digisim.signal")
-local pin = require("digisim.pin")
+local port = require("digisim.port")
 
 ---@class component
 ---@field name string
----@field pins table<string,pin>
----@field inputs pin[]
----@field outputs pin[]
+---@field ports table<string,port>
+---@field inports port[]
+---@field outports port[]
 ---@field step function
 ---@field trace boolean
 local component = {}
@@ -45,39 +45,73 @@ function component.new(name, handler, opts)
 	end
 	local ret = setmetatable({
 		name = name,
-		inputs = {},
-		outputs = {},
-		pins = {},
+		inports = {},
+		outports = {},
+		ports = {},
 	}, MT)
 	local names = opts.names.inputs
 	local inputs = #names
 	for i = 1, inputs do
 		local pinname
 		local n = names[i]
-		if n then
+		local width
+
+		if type(n) == "string" then
+			width = 1
 			pinname = n
-			n = name .. "." .. n
+		elseif type(n) ~= "table" or #n == 0 then
+			error("invalid port definition")
+		elseif #n < 2 then
+			width = 1
+			pinname = n[1]
+			if type(n) ~= "string" then
+				error("invalid port definition")
+			end
+		elseif type(n[1]) ~= "string" or type(n[2]) ~= "number" then
+			error("invalid port definition")
 		else
-			pinname = "[" .. i .. "]"
-			n = pinname .. name
+			width = math.floor(n[2])
+			pinname = n[1]
+			if width < 1 then
+				error("invalid port definition")
+			end
 		end
-		ret.inputs[i] = pin.new(i, n, ret, true)
-		ret.pins[pinname] = ret.inputs[i]
+		n = name .. "." .. pinname
+
+		ret.inports[i] = port.new(n, width, ret, true)
+		ret.ports[pinname] = ret.inports[i]
 	end
 	names = opts.names.outputs
 	local outputs = #names
 	for i = 1, outputs do
 		local pinname
 		local n = names[i]
-		if n then
+		local width
+
+		if type(n) == "string" then
+			width = 1
 			pinname = n
-			n = name .. "." .. n
+		elseif type(n) ~= "table" or #n == 0 then
+			error("invalid port definition")
+		elseif #n < 2 then
+			width = 1
+			pinname = n[1]
+			if type(n) ~= "string" then
+				error("invalid port definition")
+			end
+		elseif type(n[1]) ~= "string" or type(n[2]) ~= "number" then
+			error("invalid port definition")
 		else
-			pinname = "[" .. i .. "]"
-			n = name .. pinname
+			width = math.floor(n[2])
+			pinname = n[1]
+			if width < 1 then
+				error("invalid port definition")
+			end
 		end
-		ret.outputs[i] = pin.new(inputs + i, n, ret, false)
-		ret.pins[pinname] = ret.outputs[i]
+		n = name .. "." .. pinname
+
+		ret.outports[i] = port.new(n, width, ret, false)
+		ret.ports[pinname] = ret.outports[i]
 	end
 
 	if handler then

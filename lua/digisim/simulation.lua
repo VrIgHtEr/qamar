@@ -27,22 +27,23 @@ function simulation.new()
 	return ret
 end
 
-function simulation:update_net_names()
+function simulation:init_traces()
 	for _, v in pairs(self.components) do
-		for _, x in ipairs(v.inputs) do
-			x.net.name = nil
-		end
-		for _, x in ipairs(v.outputs) do
-			x.net.name = nil
+		for _, p in pairs(v.ports) do
+			for _, x in ipairs(p.pins) do
+				x.net.name = nil
+			end
 		end
 	end
 	---@type table<net,boolean>
 	local nets = {}
 	for _, v in pairs(self.components) do
 		if v.trace then
-			for _, x in ipairs(v.outputs) do
-				x.net.name = x.name
-				nets[x.net] = true
+			for _, p in ipairs(v.outports) do
+				for _, x in ipairs(p.pins) do
+					x.net.name = x.name
+					nets[x.net] = true
+				end
 			end
 		end
 	end
@@ -91,37 +92,6 @@ end
 
 ---@param a string
 ---@param b string
----@param output number
----@param input number
----@return simulation
-function simulation:connect(a, output, b, input)
-	if self.simulation_started then
-		error("simulation started - cannot add new component")
-	end
-	local ca, cb = self.components[a], self.components[b]
-	if not ca then
-		error("component not found: " .. a)
-	end
-	if not cb then
-		error("component not found: " .. b)
-	end
-	local o, i = ca.outputs[output], cb.inputs[input]
-	if not o then
-		error("output not found " .. a .. "[" .. tostring(output) .. "]")
-	end
-	if not i then
-		error("input not found " .. b .. "[" .. tostring(input) .. "]")
-	end
-	local na = a .. "[" .. output .. "]" .. "[" .. input .. "]" .. b
-	if self.connections[na] then
-		error("connection already exists: " .. na)
-	end
-	self.connections[na] = connection.new(na, o, i)
-	return self
-end
---
----@param a string
----@param b string
 ---@param pina string
 ---@param pinb string
 ---@return simulation
@@ -136,18 +106,18 @@ function simulation:c(a, pina, b, pinb)
 	if not cb then
 		error("component not found: " .. b)
 	end
-	local o, i = ca.pins[pina], cb.pins[pinb]
+	local o, i = ca.ports[pina], cb.ports[pinb]
 	if not o then
-		error("pin not found " .. a .. "." .. pina)
+		error("port not found " .. a .. "." .. pina)
 	end
 	if not i then
-		error("pin not found " .. b .. "." .. pinb)
+		error("port not found " .. b .. "." .. pinb)
 	end
-	local na = a .. "[" .. o.num .. "]" .. "[" .. i.num .. "]" .. b
+	local na = a .. o.name .. "," .. i.name
 	if self.connections[na] then
 		error("connection already exists: " .. na)
 	end
-	self.connections[na] = connection.new(na, o, i)
+	self.connections[na] = connection.new(na, o.pins[1], i.pins[1])
 	return self
 end
 
@@ -161,7 +131,7 @@ end
 
 function simulation:step()
 	if not self.simulation_started then
-		self:update_net_names()
+		self:init_traces()
 		self.simulation_started = true
 	end
 	local maxstep = 10000
@@ -172,7 +142,7 @@ function simulation:step()
 	local roots = {}
 	local count = 0
 	for name, x in pairs(self.components) do
-		if #x.inputs == 0 then
+		if #x.inports == 0 then
 			roots[name] = x
 			count = count + 1
 		end
@@ -188,19 +158,30 @@ function simulation:step()
 			dirty[k] = v
 		end
 		for _, c in pairs(dirty) do
-			for _, x in ipairs(c.inputs) do
-				x.net.latched_value = x.net.value
+			for _, p in ipairs(c.inports) do
+				for _, x in ipairs(p.pins) do
+					x.net.latched_value = x.net.value
+				end
 			end
 		end
 		for _, c in pairs(dirty) do
 			if c.step then
 				local inputs = {}
-				for i, x in ipairs(c.inputs) do
-					inputs[i] = x.net.latched_value
+				for i, p in ipairs(c.inports) do
+					if p.bits == 1 then
+						inputs[i] = p.pins[1].net.latched_value
+					else
+						local v = {}
+						inputs[i] = v
+						for j, x in ipairs(p.pins) do
+							v[j] = x.net.latched_value
+						end
+					end
 				end
 				local outputs = { c.step(self.time, unpack(inputs)) }
-				for i, value in ipairs(outputs) do
-					local output = c.outputs[i]
+
+				---@param output pin
+				local function handle_output_value(value, output)
 					if output.net.value ~= value then
 						output.net.value = value
 						output.net.timestamp = self.time
@@ -215,6 +196,17 @@ function simulation:step()
 									nextcount = nextcount + 1
 								end
 							end
+						end
+					end
+				end
+
+				for i, value in ipairs(outputs) do
+					local output = c.outports[i]
+					if output.bits == 1 then
+						handle_output_value(value, output.pins[1])
+					else
+						for j, x in ipairs(output.pins) do
+							handle_output_value(value[j], x)
 						end
 					end
 				end
