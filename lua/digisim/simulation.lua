@@ -164,8 +164,6 @@ function simulation:step()
 		self:update_net_names()
 		self.simulation_started = true
 	end
-	--local prt = function(_) end
-	--prt("---------------------------------------------------------")
 	local maxstep = 10000
 	local ticks = 0
 
@@ -182,7 +180,6 @@ function simulation:step()
 	if count == 0 then
 		error("must have at least one component with zero inputs")
 	end
-	--prt(self.time)
 	repeat
 		local nextdirty = {}
 		local nextcount = 0
@@ -205,14 +202,11 @@ function simulation:step()
 				for i, value in ipairs(outputs) do
 					local output = c.outputs[i]
 					if output.net.value ~= value then
-						--if output.net.timestamp <= self.time then
 						output.net.value = value
 						output.net.timestamp = self.time
 						if output.net.name ~= nil then
 							add_trace(self, output.net.name, self.time, value)
 						end
-						--else
-						--end
 
 						for _, x in pairs(output.net.pins) do
 							if x ~= output and x.is_input and x.component.step then
@@ -222,10 +216,6 @@ function simulation:step()
 								end
 							end
 						end
-
-						--prt(output.timestamp .. ":" .. vim.inspect(inputs) .. ":" .. output.name .. ":" .. output.value)
-					else
-						--if #output.component.inputs > 0 then prt( self.time .. ":" .. vim.inspect(inputs) .. ":" .. output.name .. ":" .. output.value .. ":SAME") end
 					end
 				end
 			end
