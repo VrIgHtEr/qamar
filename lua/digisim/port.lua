@@ -4,6 +4,8 @@ local pin = require("digisim.pin")
 ---@field name string
 ---@field bits number
 ---@field pins pin[]
+---@field is_input boolean
+---@field component component
 local port = {}
 local MT = { __index = port }
 
@@ -27,9 +29,11 @@ function port.new(name, bits, comp, is_input)
 		name = name,
 		bits = bits,
 		pins = {},
+		is_input = is_input and true or false,
+		component = comp,
 	}, MT)
 	if bits == 1 then
-		ret.pins[1] = pin.new(1, name, comp, is_input)
+		ret.pins[1] = pin.new(1, name, ret, is_input)
 	else
 		for i = 1, bits do
 			ret.pins[i] = pin.new(i, name .. "[" .. i .. "]", comp, is_input)

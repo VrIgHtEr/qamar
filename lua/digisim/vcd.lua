@@ -55,7 +55,7 @@ end
 ---@param self vcd
 ---@param name string
 ---@return trace
-local function new_trace(self, name)
+local function new_trace(self, name, bits)
 	if self.state == 0 then
 		io.stdout:write([[
 $date
@@ -72,19 +72,19 @@ $scope module logic $end
 		self.state = 1
 	end
 	if self.state ~= 1 then
-		error("cannot add new trace after starting trace")
+		error("cannot add new trace after starting trace: " .. name)
 	end
 	local ret = {
 		identifier = next_identifier(self),
 		value = signal.unknown,
 	}
-	io.stdout:write("$var wire 1 " .. ret.identifier .. " " .. name .. " $end\n")
+	io.stdout:write("$var wire " .. bits .. " " .. ret.identifier .. " " .. name .. " $end\n")
 	self.traces[name] = ret
 	return ret
 end
 
-function vcd:get(name)
-	return self.traces[name] or new_trace(self, name)
+function vcd:get(name, bits)
+	return self.traces[name] or new_trace(self, name, bits)
 end
 
 function vcd:trace(name, time, sig)
@@ -105,7 +105,7 @@ $end
 		io.stdout:write("#" .. tostring(time) .. "\n")
 	end
 	self.index = self.index + 1
-	io.stdout:write(tostring(sig) .. "" .. trace.identifier .. "\n")
+	io.stdout:write(tostring(sig) .. trace.identifier .. "\n")
 end
 
 return vcd

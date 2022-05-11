@@ -4,18 +4,18 @@ local net = require("digisim.net")
 ---@field num number
 ---@field name string
 ---@field net net
----@field component component
+---@field port port
 ---@field connections table<string,connection>
 ---@field is_input boolean
 local pin = {}
 local MT = { __index = pin }
 
-function pin.new(num, name, comp, is_input)
+function pin.new(num, name, port, is_input)
 	local ret = setmetatable({
 		name = name,
 		net = net.new(),
 		connections = {},
-		component = comp,
+		port = port,
 		is_input = is_input and true or false,
 		num = num,
 	}, MT)

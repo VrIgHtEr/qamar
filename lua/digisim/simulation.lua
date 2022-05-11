@@ -29,26 +29,11 @@ end
 
 function simulation:init_traces()
 	for _, v in pairs(self.components) do
-		for _, p in pairs(v.ports) do
-			for _, x in ipairs(p.pins) do
-				x.net.name = nil
-			end
-		end
-	end
-	---@type table<net,boolean>
-	local nets = {}
-	for _, v in pairs(self.components) do
 		if v.trace then
 			for _, p in ipairs(v.outports) do
-				for _, x in ipairs(p.pins) do
-					x.net.name = x.name
-					nets[x.net] = true
-				end
+				self.trace:get(p.name, p.bits)
 			end
 		end
-	end
-	for net in pairs(nets) do
-		self.trace:get(net.name)
 	end
 end
 
@@ -164,6 +149,9 @@ function simulation:step()
 				end
 			end
 		end
+		---@type table<port,boolean>
+		local trace_ports = {}
+
 		for _, c in pairs(dirty) do
 			if c.step then
 				local inputs = {}
@@ -185,14 +173,16 @@ function simulation:step()
 					if output.net.value ~= value then
 						output.net.value = value
 						output.net.timestamp = self.time
-						if output.net.name ~= nil then
-							add_trace(self, output.net.name, self.time, value)
+						for _, x in pairs(output.net.pins) do
+							if not x.port.is_input and x.port.component.trace then
+								trace_ports[x.port] = true
+							end
 						end
 
 						for _, x in pairs(output.net.pins) do
-							if x ~= output and x.is_input and x.component.step then
-								if not nextdirty[x.component.name] then
-									nextdirty[x.component.name] = x.component
+							if x ~= output and x.is_input and x.port.component.step then
+								if not nextdirty[x.port.component.name] then
+									nextdirty[x.port.component.name] = x.port.component
 									nextcount = nextcount + 1
 								end
 							end
@@ -212,6 +202,22 @@ function simulation:step()
 				end
 			end
 		end
+
+		for p in pairs(trace_ports) do
+			local val
+			if p.bits == 1 then
+				val = p.pins[1].net.value
+			else
+				val = { "b" }
+				for i, x in ipairs(p.pins) do
+					val[i + 1] = tostring(x.net.value)
+				end
+				table.insert(val, " ")
+				val = table.concat(val)
+			end
+			add_trace(self, p.name, self.time, val)
+		end
+
 		dirty = nextdirty
 		count = nextcount
 		maxstep = maxstep - 1
