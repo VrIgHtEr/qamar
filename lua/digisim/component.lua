@@ -64,7 +64,7 @@ function component.new(name, handler, opts)
 		elseif #n < 2 then
 			width = 1
 			pinname = n[1]
-			if type(n) ~= "string" then
+			if type(pinname) ~= "string" then
 				error("invalid port definition")
 			end
 		elseif type(n[1]) ~= "string" or type(n[2]) ~= "number" then
@@ -96,7 +96,7 @@ function component.new(name, handler, opts)
 		elseif #n < 2 then
 			width = 1
 			pinname = n[1]
-			if type(n) ~= "string" then
+			if type(pinname) ~= "string" then
 				error("invalid port definition")
 			end
 		elseif type(n[1]) ~= "string" or type(n[2]) ~= "number" then
