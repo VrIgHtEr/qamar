@@ -23,7 +23,7 @@ return function(simulation)
 			if period < 2 then
 				error("clock period too small")
 			end
-			circuit:add_component(name, 0, 1, function(ts)
+			circuit:add_component(name, function(ts)
 				ts = ts % period
 				return ts < period / 2 and signal.low or signal.high
 			end, opts)

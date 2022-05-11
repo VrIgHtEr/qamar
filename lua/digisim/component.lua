@@ -12,7 +12,7 @@ local pin = require("digisim.pin")
 local component = {}
 local MT = { __index = component }
 
-function component.new(name, inputs, outputs, handler, opts)
+function component.new(name, handler, opts)
 	if type(name) ~= "string" or name == "" then
 		error("invalid name")
 	end
@@ -27,13 +27,6 @@ function component.new(name, inputs, outputs, handler, opts)
 		end
 	elseif type(opts) ~= "table" then
 		error("invalid opts type")
-	end
-	if type(inputs) ~= "number" or type(outputs) ~= "number" or (handler ~= nil and type(handler) ~= "function") then
-		error("invalid inputs")
-	end
-	inputs, outputs = math.floor(inputs), math.floor(outputs)
-	if inputs < 0 or outputs < 0 or (inputs == 0 and outputs == 0) then
-		error("invalid inputs")
 	end
 	if opts.names == nil then
 		opts.names = {}
@@ -57,6 +50,7 @@ function component.new(name, inputs, outputs, handler, opts)
 		pins = {},
 	}, MT)
 	local names = opts.names.inputs
+	local inputs = #names
 	for i = 1, inputs do
 		local pinname
 		local n = names[i]
@@ -71,6 +65,7 @@ function component.new(name, inputs, outputs, handler, opts)
 		ret.pins[pinname] = ret.inputs[i]
 	end
 	names = opts.names.outputs
+	local outputs = #names
 	for i = 1, outputs do
 		local pinname
 		local n = names[i]

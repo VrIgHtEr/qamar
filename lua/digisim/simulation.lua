@@ -51,7 +51,7 @@ function simulation:update_net_names()
 	end
 end
 
-function simulation:add_component(name, inputs, outputs, handler, opts)
+function simulation:add_component(name, handler, opts)
 	if self.simulation_started then
 		error("simulation started - cannot add new component")
 	end
@@ -66,7 +66,7 @@ function simulation:add_component(name, inputs, outputs, handler, opts)
 	elseif type(opts) ~= "table" then
 		error("invalid opts type")
 	end
-	local c = component.new(name, inputs, outputs, handler, { names = opts.names })
+	local c = component.new(name, handler, { names = opts.names })
 	c.trace = opts.trace and true or false or constants.DEBUG_TRACE_ALL_OUTPUTS
 	self.components[name] = c
 	return self

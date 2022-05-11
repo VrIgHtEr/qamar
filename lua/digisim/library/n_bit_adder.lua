@@ -28,7 +28,7 @@ return function(simulation)
 			opts.names.inputs[width * 2 + 1] = "cin"
 			opts.names.outputs[width + 1] = "cout"
 
-			circuit:add_component(name, width * 2 + 1, width + 1, nil, opts)
+			circuit:add_component(name, nil, opts)
 			local n = name .. "."
 
 			circuit:new_full_adder(n .. 0)

@@ -75,7 +75,7 @@ do
 		local value = signal.low
 		local last = 0
 		circuit
-			:add_component(name, 0, 1, function(time)
+			:add_component(name, function(time)
 				time = math.floor(time / constants.CLOCK_PERIOD_TICKS)
 				if time ~= last then
 					last = time
