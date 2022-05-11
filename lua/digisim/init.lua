@@ -42,6 +42,8 @@ do
 
 	circuit:new_clock("C", { period = constants.CLOCK_PERIOD_TICKS, trace = true }):c("C", "q", "adder", "cin")
 
+	circuit:new_mux("AAAAAAAAAAAAA", { width = 8, trace = true })
+
 	local max = 0
 	for _ = 1, constants.CLOCK_PERIOD_TICKS * 512 do
 		local x
