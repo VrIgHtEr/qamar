@@ -81,6 +81,10 @@ end
 ---@param pinb string
 ---@return simulation
 function simulation:c(a, pina, b, pinb)
+	return self:cp(1, a, pina, 1, b, pinb, 1)
+end
+
+function simulation:cp(len, a, porta, starta, b, portb, startb)
 	if self.simulation_started then
 		error("simulation started - cannot add new component")
 	end
@@ -91,18 +95,29 @@ function simulation:c(a, pina, b, pinb)
 	if not cb then
 		error("component not found: " .. b)
 	end
-	local o, i = ca.ports[pina], cb.ports[pinb]
-	if not o then
-		error("port not found " .. a .. "." .. pina)
+	local pa, pb = ca.ports[porta], cb.ports[portb]
+	if not pa then
+		error("port not found " .. a .. "." .. porta)
 	end
-	if not i then
-		error("port not found " .. b .. "." .. pinb)
+	if not pb then
+		error("port not found " .. b .. "." .. portb)
 	end
-	local na = a .. o.name .. "," .. i.name
-	if self.connections[na] then
-		error("connection already exists: " .. na)
+	if len < 1 then
+		error("invalid length")
 	end
-	self.connections[na] = connection.new(na, o.pins[1], i.pins[1])
+	if starta < 1 or pa.bits - starta + 1 < len then
+		error("out of range port access")
+	end
+	if startb < 1 or pb.bits - startb + 1 < len then
+		error("out of range port access")
+	end
+	for i = 1, len do
+		local na = pa.name .. "[" .. (starta + i - 1) .. "]" .. pb.name .. "[" .. (startb + i - 1) .. "]"
+		if self.connections[na] then
+			error("connection already exists: " .. na)
+		end
+		self.connections[na] = connection.new(na, pa.pins[starta + i - 1], pb.pins[startb + i - 1])
+	end
 	return self
 end
 
