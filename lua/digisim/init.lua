@@ -44,6 +44,19 @@ do
 
 	circuit:new_mux("A", { width = 8, trace = true })
 
+	circuit:add_component("ZZZ", function(time)
+		local t = time % 4
+		return { t % 2, math.floor(t / 2) }
+	end, {
+		trace = true,
+		names = {
+			inputs = {},
+			outputs = {
+				{ "out", 2 },
+			},
+		},
+	})
+
 	local max = 0
 	for _ = 1, constants.CLOCK_PERIOD_TICKS * 1024 do
 		local x

@@ -127,12 +127,43 @@ function component.new(name, handler, opts)
 				error("handler " .. name .. " returned " .. #o .. " outputs but expected " .. outputs)
 			end
 			for i, x in ipairs(o) do
-				if type(x) ~= "number" then
+				if type(x) == "number" then
+					x = math.floor(x)
+					if x <= signal.unknown or x >= signal.TOP then
+						error("handler " .. name .. " returned invalid value " .. x .. " at index " .. i)
+					end
+				elseif type(x) == "table" then
+					for j, v in ipairs(x) do
+						if type(v) ~= "number" then
+							error(
+								"handler "
+									.. name
+									.. " returned invalid type "
+									.. type(v)
+									.. " at index "
+									.. i
+									.. "["
+									.. j
+									.. "]"
+							)
+						end
+						v = math.floor(v)
+						if v <= signal.unknown or v >= signal.TOP then
+							error(
+								"handler "
+									.. name
+									.. " returned invalid value "
+									.. v
+									.. " at index "
+									.. i
+									.. "["
+									.. j
+									.. "]"
+							)
+						end
+					end
+				else
 					error("handler " .. name .. " returned invalid type " .. type(x) .. " at index " .. i)
-				end
-				x = math.floor(x)
-				if x <= signal.unknown or x >= signal.TOP then
-					error("handler " .. name .. " returned invalid value " .. x .. " at index " .. i)
 				end
 			end
 			return unpack(o)

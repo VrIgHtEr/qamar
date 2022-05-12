@@ -36,7 +36,7 @@ function port.new(name, bits, comp, is_input)
 		ret.pins[1] = pin.new(1, name, ret, is_input)
 	else
 		for i = 1, bits do
-			ret.pins[i] = pin.new(i, name .. "[" .. i .. "]", comp, is_input)
+			ret.pins[i] = pin.new(i, name .. "[" .. i .. "]", ret, is_input)
 		end
 	end
 	return ret
