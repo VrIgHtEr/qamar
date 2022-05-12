@@ -21,42 +21,16 @@ do
 
 	local adder_width = 32
 	circuit:new_n_bit_adder("adder", { width = adder_width, trace = true })
-	local function create_random_input(name)
-		local value = signal.low
-		local last = 0
-		circuit
-			:add_component(name, function(time)
-				time = math.floor(time / constants.CLOCK_PERIOD_TICKS)
-				if time ~= last then
-					last = time
-					value = math.random(0, 1)
-				end
-				return value
-			end, { trace = true, names = { outputs = { "q" } } })
-			:c(name, "q", "adder", name)
-	end
-	for i = 0, adder_width - 1 do
-		create_random_input("a" .. i)
-		create_random_input("b" .. i)
-	end
 
+	circuit
+		:new_random("ARND", { trace = true, width = adder_width, period = constants.CLOCK_PERIOD_TICKS })
+		:cp(adder_width, "ARND", "q", 1, "adder", "a", 1)
+	circuit
+		:new_random("BRND", { trace = true, width = adder_width, period = constants.CLOCK_PERIOD_TICKS })
+		:cp(adder_width, "BRND", "q", 1, "adder", "b", 1)
 	circuit:new_clock("C", { period = constants.CLOCK_PERIOD_TICKS, trace = true }):c("C", "q", "adder", "cin")
 
-	circuit:new_mux("A", { width = 8, trace = true })
-
-	circuit:add_component("ZZZ", function(time)
-		local t = time % 4
-		return { t % 2, math.floor(t / 2) }
-	end, {
-		trace = true,
-		names = {
-			inputs = {},
-			outputs = {
-				{ "out", 2 },
-			},
-		},
-	})
-
+	circuit:new_mux("mux", { width = 8, trace = true })
 	local max = 0
 	for _ = 1, constants.CLOCK_PERIOD_TICKS * 1024 do
 		local x
