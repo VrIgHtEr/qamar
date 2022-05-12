@@ -71,7 +71,6 @@ $end
 $comment
 $end
 $timescale 1ps $end
-$scope module logic $end
 ]])
 		self.state = 1
 	end
@@ -82,7 +81,37 @@ $scope module logic $end
 		identifier = next_identifier(self),
 		value = signal.unknown,
 	}
-	io.stdout:write("$var wire " .. bits .. " " .. ret.identifier .. " " .. name .. " $end\n")
+
+	local pieces = {}
+	local pidx = 0
+	while true do
+		local idx = name:find("[.]", pidx + 1)
+		if not idx then
+			local piece = name:sub(pidx + 1)
+			if piece:len() == 0 then
+				error("invalid module name")
+			end
+			table.insert(pieces, piece)
+			break
+		end
+		local piece = name:sub(pidx + 1, idx - 1)
+		if piece:len() == 0 then
+			error("invalid module name")
+		end
+		table.insert(pieces, piece)
+		pidx = idx
+	end
+
+	if #pieces < 2 then
+		error("not enough pieces")
+	end
+	for i = 1, #pieces - 1 do
+		io.stdout:write("$scope module " .. pieces[i] .. " $end\n")
+	end
+	io.stdout:write("$var wire " .. bits .. " " .. ret.identifier .. " " .. pieces[#pieces] .. " $end\n")
+	for _ = 1, #pieces - 1 do
+		io.stdout:write("$upscope $end\n")
+	end
 	self.traces[name] = ret
 	return ret
 end
@@ -95,7 +124,6 @@ function vcd:trace(name, time, sig)
 	if self.state == 1 then
 		self.state = 2
 		io.stdout:write([[
-$upscope $end
 $enddefinitions $end
 $dumpvars
 $end
