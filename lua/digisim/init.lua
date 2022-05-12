@@ -1,5 +1,4 @@
 local constants = require("digisim.constants")
-local signal = require("digisim.signal")
 local simulation = require("digisim.simulation")
 
 do
@@ -30,7 +29,7 @@ do
 		:cp(adder_width, "BRND", "q", 1, "adder", "b", 1)
 	circuit:new_clock("C", { period = constants.CLOCK_PERIOD_TICKS, trace = true }):c("C", "q", "adder", "cin")
 
-	--	circuit:new_mux("mux", { width = 8, trace = true })
+	--circuit:new_mux("mux", { width = 8, trace = true })
 	local max = 0
 	for _ = 1, constants.CLOCK_PERIOD_TICKS * 1024 do
 		local x
