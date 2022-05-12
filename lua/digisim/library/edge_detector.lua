@@ -32,7 +32,7 @@ return function(simulation)
 			circuit:new_buffer(c .. i)
 			circuit:c(c .. (i - 1), "q", c .. i, "a")
 		end
-		circuit:new_and(rising):c(eclk, "clk", rising, "a"):c(c .. chain_length, "q", rising, "b")
+		circuit:new_and(rising):cp(1, eclk, "clk", 1, rising, "in", 1):cp(1, c .. chain_length, "q", 1, rising, "in", 2)
 
 		-- CLK_FALLING - clock falling edge detector
 		circuit:new_not(ic .. 1):c(iclk, "q", ic .. 1, "a")
@@ -40,7 +40,10 @@ return function(simulation)
 			circuit:new_buffer(ic .. i)
 			circuit:c(ic .. (i - 1), "q", ic .. i, "a")
 		end
-		circuit:new_and(falling):c(ic .. chain_length, "q", falling, "a"):c(iclk, "q", falling, "b")
+		circuit
+			:new_and(falling)
+			:cp(1, ic .. chain_length, "q", 1, falling, "in", 1)
+			:cp(1, iclk, "q", 1, falling, "in", 2)
 
 		circuit:c(eclk, "rising", rising, "q")
 		circuit:c(eclk, "falling", falling, "q")

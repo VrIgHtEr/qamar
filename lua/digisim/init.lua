@@ -19,7 +19,7 @@ do
 	circuit:c("ND", "q", "FF", "k")
 
 	local adder_width = 32
-	circuit:new_n_bit_adder("adder", { width = adder_width, trace = true })
+	circuit:new_ripple_adder("adder", { width = adder_width, trace = true })
 
 	circuit
 		:new_random("ARND", { trace = true, width = adder_width, period = constants.CLOCK_PERIOD_TICKS })

@@ -1,10 +1,10 @@
 ---@class simulation
----@field new_n_bit_adder function
+---@field new_ripple_adder function
 
 ---@param simulation simulation
 return function(simulation)
 	simulation:register_component(
-		"n_bit_adder",
+		"ripple_adder",
 		---@param circuit simulation
 		---@param name string
 		---@param opts boolean

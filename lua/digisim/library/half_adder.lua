@@ -21,8 +21,8 @@ return function(simulation)
 				:c(c, "q", name, "carry")
 				:c(name, "a", s, "a")
 				:c(name, "b", s, "b")
-				:c(name, "a", c, "a")
-				:c(name, "b", c, "b")
+				:cp(1, name, "a", 1, c, "in", 1)
+				:cp(1, name, "b", 1, c, "in", 2)
 		end
 	)
 end
