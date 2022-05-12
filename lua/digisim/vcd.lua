@@ -27,6 +27,10 @@ function vcd.new()
 	return ret
 end
 
+function vcd.sigstr(sig)
+	return sig == signal.low and "0" or sig == signal.high and "1" or sig == signal.z and "z" or "x"
+end
+
 local function next_identifier(self)
 	local id = self.id
 	id[1] = id[1] + 1

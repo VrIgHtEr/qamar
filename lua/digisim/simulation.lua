@@ -4,6 +4,8 @@ local component = require("digisim.component")
 local connection = require("digisim.connection")
 local vcd = require("digisim.vcd")
 
+local sigstr = vcd.sigstr
+
 ---@class simulation
 ---@field components table<string,component>
 ---@field connections table<string,connection>
@@ -84,6 +86,14 @@ function simulation:c(a, pina, b, pinb)
 	return self:cp(1, a, pina, 1, b, pinb, 1)
 end
 
+---@param len number
+---@param a string
+---@param porta string
+---@param starta number
+---@param b string
+---@param portb string
+---@param startb number
+---@return simulation
 function simulation:cp(len, a, porta, starta, b, portb, startb)
 	if self.simulation_started then
 		error("simulation started - cannot add new component")
@@ -221,11 +231,13 @@ function simulation:step()
 		for p in pairs(trace_ports) do
 			local val
 			if p.bits == 1 then
-				val = p.pins[1].net.value
+				val = sigstr(p.pins[1].net.value)
 			else
 				val = { "b" }
-				for i, x in ipairs(p.pins) do
-					val[i + 1] = tostring(x.net.value)
+				local len = #p.pins
+				for i = 1, len do
+					local x = p.pins[len - i + 1]
+					val[i + 1] = sigstr(x.net.value)
 				end
 				table.insert(val, " ")
 				val = table.concat(val)
