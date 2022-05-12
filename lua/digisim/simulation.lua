@@ -32,6 +32,11 @@ end
 function simulation:init_traces()
 	for _, v in pairs(self.components) do
 		if v.trace then
+			if constants.TRACE_INPUTS then
+				for _, p in ipairs(v.inports) do
+					self.trace:get(p.name, p.bits)
+				end
+			end
 			for _, p in ipairs(v.outports) do
 				self.trace:get(p.name, p.bits)
 			end
@@ -199,7 +204,10 @@ function simulation:step()
 						output.net.value = value
 						output.net.timestamp = self.time
 						for _, x in pairs(output.net.pins) do
-							if not x.port.is_input and x.port.component.trace then
+							if
+								((x.port.is_input and constants.TRACE_INPUTS) or not x.port.is_input)
+								and x.port.component.trace
+							then
 								trace_ports[x.port] = true
 							end
 						end
