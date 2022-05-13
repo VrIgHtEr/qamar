@@ -9,7 +9,8 @@ do
 	local rst = "~RST"
 	local alu = "ALU"
 	local subtract = "SUBTRACT"
-	local logic = "LOGIC"
+	local sel1 = "SEL1"
+	local sel2 = "SEL2"
 	local zero = "ZERO"
 	local arnd = "ARND"
 	local brnd = "BRND"
@@ -31,9 +32,12 @@ do
 
 	circuit:c(zero, "q", alu, "nota"):c(subtract, "q", alu, "notb")
 
-	circuit:new_clock(logic, { period = constants.CLOCK_PERIOD_TICKS * 2, trace = true }):c(logic, "q", alu, "logic")
-
-	--circuit:new_mux("mux", { width = 8, trace = true })
+	circuit
+		:new_clock(sel1, { period = constants.CLOCK_PERIOD_TICKS * 2, trace = true })
+		:cp(1, sel1, "q", 1, alu, "sel", 1)
+	circuit
+		:new_clock(sel2, { period = constants.CLOCK_PERIOD_TICKS * 3, trace = true })
+		:cp(1, sel1, "q", 1, alu, "sel", 2)
 	local max = 0
 	for _ = 1, constants.CLOCK_PERIOD_TICKS * 1024 do
 		local x
