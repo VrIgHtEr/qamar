@@ -20,9 +20,19 @@ return function(simulation)
 			if width < 1 then
 				error("invalid width")
 			end
-			opts.names = { inputs = { { "a", width }, "en" }, outputs = { "q" } }
+			opts.names = { inputs = { { "a", width }, "en" }, outputs = { { "q", width } } }
+			local z
+			if width == 1 then
+				z = signal.z
+			else
+				z = {}
+				for i = 1, width do
+					z[i] = signal.z
+				end
+			end
 			return self:add_component(name, function(_, a, en)
-				return signal.low == en and signal.z or a
+				local ret = signal.z
+				return signal.low == en and z or a
 			end, opts)
 		end
 	)

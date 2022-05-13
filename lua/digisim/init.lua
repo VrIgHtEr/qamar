@@ -19,6 +19,7 @@ do
 	circuit:new_reset(rst, { period = constants.STARTUP_TICKS, trace = true })
 	local alu_width = 32
 	circuit:new_alu(alu, { width = alu_width, trace = true })
+	circuit:c(rst, "q", alu, "oe")
 	circuit
 		:new_random(arnd, { trace = true, width = alu_width, period = constants.CLOCK_PERIOD_TICKS })
 		:cp(alu_width, arnd, "q", 1, alu, "a", 1)

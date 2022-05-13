@@ -25,6 +25,7 @@ return function(simulation)
 					"nota",
 					"notb",
 					{ "sel", 2 },
+					{ "oe" },
 				},
 				outputs = {
 					{ "out", width },
@@ -43,16 +44,22 @@ return function(simulation)
 			local xa = n .. "xa"
 			local xb = n .. "xb"
 			local lm = n .. "lm"
+			local out = n .. "out"
 
 			-- zero flag
 			circuit:new_nor(zero, { width = width })
 			circuit:cp(width, alu, "out", 1, zero, "in", 1)
 			circuit:c(zero, "q", alu, "zero")
 
+			--output tristate buffer
+			circuit:new_tristate_buffer(out, { width = width })
+			circuit:c(alu, "oe", out, "en")
+			circuit:c(out, "q", alu, "out")
+
 			-- output multiplexer, selects either the adder, AND, OR or XOR output
 			circuit:new_mux_bank(lm, { width = 2, bits = width })
 			circuit:c(alu, "sel", lm, "sel")
-			circuit:c(lm, "out", alu, "out")
+			circuit:c(lm, "out", out, "a")
 
 			--- conditional inverter for input A
 			circuit:new_xor_bank(xa, { width = width })
