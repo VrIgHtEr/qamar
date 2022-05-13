@@ -54,7 +54,7 @@ return function(simulation)
 			circuit:c(o, "q", mux, "out")
 			for i = 1, bits do
 				circuit:cp(1, dn, "q", 1, a, "b", i)
-				circuit:cp(1, mux, "sel", 1, b, "b", i)
+				circuit:cp(1, mux, "sel", width, b, "b", i)
 			end
 
 			if width == 1 then
@@ -64,8 +64,12 @@ return function(simulation)
 				local ma = n .. "ma"
 				local mb = n .. "mb"
 
-				circuit:new_mux_bank(ma, { width = width - 1, bits = bits }):cp(width - 1, mux, "sel", 1, ma, "sel", 1)
-				circuit:new_mux_bank(mb, { width = width - 1, bits = bits }):cp(width - 1, mux, "sel", 1, mb, "sel", 1)
+				circuit:new_mux_bank(ma, { width = width - 1, bits = bits })
+				circuit:cp(width - 1, mux, "sel", 1, ma, "sel", 1)
+
+				circuit:new_mux_bank(mb, { width = width - 1, bits = bits })
+				circuit:cp(width - 1, mux, "sel", 1, mb, "sel", 1)
+
 				local halfinputs = numinputs / 2
 				for i = 1, halfinputs do
 					circuit:c(mux, "d" .. (i - 1), ma, "d" .. (i - 1))
