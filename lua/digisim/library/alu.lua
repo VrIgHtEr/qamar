@@ -24,6 +24,7 @@ return function(simulation)
 					"cin",
 					"nota",
 					"notb",
+					"logic",
 				},
 				outputs = {
 					{ "out", width },
@@ -38,14 +39,20 @@ return function(simulation)
 			local zero = n .. "zero"
 			local xa = n .. "xa"
 			local xb = n .. "xb"
+			local lm = n .. "lm"
 
+			--zero flag
 			circuit:new_nor(zero, { width = width })
 			circuit:cp(width, alu, "out", 1, zero, "in", 1)
 			circuit:c(zero, "q", alu, "zero")
 
+			circuit:new_mux_bank(lm, { width = 1, bits = width })
+			circuit:c(alu, "logic", lm, "sel")
+			circuit:c(lm, "out", alu, "out")
+
 			circuit:new_ripple_adder(adder, { width = width })
 			circuit:cp(1, alu, "cin", 1, adder, "cin", 1)
-			circuit:cp(width, adder, "sum", 1, alu, "out", 1)
+			circuit:c(adder, "sum", lm, "d0")
 			circuit:cp(1, adder, "carry", 1, alu, "carry", 1)
 
 			circuit:new_xor_bank(xa, { width = width })

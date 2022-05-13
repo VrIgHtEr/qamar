@@ -23,6 +23,10 @@ do
 
 	circuit:c("ZERO", "q", "ALU", "nota"):c("C", "q", "ALU", "notb")
 
+	circuit
+		:new_clock("LOGIC", { period = constants.CLOCK_PERIOD_TICKS * 2, trace = true })
+		:c("LOGIC", "q", "ALU", "logic")
+
 	--circuit:new_mux("mux", { width = 8, trace = true })
 	local max = 0
 	for _ = 1, constants.CLOCK_PERIOD_TICKS * 1024 do

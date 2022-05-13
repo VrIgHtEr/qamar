@@ -15,7 +15,7 @@ return function(simulation)
 				error("invalid width type")
 			end
 			width = math.floor(width)
-			if width < 2 then
+			if width < 1 then
 				error("invalid width")
 			end
 			opts.names = { inputs = { { "a", width }, { "b", width } }, outputs = { { "q", width } } }
