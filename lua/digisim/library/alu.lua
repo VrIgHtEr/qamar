@@ -18,8 +18,18 @@ return function(simulation)
 				error("invalid width")
 			end
 			opts.names = {
-				inputs = { { "a", width }, { "b", width }, "cin", "nota", "notb" },
-				outputs = { { "out", width }, "carry", "zero" },
+				inputs = {
+					{ "a", width },
+					{ "b", width },
+					"cin",
+					"nota",
+					"notb",
+				},
+				outputs = {
+					{ "out", width },
+					"carry",
+					"zero",
+				},
 			}
 
 			circuit:add_component(alu, nil, opts)
