@@ -71,6 +71,8 @@ return function(simulation)
 					circuit:c(mux, "d" .. (i - 1), ma, "d" .. (i - 1))
 					circuit:c(mux, "d" .. (i + halfinputs - 1), mb, "d" .. (i - 1))
 				end
+				circuit:c(ma, "out", a, "a")
+				circuit:c(mb, "out", b, "a")
 			end
 		end
 	)

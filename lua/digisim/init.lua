@@ -37,7 +37,7 @@ do
 		:cp(1, sel1, "q", 1, alu, "sel", 1)
 	circuit
 		:new_clock(sel2, { period = constants.CLOCK_PERIOD_TICKS * 3, trace = true })
-		:cp(1, sel1, "q", 1, alu, "sel", 2)
+		:cp(1, sel2, "q", 1, alu, "sel", 2)
 	local max = 0
 	for _ = 1, constants.CLOCK_PERIOD_TICKS * 1024 do
 		local x
