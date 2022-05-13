@@ -27,6 +27,10 @@ return function(simulation)
 		if type(chain_length) ~= "number" then
 			error("invalid chain_length type")
 		end
+		chain_length = math.floor(chain_length)
+		if chain_length < 1 then
+			error("invalid chain_length")
+		end
 
 		for i = 2, chain_length do
 			circuit:new_buffer(c .. i)
