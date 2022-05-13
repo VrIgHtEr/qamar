@@ -1,12 +1,9 @@
-local signal = require("digisim.signal")
-
 ---@class net
 ---@field name string
 ---@field parent net
 ---@field pins table<string,pin>
 ---@field num_pins pin[]
 ---@field timestamp number
----@field value signal
 ---@field latched_value signal
 local net = {}
 local MT = { __index = net }
@@ -16,7 +13,6 @@ function net.new()
 		pins = {},
 		num_pins = 0,
 		timestamp = 0,
-		value = signal.unknown,
 	}, MT)
 	return ret
 end

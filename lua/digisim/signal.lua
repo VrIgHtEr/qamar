@@ -1,7 +1,9 @@
 ---@class signal
 return {
-	BOTTOM = -3,
-	unknown = -2,
+	BOTTOM = -5,
+	unknown = -4,
+	weakhigh = -3,
+	weaklow = -2,
 	z = -1,
 	low = 0,
 	high = 1,

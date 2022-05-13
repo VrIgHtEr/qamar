@@ -164,6 +164,71 @@ local function add_trace(sim, name, time, sig)
 	sim.trace:trace(name, time, sig)
 end
 
+local signal = require("digisim.signal")
+
+---@param a signal
+---@param b signal
+local function resolve(a, b)
+	if a == signal.weakhigh then
+		if b == signal.z or b == signal.high or b == signal.weakhigh then
+			return signal.high
+		elseif b == signal.low then
+			return signal.low
+		else
+			return signal.unknown
+		end
+	elseif a == signal.weaklow then
+		if b == signal.z or b == signal.low or b == signal.weaklow then
+			return signal.low
+		elseif b == signal.high then
+			return signal.high
+		else
+			return signal.unknown
+		end
+	elseif a == signal.z then
+		if b == signal.z then
+			return signal.z
+		elseif b == signal.weaklow or b == signal.low then
+			return signal.low
+		elseif b == signal.weakhigh or b == signal.high then
+			return signal.high
+		else
+			return signal.unknown
+		end
+	elseif a == signal.low then
+		if b == signal.weaklow or b == signal.weakhigh or b == signal.low or b == signal.z then
+			return signal.low
+		else
+			return signal.unknown
+		end
+	elseif a == signal.high then
+		if b == signal.weakhigh or b == signal.weaklow or b == signal.z or b == signal.high then
+			return signal.high
+		else
+			return signal.unknown
+		end
+	else
+		return signal.unknown
+	end
+end
+
+---@param time number
+---@param p port
+local function latch_values(time, p)
+	for _, x in ipairs(p.pins) do
+		if time > x.net.timestamp then
+			local sig = signal.z
+			for _, z in pairs(x.net.pins) do
+				if not z.is_input then
+					sig = resolve(sig, z.value)
+				end
+			end
+			x.net.latched_value = sig
+			x.net.timestamp = time
+		end
+	end
+end
+
 function simulation:step()
 	if not self.simulation_started then
 		self:init_traces()
@@ -194,9 +259,7 @@ function simulation:step()
 		end
 		for _, c in pairs(dirty) do
 			for _, p in ipairs(c.inports) do
-				for _, x in ipairs(p.pins) do
-					x.net.latched_value = x.net.value
-				end
+				latch_values(self.time, p)
 			end
 		end
 		---@type table<port,boolean>
@@ -211,6 +274,7 @@ function simulation:step()
 					else
 						local v = {}
 						inputs[i] = v
+
 						for j, x in ipairs(p.pins) do
 							v[j] = x.net.latched_value
 						end
@@ -220,9 +284,8 @@ function simulation:step()
 
 				---@param output pin
 				local function handle_output_value(value, output)
-					if output.net.value ~= value then
-						output.net.value = value
-						output.net.timestamp = self.time
+					if output.value ~= value then
+						output.value = value
 						for _, x in pairs(output.net.pins) do
 							if
 								((x.port.is_input and constants.TRACE_INPUTS) or not x.port.is_input)
@@ -257,15 +320,16 @@ function simulation:step()
 		end
 
 		for p in pairs(trace_ports) do
+			latch_values(self.time + 1, p)
 			local val
 			if p.bits == 1 then
-				val = sigstr(p.pins[1].net.value)
+				val = sigstr(p.pins[1].net.latched_value)
 			else
 				val = { "b" }
 				local len = #p.pins
 				for i = 1, len do
 					local x = p.pins[len - i + 1]
-					val[i + 1] = sigstr(x.net.value)
+					val[i + 1] = sigstr(x.net.latched_value)
 				end
 				table.insert(val, " ")
 				val = table.concat(val)
