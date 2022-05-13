@@ -1,5 +1,6 @@
 local constants = require("digisim.constants")
 local simulation = require("digisim.simulation")
+local signal = require("digisim.signal")
 
 do
 	local circuit = simulation.new()
@@ -18,16 +19,22 @@ do
 	circuit:c("DATA", "q", "FF", "j")
 	circuit:c("ND", "q", "FF", "k")
 
-	local adder_width = 32
-	circuit:new_ripple_adder("adder", { width = adder_width, trace = true })
+	local alu_width = 32
+	circuit:new_alu("ALU", { width = alu_width, trace = true })
 
 	circuit
-		:new_random("ARND", { trace = true, width = adder_width, period = constants.CLOCK_PERIOD_TICKS })
-		:cp(adder_width, "ARND", "q", 1, "adder", "a", 1)
+		:new_random("ARND", { trace = true, width = alu_width, period = constants.CLOCK_PERIOD_TICKS })
+		:cp(alu_width, "ARND", "q", 1, "ALU", "a", 1)
 	circuit
-		:new_random("BRND", { trace = true, width = adder_width, period = constants.CLOCK_PERIOD_TICKS })
-		:cp(adder_width, "BRND", "q", 1, "adder", "b", 1)
-	circuit:new_clock("C", { period = constants.CLOCK_PERIOD_TICKS, trace = true }):c("C", "q", "adder", "cin")
+		:new_random("BRND", { trace = true, width = alu_width, period = constants.CLOCK_PERIOD_TICKS })
+		:cp(alu_width, "BRND", "q", 1, "ALU", "b", 1)
+	circuit:new_clock("C", { period = constants.CLOCK_PERIOD_TICKS, trace = true }):c("C", "q", "ALU", "cin")
+
+	circuit:add_component("ZERO", function()
+		return signal.low
+	end, { names = { inputs = {}, outputs = { "q" } } })
+
+	circuit:c("ZERO", "q", "ALU", "nota"):c("C", "q", "ALU", "notb")
 
 	--circuit:new_mux("mux", { width = 8, trace = true })
 	local max = 0

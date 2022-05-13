@@ -70,7 +70,7 @@ digisim
 $end
 $comment
 $end
-$timescale 1ps $end
+$timescale 10ns $end
 ]])
 		self.state = 1
 	end

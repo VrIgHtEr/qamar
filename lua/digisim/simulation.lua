@@ -84,11 +84,31 @@ end
 
 ---@param a string
 ---@param b string
----@param pina string
----@param pinb string
+---@param porta string
+---@param portb string
 ---@return simulation
-function simulation:c(a, pina, b, pinb)
-	return self:cp(1, a, pina, 1, b, pinb, 1)
+function simulation:c(a, porta, b, portb)
+	if self.simulation_started then
+		error("simulation started - cannot add new component")
+	end
+	local ca, cb = self.components[a], self.components[b]
+	if not ca then
+		error("component not found: " .. a)
+	end
+	if not cb then
+		error("component not found: " .. b)
+	end
+	local pa, pb = ca.ports[porta], cb.ports[portb]
+	if not pa then
+		error("port not found " .. a .. "." .. porta)
+	end
+	if not pb then
+		error("port not found " .. b .. "." .. portb)
+	end
+	if pa.bits ~= pb.bits then
+		error("cannot automatically connect vectors of different sizes")
+	end
+	return self:cp(pa.bits, a, porta, 1, b, portb, 1)
 end
 
 ---@param len number
