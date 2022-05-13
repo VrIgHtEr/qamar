@@ -36,6 +36,8 @@ return function(simulation)
 			local n = alu .. "."
 			local adder = n .. "adder"
 			local zero = n .. "zero"
+			local xa = n .. "xa"
+			local xb = n .. "xb"
 
 			circuit:new_nor(zero, { width = width })
 			circuit:cp(width, alu, "out", 1, zero, "in", 1)
@@ -46,18 +48,17 @@ return function(simulation)
 			circuit:cp(width, adder, "sum", 1, alu, "out", 1)
 			circuit:cp(1, adder, "carry", 1, alu, "carry", 1)
 
-			for i = 1, width do
-				local xa = n .. "xa" .. (i - 1)
-				circuit:new_xor(xa)
-				circuit:cp(1, alu, "a", i, xa, "in", 1)
-				circuit:cp(1, alu, "nota", 1, xa, "in", 2)
-				circuit:cp(1, xa, "q", 1, adder, "a", i)
+			circuit:new_xor_bank(xa, { width = width })
+			circuit:c(alu, "a", xa, "a")
+			circuit:c(xa, "q", adder, "a")
 
-				local xb = n .. "xb" .. (i - 1)
-				circuit:new_xor(xb)
-				circuit:cp(1, alu, "b", i, xb, "in", 1)
-				circuit:cp(1, alu, "notb", 1, xb, "in", 2)
-				circuit:cp(1, xb, "q", 1, adder, "b", i)
+			circuit:new_xor_bank(xb, { width = width })
+			circuit:c(alu, "b", xb, "a")
+			circuit:c(xb, "q", adder, "b")
+
+			for i = 1, width do
+				circuit:cp(1, alu, "nota", 1, xa, "b", i)
+				circuit:cp(1, alu, "notb", 1, xb, "b", i)
 			end
 		end
 	)
