@@ -29,7 +29,7 @@ function simulation.new()
 	return ret
 end
 
-function simulation:init_traces()
+function simulation:init_nets()
 	for _, v in pairs(self.components) do
 		if v.trace then
 			if constants.TRACE_INPUTS then
@@ -39,6 +39,31 @@ function simulation:init_traces()
 			end
 			for _, p in ipairs(v.outports) do
 				self.trace:get(p.name, p.bits)
+				for _, output in ipairs(p.pins) do
+					local sensitivity_list = {}
+					for _, x in pairs(output.net.pins) do
+						if x.is_input and x.port.component.step then
+							sensitivity_list[x.port.component] = true
+						end
+					end
+					output.net.sensitivity_list = {}
+					for x in pairs(sensitivity_list) do
+						table.insert(output.net.sensitivity_list, x)
+					end
+					local trace_ports = {}
+					for _, x in pairs(output.net.pins) do
+						if
+							((x.port.is_input and constants.TRACE_INPUTS) or not x.port.is_input)
+							and x.port.component.trace
+						then
+							trace_ports[x.port] = true
+						end
+					end
+					output.net.trace_ports = {}
+					for x in pairs(trace_ports) do
+						table.insert(output.net.trace_ports, x)
+					end
+				end
 			end
 		end
 	end
@@ -229,9 +254,17 @@ local function latch_values(time, p)
 	end
 end
 
+local function tbl_count(tbl)
+	local ret = -#tbl
+	for _ in pairs(tbl) do
+		ret = ret + 1
+	end
+	return ret
+end
+
 function simulation:step()
 	if not self.simulation_started then
-		self:init_traces()
+		self:init_nets()
 		self.simulation_started = true
 	end
 	local maxstep = 10000
@@ -252,7 +285,6 @@ function simulation:step()
 	end
 	repeat
 		local nextdirty = {}
-		local nextcount = 0
 		self.time = self.time + 1
 		for k, v in pairs(roots) do
 			dirty[k] = v
@@ -286,21 +318,12 @@ function simulation:step()
 				local function handle_output_value(value, output)
 					if output.value ~= value then
 						output.value = value
-						for _, x in pairs(output.net.pins) do
-							if
-								((x.port.is_input and constants.TRACE_INPUTS) or not x.port.is_input)
-								and x.port.component.trace
-							then
-								trace_ports[x.port] = true
-							end
+						for _, x in ipairs(output.net.trace_ports) do
+							trace_ports[x] = true
 						end
-
-						for _, x in pairs(output.net.pins) do
-							if x ~= output and x.is_input and x.port.component.step then
-								if not nextdirty[x.port.component.name] then
-									nextdirty[x.port.component.name] = x.port.component
-									nextcount = nextcount + 1
-								end
+						for _, x in ipairs(output.net.sensitivity_list) do
+							if x ~= output then
+								nextdirty[x.name] = x
 							end
 						end
 					end
@@ -338,7 +361,7 @@ function simulation:step()
 		end
 
 		dirty = nextdirty
-		count = nextcount
+		count = tbl_count(dirty)
 		maxstep = maxstep - 1
 		ticks = ticks + 1
 		if maxstep == 0 then
