@@ -1,69 +1,72 @@
 local constants = require("digisim.constants")
 local simulation = require("digisim.simulation")
-local signal = require("digisim.signal")
 
-do
-	local circuit = simulation.new()
+local simtime = 100000
+local datapath = 32
 
-	local alu_width = 2
+local vcc = "CONST.VCC"
+local gnd = "CONST.GND"
 
-	local clk = "CLK"
-	local rst = "~RST"
-	local alu = "ALU"
-	local subtract = "SUBTRACT"
-	local sel1 = "SEL1"
-	local sel2 = "SEL2"
-	local zero = "ZERO"
-	local arnd = "ARND"
-	local brnd = "BRND"
-	local vcc = "VCC"
-	local gnd = "GND"
+local clk = "CLK"
+local rst = "~RST"
+local alu = "ALU"
+local r0 = "R0"
 
-	circuit:new_vcc(vcc):new_gnd(gnd)
+local subtract = "TEST.SUBTRACT"
+local sel1 = "TEST.SEL1"
+local sel2 = "TEST.SEL2"
+local arnd = "TEST.ARND"
+local brnd = "TEST.BRND"
+local write = "TEST.WRITE"
+local oea = "TEST.OEA"
+local oeb = "TEST.OEB"
 
-	circuit:new_clock_module(clk, { period = constants.CLOCK_PERIOD_TICKS, chain_length = 3, trace = true })
-	circuit:new_reset(rst, { period = constants.STARTUP_TICKS, trace = true })
-	circuit:new_alu(alu, { width = alu_width, trace = true })
-	circuit:c(rst, "q", alu, "oe")
-	circuit
-		:new_random(arnd, { trace = true, width = alu_width, period = constants.CLOCK_PERIOD_TICKS })
-		:cp(alu_width, arnd, "q", 1, alu, "a", 1)
-	circuit
-		:new_random(brnd, { trace = true, width = alu_width, period = constants.CLOCK_PERIOD_TICKS })
-		:cp(alu_width, brnd, "q", 1, alu, "b", 1)
-	circuit:new_clock(subtract, { period = constants.CLOCK_PERIOD_TICKS, trace = true }):c(subtract, "q", alu, "cin")
-	circuit:add_component(zero, function()
-		return signal.low
-	end, { names = { inputs = {}, outputs = { "q" } } })
+local sim = simulation.new()
 
-	circuit:c(zero, "q", alu, "nota"):c(subtract, "q", alu, "notb")
+--constants
+sim
+	:new_vcc(vcc)
+	:new_gnd(gnd)
+	--reset
+	:new_reset(rst, { period = constants.STARTUP_TICKS, trace = true })
+	--clock
+	:new_clock_module(clk, { period = constants.CLOCK_PERIOD_TICKS, chain_length = 3, trace = true })
+	--alu
+	:new_alu(alu, { width = datapath, trace = true })
+	:c(rst, "q", alu, "oe")
+	--register
+	:new_register(r0, { width = datapath })
+	:c(alu, "out", r0, "in")
+	--alu test signals
+	:new_random(arnd, { trace = true, width = datapath, period = constants.CLOCK_PERIOD_TICKS })
+	:cp(datapath, arnd, "q", 1, alu, "a", 1)
+	:new_random(brnd, { trace = true, width = datapath, period = constants.CLOCK_PERIOD_TICKS })
+	:cp(datapath, brnd, "q", 1, alu, "b", 1)
+	:new_clock(subtract, { period = constants.CLOCK_PERIOD_TICKS, trace = true })
+	:c(subtract, "q", alu, "cin")
+	:c(gnd, "q", alu, "nota")
+	:c(subtract, "q", alu, "notb")
+	:new_clock(sel1, { period = constants.CLOCK_PERIOD_TICKS * 2, trace = true })
+	:cp(1, sel1, "q", 1, alu, "sel", 1)
+	:new_clock(sel2, { period = constants.CLOCK_PERIOD_TICKS * 4, trace = true })
+	:cp(1, sel2, "q", 1, alu, "sel", 2)
+	--register test signals
+	:new_clock(oea, { period = constants.CLOCK_PERIOD_TICKS * 2 })
+	:c(oea, "q", r0, "oea")
+	:new_clock(oeb, { period = constants.CLOCK_PERIOD_TICKS * 4 })
+	:c(oeb, "q", r0, "oeb")
+	:new_clock(write, { trace = true, period = constants.CLOCK_PERIOD_TICKS * 2 })
+	:c(write, "q", r0, "write")
+	:c(clk, "rising", r0, "rising")
 
-	circuit
-		:new_clock(sel1, { period = constants.CLOCK_PERIOD_TICKS * 2, trace = true })
-		:cp(1, sel1, "q", 1, alu, "sel", 1)
-	circuit
-		:new_clock(sel2, { period = constants.CLOCK_PERIOD_TICKS * 4, trace = true })
-		:cp(1, sel2, "q", 1, alu, "sel", 2)
+---------------------------------------------------------------------------------------------------------
 
-	local r0 = "R0"
-	local write = "WRITE"
-	circuit:new_register(r0, { width = alu_width })
-	circuit:c(alu, "out", r0, "in")
-	circuit:c(vcc, "q", r0, "oea")
-	circuit:c(vcc, "q", r0, "oeb")
-	circuit:new_clock(write, { trace = true, period = constants.CLOCK_PERIOD_TICKS * 2 })
-	circuit:c(write, "q", r0, "write")
-	circuit:c(clk, "rising", r0, "rising")
-
-	---------------------------------------------------------------------------------------------------------
-
-	local max = 0
-	for _ = 1, constants.CLOCK_PERIOD_TICKS * 1024 do
-		local x
-		_, x = circuit:step()
-		max = math.max(max, x)
-	end
-	io.stderr:write("max delay: " .. max .. "\n")
+local max = 0
+while sim.time < simtime do
+	local x
+	_, x = sim:step()
+	max = math.max(max, x)
 end
+io.stderr:write("max delay: " .. max .. "\n")
 
 return simulation
