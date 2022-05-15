@@ -47,8 +47,13 @@ return function(simulation)
 			local out = n .. "out"
 
 			-- zero flag
-			circuit:new_nor(zero, { width = width })
-			circuit:cp(width, alu, "out", 1, zero, "in", 1)
+			if width == 1 then
+				circuit:new_not(zero)
+				circuit:cp(1, alu, "out", 1, zero, "a", 1)
+			else
+				circuit:new_nor(zero, { width = width })
+				circuit:cp(width, alu, "out", 1, zero, "in", 1)
+			end
 			circuit:c(zero, "q", alu, "zero")
 
 			--output tristate buffer

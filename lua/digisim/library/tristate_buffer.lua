@@ -31,7 +31,6 @@ return function(simulation)
 				end
 			end
 			return self:add_component(name, function(_, a, en)
-				local ret = signal.z
 				return signal.low == en and z or a
 			end, opts)
 		end

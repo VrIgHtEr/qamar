@@ -10,7 +10,7 @@ return function(simulation)
 		---@param opts boolean
 		function(circuit, name, opts)
 			opts = opts or {}
-			opts.names = { inputs = { "a", "b", "e" }, outputs = { "q", "~q" } }
+			opts.names = { inputs = { "s", "r", "e" }, outputs = { "q", "~q" } }
 			circuit:add_component(name, nil, opts)
 			local nl = name .. ".l"
 			local na = name .. ".a"
@@ -21,9 +21,9 @@ return function(simulation)
 				:new_and(nb)
 				:c(na, "q", nl, "q")
 				:c(nb, "q", nl, "~q")
-				:cp(1, name, "a", 1, na, "in", 1)
+				:cp(1, name, "s", 1, na, "in", 1)
 				:cp(1, name, "e", 1, na, "in", 2)
-				:cp(1, name, "b", 1, nb, "in", 1)
+				:cp(1, name, "r", 1, nb, "in", 1)
 				:cp(1, name, "e", 1, nb, "in", 2)
 				:c(nl, "q", name, "q")
 				:c(nl, "~q", name, "~q")

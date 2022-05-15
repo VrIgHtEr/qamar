@@ -118,7 +118,13 @@ function component.new(name, handler, opts)
 		function ret.step(timestamp, ...)
 			local parts = { ... }
 			for i = 1, #parts do
-				if parts[i] == signal.unknown or parts[i] == signal.z then
+				if type(parts[i]) == "table" then
+					for j, x in ipairs(parts[i]) do
+						if x == signal.unknown or x == signal.z then
+							parts[i][j] = math.random(0, 1)
+						end
+					end
+				elseif parts[i] == signal.unknown or parts[i] == signal.z then
 					parts[i] = math.random(0, 1)
 				end
 			end
