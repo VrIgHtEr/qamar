@@ -23,22 +23,37 @@ local oeb = "TEST.OEB"
 
 local sim = simulation.new()
 
---constants
 sim
+	-- constants ----------------------------------------------------------------------------------------
 	:new_vcc(vcc)
 	:new_gnd(gnd)
-	--reset
-	:new_reset(rst, { period = constants.STARTUP_TICKS, trace = true })
-	--clock
-	:new_clock_module(clk, { period = constants.CLOCK_PERIOD_TICKS, chain_length = 3, trace = true })
-	--alu
-	:new_alu(alu, { width = datapath, trace = true })
+	-- reset --------------------------------------------------------------------------------------------
+	:new_reset(
+		rst,
+		{ period = constants.STARTUP_TICKS, trace = true }
+	)
+	-- clock --------------------------------------------------------------------------------------------
+	:new_clock_module(
+		clk,
+		{ period = constants.CLOCK_PERIOD_TICKS, chain_length = 3, trace = true }
+	)
+	-- alu ----------------------------------------------------------------------------------------------
+	:new_alu(
+		alu,
+		{ width = datapath, trace = true }
+	)
 	:c(rst, "q", alu, "oe")
-	--register
-	:new_register(r0, { width = datapath })
+	-- register -----------------------------------------------------------------------------------------
+	:new_register(
+		r0,
+		{ width = datapath }
+	)
 	:c(alu, "out", r0, "in")
-	--alu test signals
-	:new_random(arnd, { trace = true, width = datapath, period = constants.CLOCK_PERIOD_TICKS })
+	-- alu test signals ---------------------------------------------------------------------------------
+	:new_random(
+		arnd,
+		{ trace = true, width = datapath, period = constants.CLOCK_PERIOD_TICKS }
+	)
 	:cp(datapath, arnd, "q", 1, alu, "a", 1)
 	:new_random(brnd, { trace = true, width = datapath, period = constants.CLOCK_PERIOD_TICKS })
 	:cp(datapath, brnd, "q", 1, alu, "b", 1)
@@ -50,8 +65,11 @@ sim
 	:cp(1, sel1, "q", 1, alu, "sel", 1)
 	:new_clock(sel2, { period = constants.CLOCK_PERIOD_TICKS * 4, trace = true })
 	:cp(1, sel2, "q", 1, alu, "sel", 2)
-	--register test signals
-	:new_clock(oea, { period = constants.CLOCK_PERIOD_TICKS * 2 })
+	-- register test signals ----------------------------------------------------------------------------
+	:new_clock(
+		oea,
+		{ period = constants.CLOCK_PERIOD_TICKS * 2 }
+	)
 	:c(oea, "q", r0, "oea")
 	:new_clock(oeb, { period = constants.CLOCK_PERIOD_TICKS * 4 })
 	:c(oeb, "q", r0, "oeb")
