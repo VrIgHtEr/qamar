@@ -1,5 +1,5 @@
 ---@class simulation
----@field new_random function
+---@field new_random fun(circuit:simulation,name:string,opts:table|nil):simulation
 
 ---@param simulation simulation
 return function(simulation)

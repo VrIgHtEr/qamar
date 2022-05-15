@@ -1,5 +1,5 @@
 ---@class simulation
----@field new_clock function
+---@field new_clock fun(circuit:simulation,name:string,opts:table|nil):simulation
 
 local signal = require("digisim.signal")
 

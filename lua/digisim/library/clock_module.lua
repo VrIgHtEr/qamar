@@ -1,5 +1,5 @@
 ---@class simulation
----@field new_clock_module function
+---@field new_clock_module fun(circuit:simulation,name:string,opts:table|nil):simulation
 
 ---@param simulation simulation
 return function(simulation)

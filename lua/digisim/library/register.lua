@@ -1,5 +1,5 @@
 ---@class simulation
----@field new_register function
+---@field new_register fun(circuit:simulation,name:string,opts:table|nil):simulation
 
 ---@param simulation simulation
 return function(simulation)

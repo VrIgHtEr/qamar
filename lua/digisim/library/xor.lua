@@ -1,5 +1,5 @@
 ---@class simulation
----@field new_xor function
+---@field new_xor fun(circuit:simulation,name:string,opts:table|nil):simulation
 
 local signal = require("digisim.signal")
 

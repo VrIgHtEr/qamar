@@ -1,5 +1,5 @@
 ---@class simulation
----@field new_vcc function
+---@field new_vcc fun(circuit:simulation,name:string,opts:table|nil):simulation
 
 local signal = require("digisim.signal")
 

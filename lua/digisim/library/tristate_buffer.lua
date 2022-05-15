@@ -1,7 +1,7 @@
 local signal = require("digisim.signal")
 
 ---@class simulation
----@field new_tristate_buffer function
+---@field new_tristate_buffer fun(circuit:simulation,name:string,opts:table|nil):simulation
 
 ---@param simulation simulation
 return function(simulation)

@@ -1,5 +1,5 @@
 ---@class simulation
----@field new_xnor function
+---@field new_xnor fun(circuit:simulation,name:string,opts:table|nil):simulation
 
 local signal = require("digisim.signal")
 

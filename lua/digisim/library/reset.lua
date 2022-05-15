@@ -1,5 +1,5 @@
 ---@class simulation
----@field new_reset function
+---@field new_reset fun(circuit:simulation,name:string,opts:table|nil):simulation
 
 local signal = require("digisim.signal")
 

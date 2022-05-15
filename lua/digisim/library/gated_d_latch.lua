@@ -1,5 +1,5 @@
 ---@class simulation
----@field new_gated_d_latch function
+---@field new_gated_d_latch fun(circuit:simulation,name:string,opts:table|nil):simulation
 
 ---@param simulation simulation
 return function(simulation)

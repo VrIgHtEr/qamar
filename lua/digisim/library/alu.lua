@@ -1,14 +1,14 @@
 ---@class simulation
----@field new_alu function
+---@field new_alu fun(circuit:simulation,name:string,opts:table|nil):simulation
 
 ---@param simulation simulation
 return function(simulation)
 	simulation:register_component(
 		"alu",
-		---@param circuit simulation
+		---@param sim simulation
 		---@param alu string
 		---@param opts boolean
-		function(circuit, alu, opts)
+		function(sim, alu, opts)
 			opts = opts or { width = 1 }
 			local width = opts.width or 1
 			if type(width) ~= "number" then
@@ -34,7 +34,7 @@ return function(simulation)
 				},
 			}
 
-			circuit:add_component(alu, nil, opts)
+			sim:add_component(alu, nil, opts)
 			local n = alu .. "."
 			local f0 = n .. "adder"
 			local f1 = n .. "and"
@@ -48,63 +48,63 @@ return function(simulation)
 
 			-- zero flag
 			if width == 1 then
-				circuit:new_not(zero)
-				circuit:cp(1, alu, "out", 1, zero, "a", 1)
+				sim:new_not(zero)
+				sim:cp(1, alu, "out", 1, zero, "a", 1)
 			else
-				circuit:new_nor(zero, { width = width })
-				circuit:cp(width, alu, "out", 1, zero, "in", 1)
+				sim:new_nor(zero, { width = width })
+				sim:cp(width, alu, "out", 1, zero, "in", 1)
 			end
-			circuit:c(zero, "q", alu, "zero")
+			sim:c(zero, "q", alu, "zero")
 
 			--output tristate buffer
-			circuit:new_tristate_buffer(out, { width = width })
-			circuit:c(alu, "oe", out, "en")
-			circuit:c(out, "q", alu, "out")
+			sim:new_tristate_buffer(out, { width = width })
+			sim:c(alu, "oe", out, "en")
+			sim:c(out, "q", alu, "out")
 
 			-- output multiplexer, selects either the adder, AND, OR or XOR output
-			circuit:new_mux_bank(lm, { width = 2, bits = width })
-			circuit:c(alu, "sel", lm, "sel")
-			circuit:c(lm, "out", out, "a")
+			sim:new_mux_bank(lm, { width = 2, bits = width })
+			sim:c(alu, "sel", lm, "sel")
+			sim:c(lm, "out", out, "a")
 
 			--- conditional inverter for input A
-			circuit:new_xor_bank(xa, { width = width })
-			circuit:c(alu, "a", xa, "a")
+			sim:new_xor_bank(xa, { width = width })
+			sim:c(alu, "a", xa, "a")
 			for i = 1, width do
-				circuit:cp(1, alu, "nota", 1, xa, "b", i)
+				sim:cp(1, alu, "nota", 1, xa, "b", i)
 			end
 
 			--- conditional inverter for input B
-			circuit:new_xor_bank(xb, { width = width })
-			circuit:c(alu, "b", xb, "a")
+			sim:new_xor_bank(xb, { width = width })
+			sim:c(alu, "b", xb, "a")
 			for i = 1, width do
-				circuit:cp(1, alu, "notb", 1, xb, "b", i)
+				sim:cp(1, alu, "notb", 1, xb, "b", i)
 			end
 
 			--arithmetic section
-			circuit:new_ripple_adder(f0, { width = width })
-			circuit:c(xa, "q", f0, "a")
-			circuit:c(xb, "q", f0, "b")
-			circuit:cp(1, alu, "cin", 1, f0, "cin", 1)
-			circuit:cp(1, f0, "carry", 1, alu, "carry", 1)
-			circuit:c(f0, "sum", lm, "d0")
+			sim:new_ripple_adder(f0, { width = width })
+			sim:c(xa, "q", f0, "a")
+			sim:c(xb, "q", f0, "b")
+			sim:cp(1, alu, "cin", 1, f0, "cin", 1)
+			sim:cp(1, f0, "carry", 1, alu, "carry", 1)
+			sim:c(f0, "sum", lm, "d0")
 
 			-- AND section
-			circuit:new_and_bank(f1, { width = width })
-			circuit:c(xa, "q", f1, "a")
-			circuit:c(xb, "q", f1, "b")
-			circuit:c(f1, "q", lm, "d1")
+			sim:new_and_bank(f1, { width = width })
+			sim:c(xa, "q", f1, "a")
+			sim:c(xb, "q", f1, "b")
+			sim:c(f1, "q", lm, "d1")
 
 			-- OR section
-			circuit:new_or_bank(f2, { width = width })
-			circuit:c(xa, "q", f2, "a")
-			circuit:c(xb, "q", f2, "b")
-			circuit:c(f2, "q", lm, "d2")
+			sim:new_or_bank(f2, { width = width })
+			sim:c(xa, "q", f2, "a")
+			sim:c(xb, "q", f2, "b")
+			sim:c(f2, "q", lm, "d2")
 
 			-- XOR section
-			circuit:new_xor_bank(f3, { width = width })
-			circuit:c(xa, "q", f3, "a")
-			circuit:c(xb, "q", f3, "b")
-			circuit:c(f3, "q", lm, "d3")
+			sim:new_xor_bank(f3, { width = width })
+			sim:c(xa, "q", f3, "a")
+			sim:c(xb, "q", f3, "b")
+			sim:c(f3, "q", lm, "d3")
 		end
 	)
 end

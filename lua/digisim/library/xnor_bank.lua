@@ -1,5 +1,5 @@
 ---@class simulation
----@field new_xnor_bank function
+---@field new_xnor_bank fun(circuit:simulation,name:string,opts:table|nil):simulation
 
 ---@param simulation simulation
 return function(simulation)

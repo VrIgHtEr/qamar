@@ -1,5 +1,5 @@
 ---@class simulation
----@field new_and function
+---@field new_and fun(circuit:simulation,name:string,opts:table|nil):simulation
 
 local signal = require("digisim.signal")
 

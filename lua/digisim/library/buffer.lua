@@ -1,5 +1,5 @@
 ---@class simulation
----@field new_buffer function
+---@field new_buffer fun(circuit:simulation,name:string,opts:table|nil):simulation
 
 ---@param simulation simulation
 return function(simulation)

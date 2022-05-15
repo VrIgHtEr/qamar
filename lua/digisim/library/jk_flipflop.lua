@@ -1,5 +1,5 @@
 ---@class simulation
----@field new_jk_flipflop function
+---@field new_jk_flipflop fun(circuit:simulation,name:string,opts:table|nil):simulation
 
 ---@param simulation simulation
 return function(simulation)

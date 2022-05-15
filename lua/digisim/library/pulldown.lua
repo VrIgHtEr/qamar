@@ -1,5 +1,5 @@
 ---@class simulation
----@field new_pulldown function
+---@field new_pulldown fun(circuit:simulation,name:string,opts:table|nil):simulation
 
 local signal = require("digisim.signal")
 

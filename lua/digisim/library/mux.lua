@@ -1,5 +1,5 @@
 ---@class simulation
----@field new_mux function
+---@field new_mux fun(circuit:simulation,name:string,opts:table|nil):simulation
 
 ---@param simulation simulation
 return function(simulation)

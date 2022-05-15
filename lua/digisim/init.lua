@@ -23,37 +23,24 @@ local oeb = "TEST.OEB"
 
 local sim = simulation.new()
 
+-- constants ----------------------------------------------------------------------------------------
+sim:new_vcc(vcc):new_gnd(gnd)
+
+-- reset --------------------------------------------------------------------------------------------
+sim:new_reset(rst, { period = constants.STARTUP_TICKS, trace = true })
+
+-- clock --------------------------------------------------------------------------------------------
+sim:new_clock_module(clk, { period = constants.CLOCK_PERIOD_TICKS, chain_length = 3, trace = true })
+
+-- alu ----------------------------------------------------------------------------------------------
+sim:new_alu(alu, { width = datapath, trace = true }):c(rst, "q", alu, "oe")
+
+-- register -----------------------------------------------------------------------------------------
+sim:new_register(r0, { width = datapath, trace = true }):c(alu, "out", r0, "in")
+
+-- alu test signals ---------------------------------------------------------------------------------
 sim
-	-- constants ----------------------------------------------------------------------------------------
-	:new_vcc(vcc)
-	:new_gnd(gnd)
-	-- reset --------------------------------------------------------------------------------------------
-	:new_reset(
-		rst,
-		{ period = constants.STARTUP_TICKS, trace = true }
-	)
-	-- clock --------------------------------------------------------------------------------------------
-	:new_clock_module(
-		clk,
-		{ period = constants.CLOCK_PERIOD_TICKS, chain_length = 3, trace = true }
-	)
-	-- alu ----------------------------------------------------------------------------------------------
-	:new_alu(
-		alu,
-		{ width = datapath, trace = true }
-	)
-	:c(rst, "q", alu, "oe")
-	-- register -----------------------------------------------------------------------------------------
-	:new_register(
-		r0,
-		{ width = datapath }
-	)
-	:c(alu, "out", r0, "in")
-	-- alu test signals ---------------------------------------------------------------------------------
-	:new_random(
-		arnd,
-		{ trace = true, width = datapath, period = constants.CLOCK_PERIOD_TICKS }
-	)
+	:new_random(arnd, { trace = true, width = datapath, period = constants.CLOCK_PERIOD_TICKS })
 	:cp(datapath, arnd, "q", 1, alu, "a", 1)
 	:new_random(brnd, { trace = true, width = datapath, period = constants.CLOCK_PERIOD_TICKS })
 	:cp(datapath, brnd, "q", 1, alu, "b", 1)

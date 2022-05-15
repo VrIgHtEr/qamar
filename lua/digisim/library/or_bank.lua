@@ -1,5 +1,5 @@
 ---@class simulation
----@field new_or_bank function
+---@field new_or_bank fun(circuit:simulation,name:string,opts:table|nil):simulation
 
 ---@param simulation simulation
 return function(simulation)

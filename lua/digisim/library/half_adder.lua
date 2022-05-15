@@ -1,5 +1,5 @@
 ---@class simulation
----@field new_half_adder function
+---@field new_half_adder fun(circuit:simulation,name:string,opts:table|nil):simulation
 
 ---@param simulation simulation
 return function(simulation)

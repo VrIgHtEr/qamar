@@ -1,5 +1,5 @@
 ---@class simulation
----@field new_edge_detector function
+---@field new_edge_detector fun(circuit:simulation,name:string,opts:table|nil):simulation
 
 ---@param simulation simulation
 return function(simulation)
