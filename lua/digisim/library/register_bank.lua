@@ -53,18 +53,11 @@ return function(simulation)
 			self:c(name, "selw", selw, "in")
 
 			local r = name .. ".r"
-			local r0 = r .. 0
-			self:new_register_zero(r0, { width = width })
-			self:c(r0, "outa", name, "outa")
-			self:c(r0, "outb", name, "outb")
-			self:cp(1, sela, "q", 1, r0, "oea", 1)
-			self:cp(1, selb, "q", 1, r0, "oeb", 1)
-
-			for i = 2, numregs do
+			for i = 1, numregs do
 				local n = r .. (i - 1)
 				self:new_register(n, { width = width })
-				self:c(r0, "outa", n, "outa")
-				self:c(r0, "outb", n, "outb")
+				self:c(name, "outa", n, "outa")
+				self:c(name, "outb", n, "outb")
 				self:c(name, "~rst", n, "~rst")
 				self:cp(1, sela, "q", i, n, "oea", 1)
 				self:cp(1, selb, "q", i, n, "oeb", 1)

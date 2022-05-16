@@ -2,8 +2,8 @@ local constants = require("digisim.constants")
 local simulation = require("digisim.simulation")
 
 local simtime = 20000
-local datapath = 3
-local reg_sel_width = 1
+local datapath = 32
+local reg_sel_width = 2
 
 local vcc = "CONST.VCC"
 local gnd = "CONST.GND"
@@ -12,13 +12,6 @@ local clk = "CLK"
 local rst = "~RST"
 local alu = "ALU"
 local regs = "REGS"
-
-local subtract = "TEST.SUBTRACT"
-local sel1 = "TEST.SEL1"
-local sel2 = "TEST.SEL2"
-local arnd = "TEST.ARND"
-local brnd = "TEST.BRND"
-local write = "TEST.WRITE"
 
 local sim = simulation.new()
 -- constants ----------------------------------------------------------------------------------------
@@ -42,50 +35,92 @@ sim
 	:c(regs, "outa", alu, "a")
 	:c(regs, "outb", alu, "b")
 
--- alu test signals ---------------------------------------------------------------------------------
+local program = {
+	{ 1, { 0, 1 }, { 0, 0 }, { 0, 1 }, { 0, 0 }, 1, 0, 0 },
+	-- iter 0
+	{ 1, { 1, 0 }, { 0, 1 }, { 1, 1 }, { 0, 0 }, 0, 0, 0 },
+	{ 1, { 0, 1 }, { 0, 0 }, { 1, 0 }, { 0, 0 }, 0, 0, 0 },
+	{ 1, { 1, 1 }, { 0, 0 }, { 0, 1 }, { 0, 0 }, 0, 0, 0 },
+	-- iter 1
+	{ 1, { 1, 0 }, { 0, 1 }, { 1, 1 }, { 0, 0 }, 0, 0, 0 },
+	{ 1, { 0, 1 }, { 0, 0 }, { 1, 0 }, { 0, 0 }, 0, 0, 0 },
+	{ 1, { 1, 1 }, { 0, 0 }, { 0, 1 }, { 0, 0 }, 0, 0, 0 },
+	-- iter 2
+	{ 1, { 1, 0 }, { 0, 1 }, { 1, 1 }, { 0, 0 }, 0, 0, 0 },
+	{ 1, { 0, 1 }, { 0, 0 }, { 1, 0 }, { 0, 0 }, 0, 0, 0 },
+	{ 1, { 1, 1 }, { 0, 0 }, { 0, 1 }, { 0, 0 }, 0, 0, 0 },
+	-- iter 3
+	{ 1, { 1, 0 }, { 0, 1 }, { 1, 1 }, { 0, 0 }, 0, 0, 0 },
+	{ 1, { 0, 1 }, { 0, 0 }, { 1, 0 }, { 0, 0 }, 0, 0, 0 },
+	{ 1, { 1, 1 }, { 0, 0 }, { 0, 1 }, { 0, 0 }, 0, 0, 0 },
+	-- iter 4
+	{ 1, { 1, 0 }, { 0, 1 }, { 1, 1 }, { 0, 0 }, 0, 0, 0 },
+	{ 1, { 0, 1 }, { 0, 0 }, { 1, 0 }, { 0, 0 }, 0, 0, 0 },
+	{ 1, { 1, 1 }, { 0, 0 }, { 0, 1 }, { 0, 0 }, 0, 0, 0 },
+	-- iter 5
+	{ 1, { 1, 0 }, { 0, 1 }, { 1, 1 }, { 0, 0 }, 0, 0, 0 },
+	{ 1, { 0, 1 }, { 0, 0 }, { 1, 0 }, { 0, 0 }, 0, 0, 0 },
+	{ 1, { 1, 1 }, { 0, 0 }, { 0, 1 }, { 0, 0 }, 0, 0, 0 },
+	-- iter 6
+	{ 1, { 1, 0 }, { 0, 1 }, { 1, 1 }, { 0, 0 }, 0, 0, 0 },
+	{ 1, { 0, 1 }, { 0, 0 }, { 1, 0 }, { 0, 0 }, 0, 0, 0 },
+	{ 1, { 1, 1 }, { 0, 0 }, { 0, 1 }, { 0, 0 }, 0, 0, 0 },
+	-- iter 7
+	{ 1, { 1, 0 }, { 0, 1 }, { 1, 1 }, { 0, 0 }, 0, 0, 0 },
+	{ 1, { 0, 1 }, { 0, 0 }, { 1, 0 }, { 0, 0 }, 0, 0, 0 },
+	{ 1, { 1, 1 }, { 0, 0 }, { 0, 1 }, { 0, 0 }, 0, 0, 0 },
+	-- iter 7
+	{ 1, { 1, 0 }, { 0, 1 }, { 1, 1 }, { 0, 0 }, 0, 0, 0 },
+	{ 1, { 0, 1 }, { 0, 0 }, { 1, 0 }, { 0, 0 }, 0, 0, 0 },
+	{ 1, { 1, 1 }, { 0, 0 }, { 0, 1 }, { 0, 0 }, 0, 0, 0 },
+	-- iter 7
+	{ 1, { 1, 0 }, { 0, 1 }, { 1, 1 }, { 0, 0 }, 0, 0, 0 },
+	{ 1, { 0, 1 }, { 0, 0 }, { 1, 0 }, { 0, 0 }, 0, 0, 0 },
+	{ 1, { 1, 1 }, { 0, 0 }, { 0, 1 }, { 0, 0 }, 0, 0, 0 },
+	-- iter 7
+	{ 1, { 1, 0 }, { 0, 1 }, { 1, 1 }, { 0, 0 }, 0, 0, 0 },
+	{ 1, { 0, 1 }, { 0, 0 }, { 1, 0 }, { 0, 0 }, 0, 0, 0 },
+	{ 1, { 1, 1 }, { 0, 0 }, { 0, 1 }, { 0, 0 }, 0, 0, 0 },
+	-- iter 7
+	{ 1, { 1, 0 }, { 0, 1 }, { 1, 1 }, { 0, 0 }, 0, 0, 0 },
+	{ 1, { 0, 1 }, { 0, 0 }, { 1, 0 }, { 0, 0 }, 0, 0, 0 },
+	{ 1, { 1, 1 }, { 0, 0 }, { 0, 1 }, { 0, 0 }, 0, 0, 0 },
+}
+
+local prog = "PROGRAM"
+sim:add_component(prog, function(time)
+	local c = math.floor(time / constants.CLOCK_PERIOD_TICKS) + 1
+	if c > #program then
+		return 0, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, 0, 0, 0
+	end
+	return unpack(program[c])
+end, {
+	names = {
+		inputs = {},
+		outputs = {
+			{ "write", 1 },
+			{ "sela", reg_sel_width },
+			{ "selb", reg_sel_width },
+			{ "selw", reg_sel_width },
+			{ "op", 2 },
+			{ "cin", 1 },
+			{ "nota", 1 },
+			{ "notb", 1 },
+		},
+	},
+})
+
 sim
-	:new_random(arnd, { trace = true, width = datapath, period = constants.CLOCK_PERIOD_TICKS })
-	:cp(datapath, arnd, "q", 1, alu, "a", 1)
-	:new_random(brnd, { trace = true, width = datapath, period = constants.CLOCK_PERIOD_TICKS })
-	:cp(datapath, brnd, "q", 1, alu, "b", 1)
-	:new_clock(subtract, { period = constants.CLOCK_PERIOD_TICKS, trace = true })
-	:c(subtract, "q", alu, "cin")
-	:c(gnd, "q", alu, "nota")
-	:c(subtract, "q", alu, "notb")
-	:new_clock(sel1, { period = constants.CLOCK_PERIOD_TICKS * 2, trace = true })
-	:cp(1, sel1, "q", 1, alu, "sel", 1)
-	:new_clock(sel2, { period = constants.CLOCK_PERIOD_TICKS * 4, trace = true })
-	:cp(1, sel2, "q", 1, alu, "sel", 2)
+	:c(prog, "op", alu, "sel")
+	:c(prog, "cin", alu, "cin")
+	:c(prog, "nota", alu, "nota")
+	:c(prog, "notb", alu, "notb")
+	:c(prog, "write", regs, "write")
+	:c(prog, "sela", regs, "sela")
+	:c(prog, "selb", regs, "selb")
+	:c(prog, "selw", regs, "selw")
 
-local testdec = "DEC"
-
-sim:new_binary_decoder(testdec, { width = reg_sel_width })
-
-local sela = "TEST.SELA"
-local selb = "TEST.SELB"
-local selw = "TEST.SELW"
--- register test signals ----------------------------------------------------------------------------
-sim
-	:new_clock(write, { trace = true, period = constants.CLOCK_PERIOD_TICKS * 2 })
-	:c(write, "q", regs, "write")
-	:new_random(sela, { width = reg_sel_width, period = constants.CLOCK_PERIOD_TICKS })
-	:c(sela, "q", regs, "sela")
-	:c(sela, "q", testdec, "in")
-	:new_random(selb, { width = reg_sel_width, period = constants.CLOCK_PERIOD_TICKS })
-	:c(selb, "q", regs, "selb")
-	:new_random(selw, { width = reg_sel_width, period = constants.CLOCK_PERIOD_TICKS })
-	:c(selw, "q", regs, "selw")
 -----------------------------------------------------------------------------------------------------
-local signal = require("digisim.signal")
-local ta = "TA"
-local tb = "TB"
-sim:add_component(ta, function()
-	return signal.weakhigh
-end, { names = { outputs = { "q" } } })
-sim:add_component(tb, function()
-	return signal.weaklow
-end, { names = { outputs = { "q" } } })
-sim:c(ta, "q", tb, "q")
 
 local max = 0
 while sim.time < simtime do

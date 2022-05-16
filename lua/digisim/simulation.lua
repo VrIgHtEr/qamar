@@ -28,6 +28,7 @@ function simulation.new()
 	}, MT)
 	return ret
 end
+local signal = require("digisim.signal")
 
 function simulation:init_nets()
 	for _, v in pairs(self.components) do
@@ -35,11 +36,15 @@ function simulation:init_nets()
 			if constants.TRACE_INPUTS then
 				for _, p in ipairs(v.inports) do
 					self.trace:get(p.name, p.bits)
+					for _, pin in pairs(p.pins) do
+						pin.value = signal.weak
+					end
 				end
 			end
 			for _, p in ipairs(v.outports) do
 				self.trace:get(p.name, p.bits)
 				for _, output in ipairs(p.pins) do
+					output.value = signal.weak
 					local sensitivity_list = {}
 					for _, x in pairs(output.net.pins) do
 						if x.is_input and x.port.component.step then
