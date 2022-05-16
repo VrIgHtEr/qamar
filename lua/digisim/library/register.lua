@@ -19,7 +19,7 @@ return function(simulation)
 				error("invalid width")
 			end
 			opts.names = {
-				inputs = { { "in", width }, "rising", "write", "oea", "oeb" },
+				inputs = { { "in", width }, "rising", "write", "oea", "oeb", "~rst" },
 				outputs = { { "outa", width }, { "outb", width } },
 			}
 			self:add_component(name, nil, opts)
@@ -39,6 +39,11 @@ return function(simulation)
 				local gs = b .. ".gs"
 				local gr = b .. ".gr"
 				local dn = b .. ".n"
+				local rs = b .. ".rs"
+				local rr = b .. ".rr"
+				local rst = b .. ".rst"
+
+				self:new_not(rst):c(name, "~rst", rst, "a")
 
 				-- create latch nand gates
 				self:new_nand(s)
@@ -60,9 +65,15 @@ return function(simulation)
 				self:cp(1, write, "q", 1, gs, "in", 1)
 				self:cp(1, write, "q", 1, gr, "in", 1)
 
-				--connect clock gating to latch
-				self:cp(1, gs, "q", 1, s, "in", 2)
-				self:cp(1, gr, "q", 1, r, "in", 2)
+				--connect clock gating to latch through reset logic
+				self:new_or(rs)
+				self:cp(1, rst, "q", 1, rs, "in", 1)
+				self:cp(1, gs, "q", 1, rs, "in", 2)
+				self:cp(1, rs, "q", 1, s, "in", 2)
+				self:new_and(rr)
+				self:cp(1, name, "~rst", 1, rr, "in", 1)
+				self:cp(1, gr, "q", 1, rr, "in", 2)
+				self:cp(1, rr, "q", 1, r, "in", 2)
 
 				--create data inverter
 				self:new_not(dn)

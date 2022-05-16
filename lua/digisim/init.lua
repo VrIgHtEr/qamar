@@ -36,7 +36,7 @@ sim:new_clock_module(clk, { period = constants.CLOCK_PERIOD_TICKS, chain_length 
 sim:new_alu(alu, { width = datapath, trace = true }):c(rst, "q", alu, "oe")
 
 -- register -----------------------------------------------------------------------------------------
-sim:new_register(r0, { width = datapath, trace = true }):c(alu, "out", r0, "in")
+sim:new_register(r0, { width = datapath, trace = true }):c(alu, "out", r0, "in"):c(rst, "q", r0, "~rst")
 
 -- alu test signals ---------------------------------------------------------------------------------
 sim
@@ -52,11 +52,9 @@ sim
 	:cp(1, sel1, "q", 1, alu, "sel", 1)
 	:new_clock(sel2, { period = constants.CLOCK_PERIOD_TICKS * 4, trace = true })
 	:cp(1, sel2, "q", 1, alu, "sel", 2)
-	-- register test signals ----------------------------------------------------------------------------
-	:new_clock(
-		oea,
-		{ period = constants.CLOCK_PERIOD_TICKS * 2 }
-	)
+-- register test signals ----------------------------------------------------------------------------
+sim
+	:new_clock(oea, { period = constants.CLOCK_PERIOD_TICKS * 2 })
 	:c(oea, "q", r0, "oea")
 	:new_clock(oeb, { period = constants.CLOCK_PERIOD_TICKS * 4 })
 	:c(oeb, "q", r0, "oeb")
@@ -64,7 +62,7 @@ sim
 	:c(write, "q", r0, "write")
 	:c(clk, "rising", r0, "rising")
 
----------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------
 
 local max = 0
 while sim.time < simtime do
