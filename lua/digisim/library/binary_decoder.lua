@@ -37,12 +37,9 @@ return function(simulation)
 				self:cp(outputs, lo, "q", 1, al, "a", 1)
 				self:cp(outputs, al, "q", 1, name, "q", 1)
 
-				local hi = name .. ".hi"
 				local ah = name .. ".ah"
-				self:new_binary_decoder(hi, { width = width - 1 })
-				self:cp(width - 1, name, "in", 1, hi, "in", 1)
 				self:new_and_bank(ah, { width = outputs })
-				self:cp(outputs, hi, "q", 1, ah, "a", 1)
+				self:cp(outputs, lo, "q", 1, ah, "a", 1)
 				self:cp(outputs, ah, "q", 1, name, "q", outputs + 1)
 
 				for i = 1, outputs do
