@@ -3,6 +3,7 @@ local simulation = require("digisim.simulation")
 
 local simtime = 100000
 local datapath = 32
+local reg_sel_width = 4
 
 local vcc = "CONST.VCC"
 local gnd = "CONST.GND"
@@ -62,8 +63,8 @@ sim
 	:c(write, "q", r0, "write")
 	:c(clk, "rising", r0, "rising")
 
-local dec = "DEC"
-sim:new_binary_decoder(dec, { width = 2 }):cp(1, sel1, "q", 1, dec, "in", 1):cp(1, sel2, "q", 1, dec, "in", 2)
+local dec = "REGS"
+sim:new_register_bank(dec, { width = datapath, selwidth = reg_sel_width })
 
 -----------------------------------------------------------------------------------------------------
 
