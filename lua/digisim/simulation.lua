@@ -267,7 +267,7 @@ function simulation:step()
 		self:init_nets()
 		self.simulation_started = true
 	end
-	local maxstep = 10000
+	local maxstep = 1000
 	local ticks = 0
 
 	---@type table<string,component>

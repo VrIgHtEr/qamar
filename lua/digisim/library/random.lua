@@ -40,7 +40,11 @@ return function(simulation)
 						vals[i] = math.random(0, 1)
 					end
 				end
-				return vals
+				if width == 1 then
+					return vals[1]
+				else
+					return vals
+				end
 			end, opts)
 		end
 	)

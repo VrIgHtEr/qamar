@@ -28,23 +28,21 @@ return function(simulation)
 				self:cp(1, n, "q", 1, name, "q", 1)
 				self:cp(1, name, "in", 1, name, "q", 2)
 			else
-				outputs = outputs / 2
-				local lo = name .. ".lo"
+				local dec = name .. ".dec"
+				self:new_binary_decoder(dec, { width = width - 1 })
+				self:cp(width - 1, name, "in", 1, dec, "in", 1)
+
 				local al = name .. ".al"
-				self:new_binary_decoder(lo, { width = width - 1 })
-				self:cp(width - 1, name, "in", 1, lo, "in", 1)
-				self:new_and_bank(al, { width = outputs })
-				self:cp(outputs, lo, "q", 1, al, "a", 1)
-				self:cp(outputs, al, "q", 1, name, "q", 1)
-
 				local ah = name .. ".ah"
-				self:new_and_bank(ah, { width = outputs })
-				self:cp(outputs, lo, "q", 1, ah, "a", 1)
-				self:cp(outputs, ah, "q", 1, name, "q", outputs + 1)
-
-				for i = 1, outputs do
-					self:cp(1, n, "q", 1, al, "b", i)
-					self:cp(1, name, "in", width, ah, "b", i)
+				self:new_and_bank(al, { width = outputs / 2 })
+				self:new_and_bank(ah, { width = outputs / 2 })
+				self:cp(outputs / 2, al, "q", 1, name, "q", 1)
+				self:cp(outputs / 2, ah, "q", 1, name, "q", outputs / 2 + 1)
+				for i = 1, outputs / 2 do
+					self:cp(1, name, "in", width, ah, "a", i)
+					self:cp(1, n, "q", 1, al, "a", i)
+					self:cp(1, dec, "q", i, al, "b", i)
+					self:cp(1, dec, "q", i, ah, "b", i)
 				end
 			end
 

@@ -1,9 +1,9 @@
 local constants = require("digisim.constants")
 local simulation = require("digisim.simulation")
 
-local simtime = 100000
+local simtime = 10000
 local datapath = 32
-local reg_sel_width = 4
+local reg_sel_width = 3
 
 local vcc = "CONST.VCC"
 local gnd = "CONST.GND"
@@ -11,7 +11,7 @@ local gnd = "CONST.GND"
 local clk = "CLK"
 local rst = "~RST"
 local alu = "ALU"
-local r0 = "R0"
+local regs = "REGS"
 
 local subtract = "TEST.SUBTRACT"
 local sel1 = "TEST.SEL1"
@@ -19,8 +19,6 @@ local sel2 = "TEST.SEL2"
 local arnd = "TEST.ARND"
 local brnd = "TEST.BRND"
 local write = "TEST.WRITE"
-local oea = "TEST.OEA"
-local oeb = "TEST.OEB"
 
 local sim = simulation.new()
 
@@ -36,8 +34,14 @@ sim:new_clock_module(clk, { period = constants.CLOCK_PERIOD_TICKS, chain_length 
 -- alu ----------------------------------------------------------------------------------------------
 sim:new_alu(alu, { width = datapath, trace = true }):c(rst, "q", alu, "oe")
 
--- register -----------------------------------------------------------------------------------------
-sim:new_register(r0, { width = datapath, trace = true }):c(alu, "out", r0, "in"):c(rst, "q", r0, "~rst")
+-- registers -----------------------------------------------------------------------------------------
+sim
+	:new_register_bank(regs, { width = datapath, selwidth = reg_sel_width, trace = true })
+	:c(alu, "out", regs, "in")
+	:c(clk, "rising", regs, "rising")
+	:c(rst, "q", regs, "~rst")
+	:c(regs, "outa", alu, "a")
+	:c(regs, "outb", alu, "b")
 
 -- alu test signals ---------------------------------------------------------------------------------
 sim
@@ -53,19 +57,25 @@ sim
 	:cp(1, sel1, "q", 1, alu, "sel", 1)
 	:new_clock(sel2, { period = constants.CLOCK_PERIOD_TICKS * 4, trace = true })
 	:cp(1, sel2, "q", 1, alu, "sel", 2)
+
+local testdec = "DEC"
+
+sim:new_binary_decoder(testdec, { width = reg_sel_width })
+
+local sela = "TEST.SELA"
+local selb = "TEST.SELB"
+local selw = "TEST.SELW"
 -- register test signals ----------------------------------------------------------------------------
 sim
-	:new_clock(oea, { period = constants.CLOCK_PERIOD_TICKS * 2 })
-	:c(oea, "q", r0, "oea")
-	:new_clock(oeb, { period = constants.CLOCK_PERIOD_TICKS * 4 })
-	:c(oeb, "q", r0, "oeb")
 	:new_clock(write, { trace = true, period = constants.CLOCK_PERIOD_TICKS * 2 })
-	:c(write, "q", r0, "write")
-	:c(clk, "rising", r0, "rising")
-
-local dec = "REGS"
-sim:new_register_bank(dec, { width = datapath, selwidth = reg_sel_width })
-
+	:c(write, "q", regs, "write")
+	:new_random(sela, { width = reg_sel_width, period = constants.CLOCK_PERIOD_TICKS })
+	:c(sela, "q", regs, "sela")
+	:c(sela, "q", testdec, "in")
+	:new_random(selb, { width = reg_sel_width, period = constants.CLOCK_PERIOD_TICKS })
+	:c(selb, "q", regs, "selb")
+	:new_random(selw, { width = reg_sel_width, period = constants.CLOCK_PERIOD_TICKS })
+	:c(selw, "q", regs, "selw")
 -----------------------------------------------------------------------------------------------------
 
 local max = 0
