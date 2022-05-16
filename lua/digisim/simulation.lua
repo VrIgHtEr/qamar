@@ -194,62 +194,78 @@ local function add_trace(sim, name, time, sig)
 	sim.trace:trace(name, time, sig)
 end
 
-local signal = require("digisim.signal")
+--[[
+uwhlz01
+
+uuuuuuu
+uwwww01
+uwhwh01
+uwwll01
+uwhlz01
+u00000u
+
+u1111u1
+
+--]]
+local restable = {
+	signal.unknown,
+	signal.unknown,
+	signal.unknown,
+	signal.unknown,
+	signal.unknown,
+	signal.unknown,
+	signal.unknown,
+	signal.unknown,
+	signal.weak,
+	signal.weak,
+	signal.weak,
+	signal.weak,
+	signal.low,
+	signal.high,
+	signal.unknown,
+	signal.weak,
+	signal.weakhigh,
+	signal.weak,
+	signal.weakhigh,
+	signal.low,
+	signal.high,
+	signal.unknown,
+	signal.weak,
+	signal.weak,
+	signal.weaklow,
+	signal.weaklow,
+	signal.low,
+	signal.high,
+	signal.unknown,
+	signal.weak,
+	signal.weakhigh,
+	signal.weaklow,
+	signal.z,
+	signal.low,
+	signal.high,
+	signal.unknown,
+	signal.low,
+	signal.low,
+	signal.low,
+	signal.low,
+	signal.low,
+	signal.unknown,
+	signal.unknown,
+	signal.high,
+	signal.high,
+	signal.high,
+	signal.high,
+	signal.unknown,
+	signal.high,
+}
 
 ---@param a signal
 ---@param b signal
 local function resolve(a, b)
-	if a == signal.weakhigh then
-		if b == signal.z or b == signal.weakhigh then
-			return signal.weakhigh
-		elseif b == signal.high then
-			return signal.high
-		elseif b == signal.low then
-			return signal.low
-		elseif b == signal.weak or b == signal.weaklow then
-			return signal.weak
-		else
-			return signal.unknown
-		end
-	elseif a == signal.weaklow then
-		if b == signal.z or b == signal.weaklow then
-			return signal.weaklow
-		elseif b == signal.low then
-			return signal.low
-		elseif b == signal.high then
-			return signal.high
-		elseif b == signal.weak or b == signal.weakhigh then
-			return signal.weak
-		else
-			return signal.unknown
-		end
-	elseif a == signal.z then
-		return b
-	elseif a == signal.low then
-		if b == signal.weaklow or b == signal.weakhigh or b == signal.low or b == signal.z or b == signal.weak then
-			return signal.low
-		else
-			return signal.unknown
-		end
-	elseif a == signal.high then
-		if b == signal.weakhigh or b == signal.weaklow or b == signal.z or b == signal.high or b == signal.weak then
-			return signal.high
-		else
-			return signal.unknown
-		end
-	elseif a == signal.weak then
-		if b == signal.low then
-			return signal.low
-		elseif b == signal.high then
-			return signal.high
-		elseif b == signal.z or b == signal.weak or b == signal.weaklow or b == signal.weakhigh then
-			return signal.weak
-		else
-			return signal.unknown
-		end
-	else
+	if a == nil or b == nil or a < signal.unknown or a > signal.high or b < signal.unknown or b > signal.high then
 		return signal.unknown
 	end
+	return restable[(7 * (a - signal.unknown) + (b - signal.unknown)) + 1]
 end
 
 ---@param time number
@@ -257,11 +273,9 @@ end
 local function latch_values(time, p)
 	for _, x in ipairs(p.pins) do
 		if time > x.net.timestamp then
-			--			io.stderr:write("RESOLVING:\n")
 			local sig = signal.z
 			for _, z in pairs(x.net.pins) do
 				if not z.is_input then
-					--					io.stderr:write("Resolving " .. z.name .. " : " .. z.value .. " - " .. sig .. "\n")
 					sig = resolve(sig, z.value)
 				end
 			end
@@ -276,7 +290,6 @@ local function latch_values(time, p)
 			end
 			x.net.latched_value = sig
 			x.net.timestamp = time
-			--			io.stderr:write("RESOLVED: " .. sig .. "\n")
 		end
 	end
 end
