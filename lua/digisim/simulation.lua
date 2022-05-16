@@ -195,40 +195,50 @@ local signal = require("digisim.signal")
 ---@param b signal
 local function resolve(a, b)
 	if a == signal.weakhigh then
-		if b == signal.z or b == signal.high or b == signal.weakhigh then
+		if b == signal.z or b == signal.weakhigh then
+			return signal.weakhigh
+		elseif b == signal.high then
 			return signal.high
 		elseif b == signal.low then
 			return signal.low
+		elseif b == signal.weak or b == signal.weaklow then
+			return signal.weak
 		else
 			return signal.unknown
 		end
 	elseif a == signal.weaklow then
-		if b == signal.z or b == signal.low or b == signal.weaklow then
+		if b == signal.z or b == signal.weaklow then
+			return signal.weaklow
+		elseif b == signal.low then
 			return signal.low
 		elseif b == signal.high then
 			return signal.high
+		elseif b == signal.weak or b == signal.weakhigh then
+			return signal.weak
 		else
 			return signal.unknown
 		end
 	elseif a == signal.z then
-		if b == signal.z then
-			return signal.z
-		elseif b == signal.weaklow or b == signal.low then
-			return signal.low
-		elseif b == signal.weakhigh or b == signal.high then
-			return signal.high
-		else
-			return signal.unknown
-		end
+		return b
 	elseif a == signal.low then
-		if b == signal.weaklow or b == signal.weakhigh or b == signal.low or b == signal.z then
+		if b == signal.weaklow or b == signal.weakhigh or b == signal.low or b == signal.z or b == signal.weak then
 			return signal.low
 		else
 			return signal.unknown
 		end
 	elseif a == signal.high then
-		if b == signal.weakhigh or b == signal.weaklow or b == signal.z or b == signal.high then
+		if b == signal.weakhigh or b == signal.weaklow or b == signal.z or b == signal.high or b == signal.weak then
 			return signal.high
+		else
+			return signal.unknown
+		end
+	elseif a == signal.weak then
+		if b == signal.low then
+			return signal.low
+		elseif b == signal.high then
+			return signal.high
+		elseif b == signal.z or b == signal.weak or b == signal.weaklow or b == signal.weakhigh then
+			return signal.weak
 		else
 			return signal.unknown
 		end
@@ -242,14 +252,26 @@ end
 local function latch_values(time, p)
 	for _, x in ipairs(p.pins) do
 		if time > x.net.timestamp then
+			--			io.stderr:write("RESOLVING:\n")
 			local sig = signal.z
 			for _, z in pairs(x.net.pins) do
 				if not z.is_input then
+					--					io.stderr:write("Resolving " .. z.name .. " : " .. z.value .. " - " .. sig .. "\n")
 					sig = resolve(sig, z.value)
 				end
 			end
+			if sig == signal.low or sig == signal.weaklow then
+				x.net.latched_value = signal.low
+			elseif sig == signal.high or sig == signal.weakhigh then
+				x.net.latched_value = signal.high
+			elseif sig == signal.z then
+				x.net.latched_value = signal.z
+			else
+				x.net.latched_value = signal.unknown
+			end
 			x.net.latched_value = sig
 			x.net.timestamp = time
+			--			io.stderr:write("RESOLVED: " .. sig .. "\n")
 		end
 	end
 end

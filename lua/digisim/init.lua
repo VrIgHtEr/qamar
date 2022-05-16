@@ -1,9 +1,9 @@
 local constants = require("digisim.constants")
 local simulation = require("digisim.simulation")
 
-local simtime = 10000
-local datapath = 32
-local reg_sel_width = 3
+local simtime = 20000
+local datapath = 3
+local reg_sel_width = 1
 
 local vcc = "CONST.VCC"
 local gnd = "CONST.GND"
@@ -21,7 +21,6 @@ local brnd = "TEST.BRND"
 local write = "TEST.WRITE"
 
 local sim = simulation.new()
-
 -- constants ----------------------------------------------------------------------------------------
 sim:new_vcc(vcc):new_gnd(gnd)
 
@@ -77,6 +76,16 @@ sim
 	:new_random(selw, { width = reg_sel_width, period = constants.CLOCK_PERIOD_TICKS })
 	:c(selw, "q", regs, "selw")
 -----------------------------------------------------------------------------------------------------
+local signal = require("digisim.signal")
+local ta = "TA"
+local tb = "TB"
+sim:add_component(ta, function()
+	return signal.weakhigh
+end, { names = { outputs = { "q" } } })
+sim:add_component(tb, function()
+	return signal.weaklow
+end, { names = { outputs = { "q" } } })
+sim:c(ta, "q", tb, "q")
 
 local max = 0
 while sim.time < simtime do
@@ -85,5 +94,6 @@ while sim.time < simtime do
 	max = math.max(max, x)
 end
 io.stderr:write("max delay: " .. max .. "\n")
+io.stderr:write("sim time:  " .. sim.time .. "\n")
 
 return simulation
