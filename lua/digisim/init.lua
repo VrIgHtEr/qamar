@@ -62,6 +62,9 @@ sim
 	:c(write, "q", r0, "write")
 	:c(clk, "rising", r0, "rising")
 
+local dec = "DEC"
+sim:new_binary_decoder(dec, { width = 2 }):cp(1, sel1, "q", 1, dec, "in", 1):cp(1, sel2, "q", 1, dec, "in", 2)
+
 -----------------------------------------------------------------------------------------------------
 
 local max = 0
