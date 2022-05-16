@@ -1,17 +1,19 @@
 local constants = require("digisim.constants")
 local simulation = require("digisim.simulation")
 
-local simtime = 20000
+local simtime = 4000
 local datapath = 32
 local reg_sel_width = 2
 
 local vcc = "CONST.VCC"
 local gnd = "CONST.GND"
 
-local clk = "CLK"
-local rst = "~RST"
-local alu = "ALU"
-local regs = "REGS"
+local clk = "CPU.clock"
+local rst = "CPU.reset~"
+local alu = "CPU.alu"
+local regs = "CPU.registers"
+
+local buses = "CPU.buses"
 
 local sim = simulation.new()
 -- constants ----------------------------------------------------------------------------------------
@@ -35,6 +37,22 @@ sim
 	:c(regs, "outa", alu, "a")
 	:c(regs, "outb", alu, "b")
 
+-- buses ---------------------------------------------------------------------------------------------
+sim
+	:add_component(
+		buses,
+		nil,
+		{ names = { inputs = {}, outputs = {
+			{ "a", datapath },
+			{ "b", datapath },
+			{ "d", datapath },
+		} } }
+	)
+	:c(regs, "in", buses, "d")
+	:c(alu, "a", buses, "a")
+	:c(alu, "b", buses, "b")
+
+-- program -------------------------------------------------------------------------------------------
 local program = {
 	{ 1, { 0, 1 }, { 0, 0 }, { 0, 1 }, { 0, 0 }, 1, 0, 0 },
 	-- iter 0
@@ -122,6 +140,7 @@ sim
 
 -----------------------------------------------------------------------------------------------------
 
+simtime = constants.CLOCK_PERIOD_TICKS * (#program + 1)
 local max = 0
 while sim.time < simtime do
 	local x
