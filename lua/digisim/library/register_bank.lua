@@ -31,7 +31,6 @@ return function(simulation)
 				inputs = {
 					{ "in", width },
 					"rising",
-					"write",
 					{ "sela", selwidth },
 					{ "selb", selwidth },
 					{ "selw", selwidth },
@@ -52,18 +51,29 @@ return function(simulation)
 			self:new_binary_decoder(selw, { width = selwidth })
 			self:c(name, "selw", selw, "in")
 
+			local vcc = name .. ".vcc"
+			self:new_vcc(vcc)
+
 			local r = name .. ".r"
 			for i = 1, numregs do
 				local n = r .. (i - 1)
-				self:new_register(n, { width = width })
-				self:c(name, "outa", n, "outa")
-				self:c(name, "outb", n, "outb")
-				self:c(name, "~rst", n, "~rst")
-				self:cp(1, sela, "q", i, n, "oea", 1)
-				self:cp(1, selb, "q", i, n, "oeb", 1)
-				self:c(name, "rising", n, "rising")
-				self:cp(1, selw, "q", i, n, "write", 1)
-				self:c(name, "in", n, "in")
+				if i > 1 then
+					self:new_register(n, { width = width })
+					self:c(name, "outa", n, "outa")
+					self:c(name, "outb", n, "outb")
+					self:c(name, "~rst", n, "~rst")
+					self:cp(1, sela, "q", i, n, "oea", 1)
+					self:cp(1, selb, "q", i, n, "oeb", 1)
+					self:c(name, "rising", n, "rising")
+					self:cp(1, selw, "q", i, n, "write", 1)
+					self:c(name, "in", n, "in")
+				else
+					self:new_register_zero(n, { width = width })
+					self:c(name, "outa", n, "outa")
+					self:c(name, "outb", n, "outb")
+					self:cp(1, sela, "q", i, n, "oea", 1)
+					self:cp(1, selb, "q", i, n, "oeb", 1)
+				end
 			end
 			return self
 		end
