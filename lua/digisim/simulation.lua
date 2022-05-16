@@ -32,42 +32,54 @@ local signal = require("digisim.signal")
 
 function simulation:init_nets()
 	for _, v in pairs(self.components) do
-		if v.trace then
-			if constants.TRACE_INPUTS then
-				for _, p in ipairs(v.inports) do
-					self.trace:get(p.name, p.bits)
-					for _, pin in pairs(p.pins) do
-						pin.value = signal.weak
+		for _, p in ipairs(v.inports) do
+			if v.trace and constants.TRACE_INPUTS then
+				self.trace:get(p.name, p.bits)
+			end
+			for _, input in pairs(p.pins) do
+				local drivers = {}
+				for _, x in pairs(input.net.pins) do
+					if not x.is_input then
+						table.insert(drivers, x)
 					end
 				end
+				input.net.drivers = drivers
 			end
-			for _, p in ipairs(v.outports) do
+		end
+		for _, p in ipairs(v.outports) do
+			if v.trace then
 				self.trace:get(p.name, p.bits)
-				for _, output in ipairs(p.pins) do
-					output.value = signal.weak
-					local sensitivity_list = {}
-					for _, x in pairs(output.net.pins) do
-						if x.is_input and x.port.component.step then
-							sensitivity_list[x.port.component] = true
-						end
+			end
+			for _, output in ipairs(p.pins) do
+				local drivers = {}
+				for _, x in pairs(output.net.pins) do
+					if not x.is_input then
+						table.insert(drivers, x)
 					end
-					output.net.sensitivity_list = {}
-					for x in pairs(sensitivity_list) do
-						table.insert(output.net.sensitivity_list, x)
+				end
+				output.net.drivers = drivers
+				local sensitivity_list = {}
+				for _, x in pairs(output.net.pins) do
+					if x.is_input and x.port.component.step then
+						sensitivity_list[x.port.component] = true
 					end
-					local trace_ports = {}
-					for _, x in pairs(output.net.pins) do
-						if
-							((x.port.is_input and constants.TRACE_INPUTS) or not x.port.is_input)
-							and x.port.component.trace
-						then
-							trace_ports[x.port] = true
-						end
+				end
+				output.net.sensitivity_list = {}
+				for x in pairs(sensitivity_list) do
+					table.insert(output.net.sensitivity_list, x)
+				end
+				local trace_ports = {}
+				for _, x in pairs(output.net.pins) do
+					if
+						((x.port.is_input and constants.TRACE_INPUTS) or not x.port.is_input)
+						and x.port.component.trace
+					then
+						trace_ports[x.port] = true
 					end
-					output.net.trace_ports = {}
-					for x in pairs(trace_ports) do
-						table.insert(output.net.trace_ports, x)
-					end
+				end
+				output.net.trace_ports = {}
+				for x in pairs(trace_ports) do
+					table.insert(output.net.trace_ports, x)
 				end
 			end
 		end
@@ -195,17 +207,13 @@ local function add_trace(sim, name, time, sig)
 end
 
 --[[
-uwhlz01
-
 uuuuuuu
 uwwww01
 uwhwh01
 uwwll01
 uwhlz01
 u00000u
-
 u1111u1
-
 --]]
 local restable = {
 	signal.unknown,
@@ -262,10 +270,13 @@ local restable = {
 ---@param a signal
 ---@param b signal
 local function resolve(a, b)
-	if a == nil or b == nil or a < signal.unknown or a > signal.high or b < signal.unknown or b > signal.high then
-		return signal.unknown
-	end
-	return restable[(7 * (a - signal.unknown) + (b - signal.unknown)) + 1]
+	return a == nil
+		or b == nil
+		or a < signal.unknown
+		or a > signal.high
+		or b < signal.unknown
+		or b > signal.high and signal.unknown
+		or restable[(7 * (a - signal.unknown) + (b - signal.unknown)) + 1]
 end
 
 ---@param time number
@@ -274,10 +285,8 @@ local function latch_values(time, p)
 	for _, x in ipairs(p.pins) do
 		if time > x.net.timestamp then
 			local sig = signal.z
-			for _, z in pairs(x.net.pins) do
-				if not z.is_input then
-					sig = resolve(sig, z.value)
-				end
+			for _, z in ipairs(x.net.drivers) do
+				sig = resolve(sig, z.value)
 			end
 			if sig == signal.low or sig == signal.weaklow then
 				x.net.latched_value = signal.low

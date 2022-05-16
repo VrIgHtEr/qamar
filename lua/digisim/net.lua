@@ -6,6 +6,7 @@
 ---@field timestamp number
 ---@field latched_value signal
 ---@field trace_ports port[]
+---@field drivers pin[]
 ---@field sensitivity_list component[]
 local net = {}
 local MT = { __index = net }

@@ -1,12 +1,12 @@
 local constants = require("digisim.constants")
 local simulation = require("digisim.simulation")
 
-local simtime = 4000
+local simtime = 100000
 local datapath = 32
-local reg_sel_width = 2
+local reg_sel_width = 5
 
-local vcc = "CONST.VCC"
-local gnd = "CONST.GND"
+local vcc = "VCC"
+local gnd = "GND"
 
 local clk = "CPU.clock"
 local rst = "CPU.reset~"
@@ -39,15 +39,14 @@ sim
 
 -- buses ---------------------------------------------------------------------------------------------
 sim
-	:add_component(
-		buses,
-		nil,
-		{ names = { inputs = {}, outputs = {
+	:add_component(buses, nil, {
+		names = { inputs = {}, outputs = {
 			{ "a", datapath },
 			{ "b", datapath },
 			{ "d", datapath },
-		} } }
-	)
+		} },
+		trace = true,
+	})
 	:c(regs, "in", buses, "d")
 	:c(alu, "a", buses, "a")
 	:c(alu, "b", buses, "b")
@@ -55,11 +54,11 @@ sim
 -- program -------------------------------------------------------------------------------------------
 local program = {
 	-- sela     selb      selw      alu_op   cin na nb
-	{ { 0, 1 }, { 0, 0 }, { 0, 1 }, { 0, 0 }, 1, 0, 0 },
+	{ { 0, 1, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 1, 0, 0, 0 }, { 0, 0 }, 1, 0, 0 },
 	--loop
-	{ { 1, 0 }, { 0, 1 }, { 1, 1 }, { 0, 0 }, 0, 0, 0 },
-	{ { 0, 1 }, { 0, 0 }, { 1, 0 }, { 0, 0 }, 0, 0, 0 },
-	{ { 1, 1 }, { 0, 0 }, { 0, 1 }, { 0, 0 }, 0, 0, 0 },
+	{ { 1, 0, 0, 0, 0 }, { 0, 1, 0, 0, 0 }, { 1, 1, 0, 0, 0 }, { 0, 0 }, 0, 0, 0 },
+	{ { 0, 1, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 1, 0, 0, 0, 0 }, { 0, 0 }, 0, 0, 0 },
+	{ { 1, 1, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 1, 0, 0, 0 }, { 0, 0 }, 0, 0, 0 },
 }
 local loopindex = 2
 local looplength = 3
@@ -72,6 +71,7 @@ sim:add_component(prog, function(time)
 	end
 	return unpack(program[c])
 end, {
+	trace = true,
 	names = {
 		inputs = {},
 		outputs = {
