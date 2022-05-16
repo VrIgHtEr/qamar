@@ -51,14 +51,22 @@ sim
 	:c(alu, "a", buses, "a")
 	:c(alu, "b", buses, "b")
 
+local function reg(r)
+	local ret = {}
+	for i = 1, reg_sel_width do
+		ret[i] = math.floor(r / math.pow(2, i - 1)) % 2
+	end
+	return ret
+end
+
 -- program -------------------------------------------------------------------------------------------
 local program = {
-	-- sela     selb      selw      alu_op   cin na nb
-	{ { 0, 1, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 1, 0, 0, 0 }, { 0, 0 }, 1, 0, 0 },
+	--sela    selb    selw    alu_op   cin na nb
+	{ reg(2), reg(0), reg(2), { 0, 0 }, 1, 0, 0 },
 	--loop
-	{ { 1, 0, 0, 0, 0 }, { 0, 1, 0, 0, 0 }, { 1, 1, 0, 0, 0 }, { 0, 0 }, 0, 0, 0 },
-	{ { 0, 1, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 1, 0, 0, 0, 0 }, { 0, 0 }, 0, 0, 0 },
-	{ { 1, 1, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 1, 0, 0, 0 }, { 0, 0 }, 0, 0, 0 },
+	{ reg(1), reg(2), reg(3), { 0, 0 }, 0, 0, 0 },
+	{ reg(2), reg(0), reg(1), { 0, 0 }, 0, 0, 0 },
+	{ reg(3), reg(0), reg(2), { 0, 0 }, 0, 0, 0 },
 }
 local loopindex = 2
 local looplength = 3
