@@ -188,6 +188,10 @@ function simulation:cp(len, a, porta, starta, b, portb, startb)
 	if startb < 1 or pb.bits - startb + 1 < len then
 		error("out of range port access")
 	end
+	if pb.name < pa.name or (pa.name == pb.name and startb < starta) then
+		pa, pb = pb, pa
+		starta, startb = startb, starta
+	end
 	for i = 1, len do
 		local na = pa.name .. "[" .. (starta + i - 1) .. "]" .. pb.name .. "[" .. (startb + i - 1) .. "]"
 		if self.connections[na] then
