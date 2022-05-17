@@ -10,9 +10,9 @@ local gnd = "GND"
 
 local clk = "CPU.clock"
 local rst = "CPU.reset~"
+local cu = "CPU.cu"
 local alu = "CPU.alu"
 local regs = "CPU.registers"
-
 local buses = "CPU.buses"
 
 local sim = simulation.new()
@@ -71,8 +71,7 @@ local program = {
 local loopindex = 2
 local looplength = 3
 
-local prog = "PROGRAM"
-sim:add_component(prog, function(time)
+sim:add_component(cu, function(time)
 	local c = math.floor(time / constants.CLOCK_PERIOD_TICKS) + 1
 	if c >= loopindex then
 		c = (c - loopindex) % looplength + loopindex
@@ -95,13 +94,13 @@ end, {
 })
 
 sim
-	:c(prog, "op", alu, "sel")
-	:c(prog, "cin", alu, "cin")
-	:c(prog, "nota", alu, "nota")
-	:c(prog, "notb", alu, "notb")
-	:c(prog, "sela", regs, "sela")
-	:c(prog, "selb", regs, "selb")
-	:c(prog, "selw", regs, "selw")
+	:c(cu, "op", alu, "sel")
+	:c(cu, "cin", alu, "cin")
+	:c(cu, "nota", alu, "nota")
+	:c(cu, "notb", alu, "notb")
+	:c(cu, "sela", regs, "sela")
+	:c(cu, "selb", regs, "selb")
+	:c(cu, "selw", regs, "selw")
 
 -----------------------------------------------------------------------------------------------------
 
