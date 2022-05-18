@@ -29,8 +29,7 @@ return function(simulation)
 			self:new_tristate_buffer(oa, { width = width }):c(oa, "q", name, "outa"):c(name, "oea", oa, "en")
 			self:new_tristate_buffer(ob, { width = width }):c(ob, "q", name, "outb"):c(name, "oeb", ob, "en")
 
-			local gnd = name .. ".gnd"
-			self:new_gnd(gnd)
+			local gnd = "GND"
 			for i = 1, width do
 				self:cp(1, gnd, "q", 1, oa, "a", i)
 				self:cp(1, gnd, "q", 1, ob, "a", i)

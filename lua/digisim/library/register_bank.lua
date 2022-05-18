@@ -51,9 +51,6 @@ return function(simulation)
 			self:new_binary_decoder(selw, { width = selwidth })
 			self:c(name, "selw", selw, "in")
 
-			local vcc = name .. ".vcc"
-			self:new_vcc(vcc)
-
 			local r = name .. ".r"
 			for i = 1, numregs do
 				local n = r .. (i - 1)

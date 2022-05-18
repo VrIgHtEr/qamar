@@ -2,8 +2,8 @@ local constants = require("digisim.constants")
 local simulation = require("digisim.simulation")
 
 local simtime = 100000
-local datapath = 32
-local reg_sel_width = 5
+local datapath = 8
+local reg_sel_width = 3
 
 local vcc = "VCC"
 local gnd = "GND"
