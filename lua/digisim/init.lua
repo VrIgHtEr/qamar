@@ -1,10 +1,6 @@
 local constants = require("digisim.constants")
 local simulation = require("digisim.simulation")
 
-local simtime = 100000
-local datapath = 64
-local reg_sel_width = 5
-
 local vcc = "VCC"
 local gnd = "GND"
 
@@ -26,11 +22,11 @@ sim:new_reset(rst, { period = constants.STARTUP_TICKS, trace = true })
 sim:new_clock_module(clk, { period = constants.CLOCK_PERIOD_TICKS, chain_length = 3, trace = true })
 
 -- alu ----------------------------------------------------------------------------------------------
-sim:new_alu(alu, { width = datapath, trace = true }):c(rst, "q", alu, "oe")
+sim:new_alu(alu, { width = constants.BUS_WIDTH, trace = true }):c(rst, "q", alu, "oe")
 
 -- registers -----------------------------------------------------------------------------------------
 sim
-	:new_register_bank(regs, { width = datapath, selwidth = reg_sel_width, trace = true })
+	:new_register_bank(regs, { width = constants.BUS_WIDTH, selwidth = constants.REGISTER_SELECT_WIDTH, trace = true })
 	:c(alu, "out", regs, "in")
 	:c(clk, "rising", regs, "rising")
 	:c(rst, "q", regs, "~rst")
@@ -40,11 +36,14 @@ sim
 -- buses ---------------------------------------------------------------------------------------------
 sim
 	:add_component(buses, nil, {
-		names = { inputs = {}, outputs = {
-			{ "a", datapath },
-			{ "b", datapath },
-			{ "d", datapath },
-		} },
+		names = {
+			inputs = {},
+			outputs = {
+				{ "a", constants.BUS_WIDTH },
+				{ "b", constants.BUS_WIDTH },
+				{ "d", constants.BUS_WIDTH },
+			},
+		},
 		trace = true,
 	})
 	:c(regs, "in", buses, "d")
@@ -53,7 +52,7 @@ sim
 
 local function reg(r)
 	local ret = {}
-	for i = 1, reg_sel_width do
+	for i = 1, constants.REGISTER_SELECT_WIDTH do
 		ret[i] = math.floor(r / math.pow(2, i - 1)) % 2
 	end
 	return ret
@@ -84,9 +83,9 @@ end, {
 	names = {
 		inputs = {},
 		outputs = {
-			{ "sela", reg_sel_width },
-			{ "selb", reg_sel_width },
-			{ "selw", reg_sel_width },
+			{ "sela", constants.REGISTER_SELECT_WIDTH },
+			{ "selb", constants.REGISTER_SELECT_WIDTH },
+			{ "selw", constants.REGISTER_SELECT_WIDTH },
 			{ "op", 2 },
 			{ "cin", 1 },
 			{ "nota", 1 },
@@ -112,7 +111,7 @@ sim:c(clk, "rising", seq, "rising")
 -----------------------------------------------------------------------------------------------------
 
 local max = 0
-while sim.time < simtime do
+while sim.time < constants.SIM_TIME do
 	local x
 	_, x = sim:step()
 	max = math.max(max, x)
