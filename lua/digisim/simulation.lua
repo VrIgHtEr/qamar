@@ -335,26 +335,26 @@ function simulation:step()
 	if count == 0 then
 		error("must have at least one component with zero inputs")
 	end
-	local _, nexttimestamp = self.queue:peek()
-	if nexttimestamp ~= nil then
-		self.time = nexttimestamp - 1
+	if self.time == 0 then
+		for k, v in pairs(roots) do
+			dirty[k] = v
+		end
+	else
+		local _, nexttimestamp = self.queue:peek()
+		if nexttimestamp ~= nil then
+			self.time = nexttimestamp - 1
+		end
 	end
 	repeat
 		local nextdirty = {}
 		self.time = self.time + 1
-		if self.time == 1 then
-			for k, v in pairs(roots) do
-				dirty[k] = v
+		while true do
+			local val, ts = self.queue:peek()
+			if ts == nil or ts > self.time then
+				break
 			end
-		else
-			while true do
-				local val, ts = self.queue:peek()
-				if ts == nil or ts > self.time then
-					break
-				end
-				dirty[val.name] = val
-				self.queue:pop()
-			end
+			dirty[val.name] = val
+			self.queue:pop()
 		end
 		for _, c in pairs(dirty) do
 			for _, p in ipairs(c.inports) do
