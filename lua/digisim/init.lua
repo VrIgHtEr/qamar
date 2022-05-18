@@ -19,7 +19,7 @@ sim:new_vcc(vcc):new_gnd(gnd)
 sim:new_reset(rst, { period = constants.STARTUP_TICKS, trace = true })
 
 -- clock --------------------------------------------------------------------------------------------
-sim:new_clock_module(clk, { period = constants.CLOCK_PERIOD_TICKS, chain_length = 3, trace = true })
+sim:new_clock_module(clk, { period = constants.CLOCK_PERIOD_TICKS, chain_length = 2, trace = true })
 
 -- alu ----------------------------------------------------------------------------------------------
 sim:new_alu(alu, { width = constants.BUS_WIDTH, trace = true }):c(rst, "q", alu, "oe")
