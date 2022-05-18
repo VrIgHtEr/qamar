@@ -12,7 +12,7 @@ end
 
 function pq:peek()
 	if self.count > 0 then
-		return self[1]
+		return self[1][2], self[1][1]
 	end
 end
 
@@ -20,7 +20,7 @@ end
 ---@param index number
 local function float(self, index)
 	local p = math.floor(index / 2)
-	while p > 1 do
+	while p >= 1 do
 		if self[index][1] >= self[p][1] then
 			break
 		end
@@ -51,7 +51,6 @@ function pq:push(priority, value)
 	if value ~= nil then
 		self.count = self.count + 1
 		self[self.count] = { priority, value }
-		self.count = self.count + 1
 		float(self, self.count)
 	end
 end
@@ -63,7 +62,7 @@ function pq:pop()
 		self[self.count] = nil
 		self.count = self.count - 1
 		sink(self, 1)
-		return ret
+		return ret[2], ret[1]
 	end
 end
 

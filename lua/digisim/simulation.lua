@@ -1,17 +1,16 @@
-local queue = require("qamar.util.deque")
 local constants = require("digisim.constants")
 local component = require("digisim.component")
 local connection = require("digisim.connection")
+local pq = require("digisim.pq")
 local vcd = require("digisim.vcd")
-
 local sigstr = vcd.sigstr
 
 ---@class simulation
 ---@field components table<string,component>
 ---@field connections table<string,connection>
----@field queue deque
 ---@field time number
 ---@field trace vcd
+---@field queue pq
 ---@field simulation_started boolean
 local simulation = {}
 local MT = { __index = simulation }
@@ -22,8 +21,8 @@ function simulation.new()
 		connections = {},
 		time = 0,
 		next_connection_id = 0,
-		queue = queue(),
 		trace = vcd.new(),
+		queue = pq.new(),
 		simulation_started = false,
 	}, MT)
 	return ret
@@ -336,11 +335,26 @@ function simulation:step()
 	if count == 0 then
 		error("must have at least one component with zero inputs")
 	end
+	local _, nexttimestamp = self.queue:peek()
+	if nexttimestamp ~= nil then
+		self.time = nexttimestamp - 1
+	end
 	repeat
 		local nextdirty = {}
 		self.time = self.time + 1
-		for k, v in pairs(roots) do
-			dirty[k] = v
+		if self.time == 1 then
+			for k, v in pairs(roots) do
+				dirty[k] = v
+			end
+		else
+			while true do
+				local val, ts = self.queue:peek()
+				if ts == nil or ts > self.time then
+					break
+				end
+				dirty[val.name] = val
+				self.queue:pop()
+			end
 		end
 		for _, c in pairs(dirty) do
 			for _, p in ipairs(c.inports) do
@@ -381,8 +395,13 @@ function simulation:step()
 						end
 					end
 				end
-
-				for i, value in ipairs(outputs) do
+				local numoutputs = #outputs - 1
+				local sleep = outputs[numoutputs + 1]
+				if sleep > 0 then
+					self.queue:push(self.time + sleep, c)
+				end
+				for i = 1, numoutputs do
+					local value = outputs[i]
 					local output = c.outports[i]
 					if output.bits == 1 then
 						handle_output_value(value, output.pins[1])

@@ -2,8 +2,8 @@ local constants = require("digisim.constants")
 local simulation = require("digisim.simulation")
 
 local simtime = 100000
-local datapath = 8
-local reg_sel_width = 3
+local datapath = 64
+local reg_sel_width = 5
 
 local vcc = "VCC"
 local gnd = "GND"
@@ -69,14 +69,16 @@ local program = {
 	{ reg(3), reg(0), reg(2), { 0, 0 }, 0, 0, 0 },
 }
 local loopindex = 2
-local looplength = 3
+local c = 0
 
-sim:add_component(cu, function(time)
-	local c = math.floor(time / constants.CLOCK_PERIOD_TICKS) + 1
-	if c >= loopindex then
-		c = (c - loopindex) % looplength + loopindex
+sim:add_component(cu, function()
+	c = c + 1
+	if c > #program then
+		c = loopindex
 	end
-	return unpack(program[c])
+	local ret = { unpack(program[c]) }
+	ret[#ret + 1] = constants.CLOCK_PERIOD_TICKS
+	return unpack(ret)
 end, {
 	trace = true,
 	names = {

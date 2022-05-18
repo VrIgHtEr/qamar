@@ -133,10 +133,11 @@ function component.new(name, handler, opts)
 				end
 			end
 			local o = { handler(timestamp, unpack(parts)) }
-			if #o ~= outputs then
+			if #o < outputs or (#parts == 0 and #o > outputs + 1 or #parts > 0 and #o > outputs) then
 				error("handler " .. name .. " returned " .. #o .. " outputs but expected " .. outputs)
 			end
-			for i, x in ipairs(o) do
+			for i = 1, outputs do
+				local x = o[i]
 				if type(x) == "number" then
 					x = math.floor(x)
 					if x <= signal.unknown or x >= signal.TOP then
@@ -175,6 +176,15 @@ function component.new(name, handler, opts)
 				else
 					error("handler " .. name .. " returned invalid type " .. type(x) .. " at index " .. i)
 				end
+			end
+			local sleep = o[outputs + 1]
+			if sleep ~= nil then
+				if type(sleep) ~= "number" or sleep < 0 then
+					error("invalid sleep period")
+				end
+				sleep = math.floor(sleep)
+			else
+				sleep, o[outputs + 1] = 0, 0
 			end
 			return unpack(o)
 		end
