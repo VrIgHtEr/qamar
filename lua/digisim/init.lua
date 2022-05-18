@@ -1,6 +1,7 @@
 local constants = require("digisim.constants")
 local simulation = require("digisim.simulation")
 
+io.stderr:write("building circuit...\n")
 local vcc = "VCC"
 local gnd = "GND"
 
@@ -117,6 +118,8 @@ sim:new_seq(seq, { width = 8 })
 sim:c(rst, "q", seq, "rst~")
 sim:c(clk, "rising", seq, "rising")
 -----------------------------------------------------------------------------------------------------
+local pc = "PC"
+sim:new_pc(pc, { width = constants.BUS_WIDTH })
 
 local max = 0
 while sim.time < constants.SIM_TIME do

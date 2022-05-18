@@ -30,19 +30,22 @@ end
 local signal = require("digisim.signal")
 
 function simulation:init_nets()
+	io.stderr:write("initializing nets...\n")
 	for _, v in pairs(self.components) do
 		for _, p in ipairs(v.inports) do
 			if v.trace and constants.TRACE_INPUTS then
 				self.trace:get(p.name, p.bits)
 			end
 			for _, input in pairs(p.pins) do
-				local drivers = {}
-				for _, x in pairs(input.net.pins) do
-					if not x.is_input then
-						table.insert(drivers, x)
+				if not input.net.drivers then
+					local drivers = {}
+					for _, x in pairs(input.net.pins) do
+						if not x.is_input then
+							table.insert(drivers, x)
+						end
 					end
+					input.net.drivers = drivers
 				end
-				input.net.drivers = drivers
 			end
 		end
 		for _, p in ipairs(v.outports) do
@@ -50,39 +53,46 @@ function simulation:init_nets()
 				self.trace:get(p.name, p.bits)
 			end
 			for _, output in ipairs(p.pins) do
-				local drivers = {}
-				for _, x in pairs(output.net.pins) do
-					if not x.is_input then
-						table.insert(drivers, x)
+				if not output.net.drivers then
+					local drivers = {}
+					for _, x in pairs(output.net.pins) do
+						if not x.is_input then
+							table.insert(drivers, x)
+						end
+					end
+					output.net.drivers = drivers
+				end
+				if not output.net.sensitivity_list then
+					local sensitivity_list = {}
+					for _, x in pairs(output.net.pins) do
+						if x.is_input and x.port.component.step then
+							sensitivity_list[x.port.component] = true
+						end
+					end
+					output.net.sensitivity_list = {}
+					for x in pairs(sensitivity_list) do
+						table.insert(output.net.sensitivity_list, x)
 					end
 				end
-				output.net.drivers = drivers
-				local sensitivity_list = {}
-				for _, x in pairs(output.net.pins) do
-					if x.is_input and x.port.component.step then
-						sensitivity_list[x.port.component] = true
+				if not output.net.trace_ports then
+					local trace_ports = {}
+					for _, x in pairs(output.net.pins) do
+						if
+							((x.port.is_input and constants.TRACE_INPUTS) or not x.port.is_input)
+							and x.port.component.trace
+						then
+							trace_ports[x.port] = true
+						end
 					end
-				end
-				output.net.sensitivity_list = {}
-				for x in pairs(sensitivity_list) do
-					table.insert(output.net.sensitivity_list, x)
-				end
-				local trace_ports = {}
-				for _, x in pairs(output.net.pins) do
-					if
-						((x.port.is_input and constants.TRACE_INPUTS) or not x.port.is_input)
-						and x.port.component.trace
-					then
-						trace_ports[x.port] = true
+					output.net.trace_ports = {}
+					for x in pairs(trace_ports) do
+						table.insert(output.net.trace_ports, x)
 					end
-				end
-				output.net.trace_ports = {}
-				for x in pairs(trace_ports) do
-					table.insert(output.net.trace_ports, x)
 				end
 			end
 		end
 	end
+	io.stderr:write("nets initialized!\n")
 end
 
 function simulation:add_component(name, handler, opts)
