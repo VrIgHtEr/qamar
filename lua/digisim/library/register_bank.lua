@@ -40,6 +40,11 @@ return function(simulation)
 			}
 			self:add_component(name, nil, opts)
 
+			local pull = name .. ".pull"
+			self:new_pulldown(pull .. ".sela", { width = selwidth }):c(pull .. ".sela", "q", name, "sela")
+			self:new_pulldown(pull .. ".selb", { width = selwidth }):c(pull .. ".selb", "q", name, "selb")
+			self:new_pulldown(pull .. ".selw", { width = selwidth }):c(pull .. ".selw", "q", name, "selw")
+
 			local sela = name .. ".sela"
 			local selb = name .. ".selb"
 			local selw = name .. ".selw"

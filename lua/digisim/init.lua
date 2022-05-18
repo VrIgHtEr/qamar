@@ -49,6 +49,14 @@ sim
 	:c(regs, "in", buses, "d")
 	:c(alu, "a", buses, "a")
 	:c(alu, "b", buses, "b")
+for i = 1, constants.BUS_WIDTH do
+	local a = buses .. ".pulldowns.a" .. (i - 1)
+	sim:new_pulldown(a):cp(1, a, "q", 1, buses, "a", i)
+	local b = buses .. ".pulldowns.b" .. (i - 1)
+	sim:new_pulldown(b):cp(1, b, "q", 1, buses, "b", i)
+	local d = buses .. ".pulldowns.d" .. (i - 1)
+	sim:new_pulldown(d):cp(1, d, "q", 1, buses, "d", i)
+end
 
 local function reg(r)
 	local ret = {}

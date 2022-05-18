@@ -36,6 +36,14 @@ return function(simulation)
 
 			sim:add_component(alu, nil, opts)
 			local n = alu .. "."
+			do
+				local p = n .. "pulldowns."
+				sim:new_pulldown(p .. "nota"):c(p .. "nota", "q", alu, "nota")
+				sim:new_pulldown(p .. "notb"):c(p .. "notb", "q", alu, "notb")
+				sim:new_pulldown(p .. "sel", { width = 2 }):c(p .. "sel", "q", alu, "sel")
+				sim:new_pulldown(p .. "cin"):c(p .. "cin", "q", alu, "cin")
+				sim:new_pulldown(p .. "oe"):c(p .. "oe", "q", alu, "oe")
+			end
 			local f0 = n .. "adder"
 			local f1 = n .. "and"
 			local f2 = n .. "or"

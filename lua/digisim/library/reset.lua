@@ -26,7 +26,7 @@ return function(simulation)
 			local initialized = false
 			circuit:add_component(name, function()
 				if initialized then
-					return signal.high, 1000000
+					return signal.high
 				end
 				initialized = true
 				return signal.low, period
