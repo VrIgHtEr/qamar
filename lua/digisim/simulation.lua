@@ -92,7 +92,7 @@ function simulation:init_nets()
 			end
 		end
 	end
-	io.stderr:write("nets initialized!\n")
+	io.stderr:write("simulation started!\n")
 end
 
 function simulation:add_component(name, handler, opts)
