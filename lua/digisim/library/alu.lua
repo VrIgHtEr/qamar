@@ -105,6 +105,7 @@ return function(simulation)
 			sim:c(xa, "q", f3, "a")
 			sim:c(xb, "q", f3, "b")
 			sim:c(f3, "q", lm, "d3")
+			return sim
 		end
 	)
 end
