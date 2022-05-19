@@ -65,13 +65,13 @@ return function(simulation)
 					self:c(name, "rising", n, "rising")
 					self:cp(1, selw, "q", i, n, "write", 1)
 					self:c(name, "in", n, "in")
+					self:c(name, "outa", n, "outa")
+					self:c(name, "outb", n, "outb")
+					self:cp(1, sela, "q", i, n, "oea", 1)
+					self:cp(1, selb, "q", i, n, "oeb", 1)
 				else
-					self:new_register_zero(n, { width = width })
+					--	self:new_register_zero(n, { width = width })
 				end
-				self:c(name, "outa", n, "outa")
-				self:c(name, "outb", n, "outb")
-				self:cp(1, sela, "q", i, n, "oea", 1)
-				self:cp(1, selb, "q", i, n, "oeb", 1)
 			end
 			return self
 		end

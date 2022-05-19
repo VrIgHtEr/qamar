@@ -1,21 +1,34 @@
 [*]
 [*] GTKWave Analyzer v3.3.111 (w)1999-2020 BSI
-[*] Wed May 18 23:45:23 2022
+[*] Thu May 19 06:49:55 2022
 [*]
 [dumpfile] "(null)"
-[savefile] "/home/cedric/code/repos/qamar/display.gtkw"
+[savefile] "/home/cedric/code/c/qamar/display.gtkw"
 [timestart] 0
-[size] 1920 1006
+[size] 1908 999
 [pos] -1 -1
 *-11.000000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] CPU.
-[sst_width] 197
-[signals_width] 86
+[sst_width] 211
+[signals_width] 94
 [sst_expanded] 1
-[sst_vpaned_height] 567
+[sst_vpaned_height] 562
 @24
 CPU.buses.a[7:0]
+@c00025
 CPU.buses.b[7:0]
+@28
+(0)CPU.buses.b[7:0]
+(1)CPU.buses.b[7:0]
+(2)CPU.buses.b[7:0]
+(3)CPU.buses.b[7:0]
+(4)CPU.buses.b[7:0]
+(5)CPU.buses.b[7:0]
+(6)CPU.buses.b[7:0]
+(7)CPU.buses.b[7:0]
+@1401201
+-group_end
+@24
 CPU.buses.d[7:0]
 @28
 CPU.alu.carry

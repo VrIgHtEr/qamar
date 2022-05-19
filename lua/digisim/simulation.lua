@@ -31,6 +31,19 @@ local signal = require("digisim.signal")
 
 function simulation:init_nets()
 	io.stderr:write("initializing nets...\n")
+	if not self.roots then
+		local count = 0
+		self.roots = {}
+		for name, x in pairs(self.components) do
+			if #x.inports == 0 then
+				self.roots[name] = x
+				count = count + 1
+			end
+		end
+		if count == 0 then
+			error("must have at least one component with zero inputs")
+		end
+	end
 	for _, v in pairs(self.components) do
 		for _, p in ipairs(v.inports) do
 			if v.trace and constants.TRACE_INPUTS then
@@ -334,19 +347,8 @@ function simulation:step()
 
 	---@type table<string,component>
 	local dirty = {}
-	local roots = {}
-	local count = 0
-	for name, x in pairs(self.components) do
-		if #x.inports == 0 then
-			roots[name] = x
-			count = count + 1
-		end
-	end
-	if count == 0 then
-		error("must have at least one component with zero inputs")
-	end
 	if self.time == 0 then
-		for k, v in pairs(roots) do
+		for k, v in pairs(self.roots) do
 			dirty[k] = v
 		end
 	else
@@ -355,6 +357,7 @@ function simulation:step()
 			self.time = nexttimestamp - 1
 		end
 	end
+	local count
 	repeat
 		local nextdirty = {}
 		self.time = self.time + 1
