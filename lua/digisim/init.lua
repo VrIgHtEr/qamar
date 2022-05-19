@@ -123,7 +123,7 @@ sim:new_pc(pc, { width = constants.BUS_WIDTH })
 
 local max = 0
 while sim.time < constants.SIM_TIME do
-	io.stderr:write("TIME: " .. sim.time)
+	io.stderr:write("TIME: " .. sim.time .. "\n")
 	local x
 	_, x = sim:step()
 	max = math.max(max, x)
