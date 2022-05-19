@@ -323,7 +323,6 @@ local function latch_values(time, p)
 			else
 				x.net.latched_value = signal.unknown
 			end
-			x.net.latched_value = sig
 			x.net.timestamp = time
 		end
 	end
