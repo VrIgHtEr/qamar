@@ -21,7 +21,7 @@ return function(simulation)
 			local outputs = math.pow(2, width)
 			opts.names = { inputs = { { "in", width } }, outputs = { { "q", outputs } } }
 
-			self:add_component(name, nil, opts)
+			self:add_component(name, opts)
 			local n = name .. ".n"
 			self:new_not(n):cp(1, name, "in", width, n, "a", 1)
 			if width == 1 then

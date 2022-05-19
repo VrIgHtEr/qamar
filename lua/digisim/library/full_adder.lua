@@ -11,7 +11,7 @@ return function(simulation)
 		function(circuit, adder, opts)
 			opts = opts or {}
 			opts.names = { inputs = { "a", "b", "c" }, outputs = { "sum", "carry" } }
-			circuit:add_component(adder, nil, opts)
+			circuit:add_component(adder, opts)
 
 			local ha = adder .. ".ha"
 			local hb = adder .. ".hb"

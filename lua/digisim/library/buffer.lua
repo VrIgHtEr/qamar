@@ -22,7 +22,7 @@ return function(simulation)
 			end
 			opts.names = { inputs = { { "a", width } }, outputs = { { "q", width } } }
 			if constants.NAND_ONLY then
-				s:add_component(n, nil, opts)
+				s:add_component(n, opts)
 				for i = 1, width do
 					local a = n .. ".a" .. (i - 1)
 					local b = n .. ".b" .. (i - 1)
@@ -34,9 +34,9 @@ return function(simulation)
 				end
 				return s
 			else
-				return s:add_component(n, function(_, a)
+				return s:add_component(n, opts, function(_, a)
 					return a
-				end, opts)
+				end)
 			end
 		end
 	)

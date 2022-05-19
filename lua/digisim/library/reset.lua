@@ -24,13 +24,13 @@ return function(simulation)
 				error("reset period too small")
 			end
 			local initialized = false
-			circuit:add_component(name, function()
+			circuit:add_component(name, opts, function()
 				if initialized then
 					return signal.high
 				end
 				initialized = true
 				return signal.low, period
-			end, opts)
+			end)
 		end
 	)
 end

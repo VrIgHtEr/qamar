@@ -21,14 +21,14 @@ return function(simulation)
 				error("invalid width")
 			end
 			opts.names = { inputs = { { "in", width } }, outputs = { "q" } }
-			return self:add_component(name, function(_, a)
+			return self:add_component(name, opts, function(_, a)
 				for _, x in ipairs(a) do
 					if x ~= signal.high then
 						return signal.high
 					end
 				end
 				return signal.low
-			end, opts)
+			end)
 		end
 	)
 end

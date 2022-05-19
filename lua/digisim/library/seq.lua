@@ -28,7 +28,7 @@ return function(simulation)
 				},
 			}
 
-			sim:add_component(seq, nil, opts)
+			sim:add_component(seq, opts)
 
 			local n = seq .. "."
 			local nrst = n .. "nrst"

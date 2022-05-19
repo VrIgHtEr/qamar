@@ -19,7 +19,7 @@ return function(simulation)
 			end
 			opts.names = { inputs = { { "a", width }, { "b", width }, "cin" }, outputs = { { "sum", width }, "carry" } }
 
-			circuit:add_component(name, nil, opts)
+			circuit:add_component(name, opts)
 			local n = name .. "."
 
 			circuit:new_full_adder(n .. 0)

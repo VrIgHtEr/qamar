@@ -28,7 +28,7 @@ return function(simulation)
 					{ "~q", width },
 				},
 			}
-			circuit:add_component(latch, nil, opts)
+			circuit:add_component(latch, opts)
 
 			for i = 1, width do
 				local nl = latch .. ".l" .. (i - 1)

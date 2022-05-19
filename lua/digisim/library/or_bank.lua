@@ -19,7 +19,7 @@ return function(simulation)
 				error("invalid width")
 			end
 			opts.names = { inputs = { { "a", width }, { "b", width } }, outputs = { { "q", width } } }
-			self:add_component(name, nil, opts)
+			self:add_component(name, opts)
 			for i = 1, width do
 				local n = name .. ".a" .. (i - 1)
 				self:new_or(n)

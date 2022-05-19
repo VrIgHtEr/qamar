@@ -23,7 +23,7 @@ return function(simulation)
 			for i = 1, datapins do
 				opts.names.inputs[width + i] = "i" .. (i - 1)
 			end
-			circuit:add_component(name, nil, opts)
+			circuit:add_component(name, opts)
 
 			local zero = name .. ".lo"
 			local one = name .. ".hi"

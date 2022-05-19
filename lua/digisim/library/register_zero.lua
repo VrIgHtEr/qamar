@@ -22,7 +22,7 @@ return function(simulation)
 				inputs = { "oea", "oeb" },
 				outputs = { { "outa", width }, { "outb", width } },
 			}
-			self:add_component(name, nil, opts)
+			self:add_component(name, opts)
 
 			local oa = name .. ".bufa"
 			local ob = name .. ".bufb"

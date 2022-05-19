@@ -33,7 +33,7 @@ return function(simulation)
 			for i = 1, width do
 				vals[i] = math.random(0, 1)
 			end
-			circuit:add_component(name, function(time)
+			circuit:add_component(name, opts, function(time)
 				local t = time % period
 				if t == 0 then
 					for i = 1, width do
@@ -45,7 +45,7 @@ return function(simulation)
 				else
 					return vals
 				end
-			end, opts)
+			end)
 		end
 	)
 end

@@ -31,7 +31,7 @@ return function(simulation)
 				error("invalid chain_length")
 			end
 
-			circuit:add_component(name, nil, opts)
+			circuit:add_component(name, opts)
 			local clk = name .. "." .. "clk"
 			circuit:new_clock(clk, { period = period }):c(clk, "q", name, "q")
 

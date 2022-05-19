@@ -34,7 +34,7 @@ return function(simulation)
 				},
 			}
 
-			sim:add_component(sram, nil, opts)
+			sim:add_component(sram, opts)
 			local n = sram .. "."
 			local f0 = n .. "adder"
 			local f1 = n .. "and"

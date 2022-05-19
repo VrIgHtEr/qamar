@@ -11,7 +11,7 @@ return function(simulation)
 		function(circuit, name, opts)
 			opts = opts or {}
 			opts.names = { inputs = { "j", "k", "clock_rising", "clock_falling" }, outputs = { "q", "~q" } }
-			circuit:add_component(name, nil, opts)
+			circuit:add_component(name, opts)
 			local q = name .. ".q"
 			local m = name .. ".m"
 			local qj = name .. ".qj"

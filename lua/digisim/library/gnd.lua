@@ -30,9 +30,9 @@ return function(simulation)
 				end
 				ret = t
 			end
-			return self:add_component(name, function()
+			return self:add_component(name, opts, function()
 				return ret
-			end, opts)
+			end)
 		end
 	)
 end

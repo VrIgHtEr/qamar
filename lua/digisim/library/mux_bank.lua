@@ -40,7 +40,7 @@ return function(simulation)
 			end
 			inputs[numinputs + 1] = { "sel", width }
 
-			circuit:add_component(mux, nil, opts)
+			circuit:add_component(mux, opts)
 
 			local dn = n .. "n"
 			local a = n .. "a"

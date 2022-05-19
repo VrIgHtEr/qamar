@@ -108,7 +108,7 @@ function simulation:init_nets()
 	io.stderr:write("simulation started!\n")
 end
 
-function simulation:add_component(name, handler, opts)
+function simulation:add_component(name, opts, handler)
 	if self.simulation_started then
 		error("simulation started - cannot add new component")
 	end

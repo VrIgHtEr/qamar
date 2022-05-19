@@ -30,9 +30,9 @@ return function(simulation)
 					z[i] = signal.z
 				end
 			end
-			return self:add_component(name, function(_, a, en)
+			return self:add_component(name, opts, function(_, a, en)
 				return signal.low == en and z or a
-			end, opts)
+			end)
 		end
 	)
 end

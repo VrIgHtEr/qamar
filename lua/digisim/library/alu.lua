@@ -34,7 +34,7 @@ return function(simulation)
 				},
 			}
 
-			sim:add_component(alu, nil, opts)
+			sim:add_component(alu, opts)
 			local n = alu .. "."
 			do
 				local p = n .. "pulldowns."

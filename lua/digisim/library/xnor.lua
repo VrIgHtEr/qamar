@@ -23,7 +23,7 @@ return function(simulation)
 			end
 			opts.names = { inputs = { { "in", width } }, outputs = { "q" } }
 			if constants.NAND_ONLY then
-				self:add_component(name, nil, opts)
+				self:add_component(name, opts)
 				local x = name .. ".x"
 				self:new_xor(x, { width = width })
 				self:c(name, "in", x, "in")
@@ -33,7 +33,7 @@ return function(simulation)
 				self:c(n, "q", name, "q")
 				return self
 			else
-				return self:add_component(name, function(_, a)
+				return self:add_component(name, opts, function(_, a)
 					local ret = false
 					for _, x in ipairs(a) do
 						if x == signal.high then
@@ -41,7 +41,7 @@ return function(simulation)
 						end
 					end
 					return ret and signal.low or signal.high
-				end, opts)
+				end)
 			end
 		end
 	)

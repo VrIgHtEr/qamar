@@ -22,7 +22,7 @@ return function(simulation)
 				inputs = { { "in", width }, "rising", "write", "oea", "oeb", "~rst" },
 				outputs = { { "outa", width }, { "outb", width } },
 			}
-			self:add_component(name, nil, opts)
+			self:add_component(name, opts)
 
 			local write = name .. ".wa"
 			self:new_and(write):cp(1, name, "rising", 1, write, "in", 1):cp(1, name, "write", 1, write, "in", 2)

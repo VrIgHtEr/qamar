@@ -38,7 +38,7 @@ return function(simulation)
 				},
 				outputs = { { "outa", width }, { "outb", width } },
 			}
-			self:add_component(name, nil, opts)
+			self:add_component(name, opts)
 
 			local pull = name .. ".pull"
 			self:new_pulldown(pull .. ".sela", { width = selwidth }):c(pull .. ".sela", "q", name, "sela")

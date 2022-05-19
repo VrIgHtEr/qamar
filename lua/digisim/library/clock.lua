@@ -24,10 +24,10 @@ return function(simulation)
 				error("clock period too small")
 			end
 			local val = signal.high
-			circuit:add_component(name, function()
+			circuit:add_component(name, opts, function()
 				val = val == signal.high and signal.low or signal.high
 				return val, period / 2
-			end, opts)
+			end)
 		end
 	)
 end

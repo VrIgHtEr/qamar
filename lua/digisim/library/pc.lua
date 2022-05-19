@@ -24,7 +24,7 @@ return function(simulation)
 				},
 				outputs = {},
 			}
-			sim:add_component(pc, nil, opts)
+			sim:add_component(pc, opts)
 
 			local ndir = pc .. ".ndir"
 			sim:new_not(ndir):c(pc, "dir", ndir, "a")

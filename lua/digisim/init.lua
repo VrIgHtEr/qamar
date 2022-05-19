@@ -36,7 +36,7 @@ sim
 
 -- buses ---------------------------------------------------------------------------------------------
 sim
-	:add_component(buses, nil, {
+	:add_component(buses, {
 		names = {
 			inputs = {},
 			outputs = {
@@ -79,15 +79,7 @@ local program = {
 local loopindex = 2
 local c = 0
 
-sim:add_component(cu, function()
-	c = c + 1
-	if c > #program then
-		c = loopindex
-	end
-	local ret = { unpack(program[c]) }
-	ret[#ret + 1] = constants.CLOCK_PERIOD_TICKS
-	return unpack(ret)
-end, {
+sim:add_component(cu, {
 	trace = true,
 	names = {
 		inputs = {},
@@ -101,7 +93,15 @@ end, {
 			{ "notb", 1 },
 		},
 	},
-})
+}, function()
+	c = c + 1
+	if c > #program then
+		c = loopindex
+	end
+	local ret = { unpack(program[c]) }
+	ret[#ret + 1] = constants.CLOCK_PERIOD_TICKS
+	return unpack(ret)
+end)
 
 sim
 	:c(cu, "op", alu, "sel")

@@ -23,7 +23,7 @@ return function(simulation)
 			end
 			opts.names = { inputs = { { "a", width } }, outputs = { { "q", width } } }
 			if constants.NAND_ONLY then
-				s:add_component(n, nil, opts)
+				s:add_component(n, opts)
 				for i = 1, width do
 					local x = n .. ".i" .. (i - 1)
 					s:new_nand(x)
@@ -33,7 +33,7 @@ return function(simulation)
 				end
 				return s
 			else
-				return s:add_component(n, function(_, a)
+				return s:add_component(n, opts, function(_, a)
 					if width == 1 then
 						return a == signal.low and signal.high or signal.low
 					else
@@ -43,7 +43,7 @@ return function(simulation)
 						end
 						return ret
 					end
-				end, opts)
+				end)
 			end
 		end
 	)

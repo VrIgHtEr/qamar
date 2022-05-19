@@ -59,12 +59,12 @@ return function(simulation)
 			end
 			opts.names = { inputs = { { "in", width } }, outputs = { "q" } }
 			if constants.NAND_ONLY then
-				self:add_component(name, nil, opts)
+				self:add_component(name, opts)
 				local component, port, offset = build(self, name, name, 1, width)
 				self:cp(1, component, port, offset, name, "q", 1)
 				return self
 			else
-				return self:add_component(name, function(_, a)
+				return self:add_component(name, opts, function(_, a)
 					local ret = false
 					for _, x in ipairs(a) do
 						if x == signal.high then
@@ -72,7 +72,7 @@ return function(simulation)
 						end
 					end
 					return ret and signal.high or signal.low
-				end, opts)
+				end)
 			end
 		end
 	)

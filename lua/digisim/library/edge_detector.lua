@@ -9,7 +9,7 @@ return function(simulation)
 	simulation:register_component("edge_detector", function(circuit, eclk, opts)
 		opts = opts or {}
 		opts.names = { inputs = { "clk" }, outputs = { "rising", "falling" } }
-		circuit:add_component(eclk, nil, opts)
+		circuit:add_component(eclk, opts)
 
 		local iclk = eclk .. ".~clk"
 		local c = eclk .. ".clk"
