@@ -102,7 +102,6 @@ sim:add_component(cu, {
 	ret[#ret + 1] = constants.CLOCK_PERIOD_TICKS
 	return unpack(ret)
 end)
-
 sim
 	:c(cu, "op", alu, "sel")
 	:c(cu, "cin", alu, "cin")
@@ -112,6 +111,8 @@ sim
 	:c(cu, "selb", regs, "selb")
 	:c(cu, "selw", regs, "selw")
 
+sim:new_instruction_decoder("IDECODE")
+sim:c(alu, "out", "IDECODE", "in")
 -----------------------------------------------------------------------------------------------------
 local seq = "SEQ"
 sim:new_seq(seq, { width = 8 })
