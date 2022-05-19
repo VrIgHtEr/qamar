@@ -2,6 +2,7 @@
 ---@field new_xnor fun(circuit:simulation,name:string,opts:table|nil):simulation
 
 local signal = require("digisim.signal")
+local constants = require("digisim.constants")
 
 ---@param simulation simulation
 return function(simulation)
@@ -21,15 +22,27 @@ return function(simulation)
 				error("invalid width")
 			end
 			opts.names = { inputs = { { "in", width } }, outputs = { "q" } }
-			return self:add_component(name, function(_, a)
-				local ret = false
-				for _, x in ipairs(a) do
-					if x == signal.high then
-						ret = not ret
+			if constants.NAND_ONLY then
+				self:add_component(name, nil, opts)
+				local x = name .. ".x"
+				self:new_xor(x, { width = width })
+				self:c(name, "in", x, "in")
+				local n = name .. ".n"
+				self:new_not(n)
+				self:c(x, "q", n, "a")
+				self:c(n, "q", name, "q")
+				return self
+			else
+				return self:add_component(name, function(_, a)
+					local ret = false
+					for _, x in ipairs(a) do
+						if x == signal.high then
+							ret = not ret
+						end
 					end
-				end
-				return ret and signal.low or signal.high
-			end, opts)
+					return ret and signal.low or signal.high
+				end, opts)
+			end
 		end
 	)
 end
