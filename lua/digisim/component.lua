@@ -120,12 +120,8 @@ function component.new(name, handler, opts)
 			for i = 1, #parts do
 				if type(parts[i]) == "table" then
 					for j, x in ipairs(parts[i]) do
-						if x == signal.unknown or x == signal.z or x == signal.weak then
+						if x == signal.unknown or x == signal.z then
 							parts[i][j] = math.random(0, 1)
-						elseif x == signal.weaklow then
-							parts[i][j] = signal.low
-						elseif x == signal.weakhigh then
-							parts[i][j] = signal.high
 						end
 					end
 				elseif parts[i] == signal.unknown or parts[i] == signal.z then
