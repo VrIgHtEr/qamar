@@ -199,6 +199,51 @@ return function(simulation)
 			local S3 = n .. "S3"
 			self:new_or(S3):cp(1, S1, "q", 1, S3, "in", 1):cp(1, S2, "q", 1, S3, "in", 2)
 			self:c(S3, "q", dec, "s")
+			local R1 = n .. "R1"
+			self
+				:new_and(R1, { width = 5 })
+				:cp(1, N, "q", 1, R1, "in", 1)
+				:cp(1, W, "q", 1, R1, "in", 2)
+				:cp(1, dec, "in", 13, R1, "in", 3)
+				:cp(1, nec, "q", 14, R1, "in", 4)
+				:cp(1, dec, "in", 15, R1, "in", 5)
+			local R2 = n .. "R2"
+			self
+				:new_and(R2, { width = 3 })
+				:cp(1, N, "q", 1, R2, "in", 1)
+				:cp(1, W, "q", 1, R2, "in", 2)
+				:cp(1, nec, "q", 31, R2, "in", 3)
+			local R3 = n .. "R3"
+			self
+				:new_and(R3, { width = 4 })
+				:cp(1, N, "q", 1, R3, "in", 1)
+				:cp(1, nec, "q", 13, R3, "in", 2)
+				:cp(1, dec, "in", 5, R3, "in", 3)
+				:cp(1, S, "q", 1, R3, "in", 4)
+			local R4 = n .. "R4"
+			self
+				:new_and(R4, { width = 3 })
+				:cp(1, K, "q", 1, R4, "in", 1)
+				:cp(1, S, "q", 1, R4, "in", 2)
+				:cp(1, nec, "q", 31, R4, "in", 3)
+			local R5 = n .. "R5"
+			self
+				:new_and(R5, { width = 5 })
+				:cp(1, K, "q", 1, R5, "in", 1)
+				:cp(1, F, "q", 1, R5, "in", 2)
+				:cp(1, C, "q", 1, R5, "in", 3)
+				:cp(1, nec, "q", 31, R5, "in", 4)
+				:cp(1, nec, "q", 13, R5, "in", 5)
+
+			local R6 = n .. "R6"
+			self
+				:new_or(R6, { width = 6 })
+				:cp(1, R1, "q", 1, R6, "in", 1)
+				:cp(1, R2, "q", 1, R6, "in", 2)
+				:cp(1, R3, "q", 1, R6, "in", 3)
+				:cp(1, R4, "q", 1, R6, "in", 4)
+				:cp(1, R5, "q", 1, R6, "in", 5)
+				:c(R6, "q", dec, "r")
 
 			--[[
 A = b1b2
@@ -230,10 +275,6 @@ K = S !b7 !b6 J !b5
    B   B  BB 1113      B
 VKS7NOM6LJ43D5431CBEFGH5WPQRTSU   RISBUJ
 ========================================
-----1--------101--------1------ | 1.....
-----1-----------0-------1------ | 1.....
-----1----------0-------1-----1- | 1.....
--1--------------0------------1- | 1.....
 -1-------------001--1---------- | 1.....
 ------1------0-0--------------- | .1....
 -----1-------1-----1----------- | .1....
@@ -246,10 +287,18 @@ VKS7NOM6LJ43D5431CBEFGH5WPQRTSU   RISBUJ
 --------------1-----------1---- | .1....
 ----------01---0----1-------1-- | .1....
 
-----1---------------1--0------- | ..1...
-----1--------0-0-------0------- | ..1...
-
 ]]
+			local illegal = n .. "illegal"
+			self
+				:new_nor(illegal, { width = 6 })
+				:cp(1, illegal, "in", 1, dec, "r", 1)
+				:cp(1, illegal, "in", 2, dec, "i", 1)
+				:cp(1, illegal, "in", 3, dec, "s", 1)
+				:cp(1, illegal, "in", 4, dec, "b", 1)
+				:cp(1, illegal, "in", 5, dec, "u", 1)
+				:c(illegal, "q", dec, "illegal")
+				:cp(1, illegal, "in", 6, dec, "j", 1)
+			self:new_pulldown(n .. "PI"):c(n .. "PI", "q", dec, "i")
 			return self
 		end
 	)
