@@ -244,8 +244,75 @@ return function(simulation)
 				:cp(1, R4, "q", 1, R6, "in", 4)
 				:cp(1, R5, "q", 1, R6, "in", 5)
 				:c(R6, "q", dec, "r")
+			local I0 = n .. "I0"
+			self:new_and(I0, { width = 2 }):cp(1, O, "q", 1, I0, "in", 1):cp(1, nec, "q", 13, I0, "in", 2)
+			local I1 = n .. "I1"
+			self:new_and(I1, { width = 2 }):cp(1, O, "q", 1, I1, "in", 1):cp(1, dec, "in", 14, I1, "in", 2)
+			local I2 = n .. "I2"
+			self:new_and(I2, { width = 2 }):cp(1, Q, "q", 1, I2, "in", 1):cp(1, dec, "in", 13, I2, "in", 2)
+			local I3 = n .. "I3"
+			self:new_and(I3, { width = 2 }):cp(1, Q, "q", 1, I3, "in", 1):cp(1, dec, "in", 14, I3, "in", 2)
+			local I4 = n .. "I4"
+			self
+				:new_and(I4, { width = 3 })
+				:cp(1, O, "q", 1, I4, "in", 1)
+				:cp(1, E, "q", 1, I4, "in", 2)
+				:cp(1, dec, "in", 15, I4, "in", 3)
+			local I5 = n .. "I5"
+			self
+				:new_and(I5, { width = 3 })
+				:cp(1, O, "q", 1, I5, "in", 1)
+				:cp(1, E, "q", 1, I5, "in", 2)
+				:cp(1, nec, "q", 13, I5, "in", 3)
+			local I6 = n .. "I6"
+			self
+				:new_and(I6, { width = 3 })
+				:cp(1, M, "q", 1, I6, "in", 1)
+				:cp(1, nec, "q", 14, I6, "in", 2)
+				:cp(1, nec, "q", 5, I6, "in", 3)
+			local I7 = n .. "I7"
+			self
+				:new_and(I7, { width = 3 })
+				:cp(1, M, "q", 1, I7, "in", 1)
+				:cp(1, nec, "q", 15, I7, "in", 2)
+				:cp(1, nec, "q", 13, I7, "in", 3)
+			local I8 = n .. "I8"
+			self
+				:new_and(I8, { width = 4 })
+				:cp(1, E, "q", 1, I8, "in", 1)
+				:cp(1, Q, "q", 1, I8, "in", 2)
+				:cp(1, nec, "q", 15, I8, "in", 3)
+				:cp(1, nec, "q", 13, I8, "in", 4)
+			local I9 = n .. "I9"
+			self
+				:new_and(I9, { width = 5 })
+				:cp(1, F, "q", 1, I9, "in", 1)
+				:cp(1, T, "q", 1, I9, "in", 2)
+				:cp(1, nec, "q", 4, I9, "in", 3)
+				:cp(1, nec, "q", 13, I9, "in", 4)
+				:cp(1, dec, "in", 3, I9, "in", 5)
+			local IA = n .. "IA"
+			self
+				:new_or(IA, { width = 10 })
+				:cp(1, I0, "q", 1, IA, "in", 1)
+				:cp(1, I1, "q", 1, IA, "in", 2)
+				:cp(1, I2, "q", 1, IA, "in", 3)
+				:cp(1, I3, "q", 1, IA, "in", 4)
+				:cp(1, I4, "q", 1, IA, "in", 5)
+				:cp(1, I5, "q", 1, IA, "in", 6)
+				:cp(1, I6, "q", 1, IA, "in", 7)
+				:cp(1, I7, "q", 1, IA, "in", 8)
+				:cp(1, I8, "q", 1, IA, "in", 9)
+				:cp(1, I9, "q", 1, IA, "in", 10)
+			self:c(IA, "q", dec, "i")
 
 			--[[
+========================================
+             BBBB
+   B   B  BB 1113      B
+VKS7NOM6LJ43D5431CBEFGH5WPQRTSU   RISBUJ
+========================================
+----------01---0----1-------1-- | .1....
 A = b1b2
 J = b4 b3
 F = !b15!b14
@@ -270,22 +337,6 @@ N = b6 L
 O = b5 M
 K = S !b7 !b6 J !b5
 
-========================================
-             BBBB
-   B   B  BB 1113      B
-VKS7NOM6LJ43D5431CBEFGH5WPQRTSU   RISBUJ
-========================================
--1-------------001--1---------- | 1.....
-------1------0-0--------------- | .1....
------1-------1-----1----------- | .1....
------1----------0--1----------- | .1....
------1---------0--------------- | .1....
------1--------1---------------- | .1....
-------1-------0--------0------- | .1....
--------------0--0--1------1---- | .1....
----------------1----------1---- | .1....
---------------1-----------1---- | .1....
-----------01---0----1-------1-- | .1....
 
 ]]
 			local illegal = n .. "illegal"
@@ -298,7 +349,6 @@ VKS7NOM6LJ43D5431CBEFGH5WPQRTSU   RISBUJ
 				:cp(1, illegal, "in", 5, dec, "u", 1)
 				:c(illegal, "q", dec, "illegal")
 				:cp(1, illegal, "in", 6, dec, "j", 1)
-			self:new_pulldown(n .. "PI"):c(n .. "PI", "q", dec, "i")
 			return self
 		end
 	)
