@@ -11,6 +11,7 @@ local cu = "CPU.cu"
 local alu = "CPU.alu"
 local regs = "CPU.registers"
 local buses = "CPU.buses"
+local memory = "CPU.memory"
 
 local sim = simulation.new()
 -- constants ----------------------------------------------------------------------------------------
@@ -58,7 +59,11 @@ for i = 1, constants.BUS_WIDTH do
 	local d = buses .. ".pulldowns.d" .. (i - 1)
 	sim:new_pulldown(d):cp(1, d, "q", 1, buses, "d", i)
 end
+-- buses ---------------------------------------------------------------------------------------------
 
+sim:new_sram(memory, { width = constants.BUS_WIDTH, data_width = 8, file = "./lua/sram.dat" })
+
+-- program -------------------------------------------------------------------------------------------
 local function reg(r)
 	local ret = {}
 	for i = 1, constants.REGISTER_SELECT_WIDTH do
@@ -67,7 +72,6 @@ local function reg(r)
 	return ret
 end
 
--- program -------------------------------------------------------------------------------------------
 local program = {
 	--sela    selb    selw    alu_op   cin na nb
 	{ reg(2), reg(0), reg(2), { 0, 0 }, 1, 0, 0 },
@@ -121,7 +125,11 @@ sim:c(clk, "rising", seq, "rising")
 -----------------------------------------------------------------------------------------------------
 local pc = "PC"
 sim:new_pc(pc, { width = constants.BUS_WIDTH })
-
+-----------------------------------------------------------------------------------------------------
+sim:c(memory, "write", "GND", "q")
+sim:c(memory, "oe", "VCC", "q")
+sim:c(memory, "address", buses, "d")
+-----------------------------------------------------------------------------------------------------
 local max = 0
 while sim.time < constants.SIM_TIME do
 	io.stderr:write("TIME: " .. sim.time .. "\n")
