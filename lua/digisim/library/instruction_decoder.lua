@@ -153,6 +153,8 @@ return function(simulation)
 				end
 			end
 
+			---@param name string
+			---@param minterms string[]
 			local function build_2ll(name, minterms)
 				for i, x in ipairs(minterms) do
 					build_minterm(name .. i, x)
