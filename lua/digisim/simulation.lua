@@ -30,7 +30,6 @@ end
 local signal = require("digisim.signal")
 
 function simulation:init_nets()
-	io.stderr:write("initializing nets...\n")
 	if not self.roots then
 		local count = 0
 		self.roots = {}
@@ -105,7 +104,6 @@ function simulation:init_nets()
 			end
 		end
 	end
-	io.stderr:write("simulation started!\n")
 end
 
 function simulation:add_component(name, opts, handler)
@@ -296,7 +294,6 @@ local restable = {
 ---@param a signal
 ---@param b signal
 local function resolve(a, b)
-	--	xpcall(function()
 	return a == nil
 		or b == nil
 		or a < signal.unknown
@@ -304,11 +301,6 @@ local function resolve(a, b)
 		or b < signal.unknown
 		or b > signal.high and signal.unknown
 		or restable[(7 * (a - signal.unknown) + (b - signal.unknown)) + 1]
-	--	end, function(err)
-	--		io.stderr:write("ERROR: " .. tostring(err) .. "\n")
-	--		io.stderr:write(debug.traceback() .. "\n")
-	--		return err
-	--	end)
 end
 
 ---@param time number
