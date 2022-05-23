@@ -123,7 +123,6 @@ return function(simulation)
 			---@param name string
 			---@param minterm string
 			local function build_minterm(name, minterm)
-				io.stderr:write("GENERATING MINTERM: " .. minterm .. "\n")
 				local terms = {}
 				local idx = 1
 				while true do
@@ -150,7 +149,6 @@ return function(simulation)
 				end
 				self:new_and(name, { width = #terms })
 				for i, term in ipairs(terms) do
-					io.stderr:write(term[1] .. "," .. term[2] .. "," .. term[3] .. "\n")
 					self:cp(1, name, "in", i, term[1], term[2], term[3])
 				end
 			end
