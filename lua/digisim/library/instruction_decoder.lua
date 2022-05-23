@@ -123,6 +123,7 @@ return function(simulation)
 			---@param name string
 			---@param minterm string
 			local function build_minterm(name, minterm)
+				io.stderr:write("GENERATING MINTERM: " .. minterm .. "\n")
 				local terms = {}
 				local idx = 1
 				while true do
@@ -149,6 +150,7 @@ return function(simulation)
 				end
 				self:new_and(name, { width = #terms })
 				for i, term in ipairs(terms) do
+					io.stderr:write(term[1] .. "," .. term[2] .. "," .. term[3] .. "\n")
 					self:cp(1, name, "in", i, term[1], term[2], term[3])
 				end
 			end
@@ -166,35 +168,35 @@ return function(simulation)
 			local R = n .. "r"
 			build_2ll(R, {
 				"A'B'C'DEFGH'I'K'L'M'N'O'P'Q'",
+				"A'BCD'E'FGK'L'M'N'O'P'Q'",
+				"A'BCD'E'FGHI'JK'M'N'O'P'Q'",
+				"A'BCD'E'FGH'I'J'K'M'N'O'P'Q'",
 				"A'B'C'DEFGH'I'J'K'L'M'N'",
-				"A'CD'FGH'I'J'K'M'N'O'P'Q'",
-				"A'CD'FGHI'JK'M'N'O'P'Q'",
-				"A'CD'FGK'L'M'N'O'P'Q'",
 			})
 
 			self:c(R, "q", dec, "r")
 
 			local I = n .. "i"
 			build_2ll(I, {
-				"BCD'E'FGH'K'L'M'N'O'P'Q'",
-				"A'CD'FGHI'JK'M'N'O'P'Q'",
-				"A'CD'FGK'L'M'N'O'P'Q'",
-				"ABC'D'FGH'I'J'",
-				"ABCD'E'FGJ",
+				"A'B'CD'E'FGHK'M'N'O'P'Q'",
+				"A'B'CD'E'FGK'L'M'N'O'P'Q'",
+				"A'B'CD'E'FGJ'",
+				"ABCD'E'FGH'K'L'M'N'O'P'Q'",
+				"ABC'D'EFGH'I'J'",
+				"A'B'D'E'FGH'J'",
 				"ABCD'E'FGI",
+				"A'B'CD'E'FGI",
 				"A'B'C'D'E'FGI'",
-				"A'C'D'E'FGH'J'",
-				"A'B'CD'FGI",
-				"A'B'CD'FGJ'",
+				"ABCD'E'FGJ",
 			})
 			self:c(I, "q", dec, "i")
 
 			local S = n .. "s"
-			build_2ll(S, { "BC'D'E'FGH'I'", "A'C'D'E'FGH'J'" })
+			build_2ll(S, { "A'BC'D'E'FGH'J'", "A'BC'D'E'FGH'I'" })
 			self:c(S, "q", dec, "s")
 
 			local B = n .. "b"
-			build_2ll(B, { "ABC'D'E'FGH", "BC'D'E'FGH'I'" })
+			build_2ll(B, { "ABC'D'E'FGH", "ABC'D'E'FGI'" })
 			self:c(B, "q", dec, "b")
 
 			local U = n .. "u"
