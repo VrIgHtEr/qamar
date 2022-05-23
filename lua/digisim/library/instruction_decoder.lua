@@ -97,258 +97,114 @@ return function(simulation)
 			self:c(immj, "q", dec, "imm")
 
 			local n = dec .. "."
-			local nec = n .. "i"
+			local nec = n .. "inv"
 			self:new_not(nec, { width = 32 }):c(dec, "in", nec, "a")
 
-			local A = n .. "A"
-			self:new_and(A):cp(1, dec, "in", 2, A, "in", 1):cp(1, dec, "in", 1, A, "in", 2)
-			local J = n .. "J"
-			self:new_and(J):cp(1, dec, "in", 4, J, "in", 1):cp(1, dec, "in", 3, J, "in", 2)
-			local F = n .. "F"
-			self:new_and(F):cp(1, nec, "q", 14, F, "in", 1):cp(1, nec, "q", 15, F, "in", 2)
-			local B = n .. "B"
-			self
-				:new_and(B, { width = 3 })
-				:cp(1, nec, "q", 28, B, "in", 1)
-				:cp(1, nec, "q", 27, B, "in", 2)
-				:cp(1, nec, "q", 26, B, "in", 3)
-			local C = n .. "C"
-			self
-				:new_and(C, { width = 3 })
-				:cp(1, nec, "q", 32, C, "in", 1)
-				:cp(1, nec, "q", 30, C, "in", 2)
-				:cp(1, nec, "q", 29, C, "in", 3)
-			local E = n .. "E"
-			self:new_and(E):cp(1, B, "q", 1, E, "in", 1):cp(1, C, "q", 1, E, "in", 2)
-			local S = n .. "S"
-			self:new_and(S):cp(1, E, "q", 1, S, "in", 1):cp(1, F, "q", 1, S, "in", 2)
-			local H = n .. "H"
-			self
-				:new_and(H, { width = 3 })
-				:cp(1, S, "q", 1, H, "in", 1)
-				:cp(1, dec, "in", 7, H, "in", 2)
-				:cp(1, dec, "in", 6, H, "in", 3)
-			local T = n .. "T"
-			self:new_and(T):cp(1, H, "q", 1, T, "in", 1):cp(1, nec, "q", 5, T, "in", 2)
-			local V = n .. "V"
-			self:new_and(V):cp(1, T, "q", 1, V, "in", 1):cp(1, J, "q", 1, V, "in", 2)
-			self:c(V, "q", dec, "j")
-			local D = n .. "D"
-			self
-				:new_and(D, { width = 3 })
-				:cp(1, S, "q", 1, D, "in", 1)
-				:cp(1, nec, "q", 7, D, "in", 2)
-				:cp(1, nec, "q", 4, D, "in", 3)
+			local mapping = {
+				A = 7,
+				B = 6,
+				C = 5,
+				D = 4,
+				E = 3,
+				F = 2,
+				G = 1,
+				H = 15,
+				I = 14,
+				J = 13,
+				K = 32,
+				L = 31,
+				M = 30,
+				N = 29,
+				O = 28,
+				P = 27,
+				Q = 26,
+			}
 
-			local G = n .. "G"
-			self
-				:new_and(G, { width = 3 })
-				:cp(1, D, "q", 1, G, "in", 1)
-				:cp(1, dec, "in", 3, G, "in", 2)
-				:cp(1, dec, "in", 5, G, "in", 3)
-			self:c(G, "q", dec, "u")
+			---@param name string
+			---@param minterm string
+			local function build_minterm(name, minterm)
+				local terms = {}
+				local idx = 1
+				while true do
+					local term = minterm:match("[A-Z]'?", idx)
+					if not term then
+						break
+					end
+					local l = term:len()
+					idx = idx + l
+					local varname = term:sub(1, 1)
+					local varmap = mapping[varname]
+					if not varmap then
+						error("mapping not found")
+					end
+					local inverted = l > 1
+					table.insert(terms, {
+						inverted and nec or dec,
+						inverted and "q" or "in",
+						varmap,
+					})
+				end
+				if idx <= minterm:len() then
+					error("could not parse entire minterm")
+				end
+				self:new_and(name, { width = #terms })
+				for i, term in ipairs(terms) do
+					self:cp(1, name, "in", i, term[1], term[2], term[3])
+				end
+			end
 
-			local I = n .. "I"
-			self:new_and(I):cp(1, nec, "q", 3, I, "in", 1):cp(1, nec, "q", 4, I, "in", 2)
-			local P = n .. "P"
-			self:new_and(P):cp(1, H, "q", 1, P, "in", 1):cp(1, I, "q", 1, P, "in", 2)
-			local R = n .. "R"
-			self:new_and(R):cp(1, P, "q", 1, R, "in", 1):cp(1, nec, "q", 5, R, "in", 2)
-			local U = n .. "U"
-			self:new_and(U):cp(1, R, "q", 1, U, "in", 1):cp(1, S, "q", 1, U, "in", 2)
-			local B1 = n .. "B1"
-			self:new_and(B1):cp(1, U, "q", 1, B1, "in", 1):cp(1, dec, "in", 15, B1, "in", 2)
-			local B2 = n .. "B2"
-			self:new_and(B2):cp(1, U, "q", 1, B2, "in", 1):cp(1, nec, "q", 14, B2, "in", 2)
-			local B3 = n .. "B3"
-			self:new_or(B3):cp(1, B1, "q", 1, B3, "in", 1):cp(1, B2, "q", 1, B3, "in", 2)
-			self:c(B3, "q", dec, "b")
-			local W = n .. "W"
-			self:new_and(W):cp(1, E, "q", 1, W, "in", 1):cp(1, dec, "in", 5, W, "in", 2)
-			local Q = n .. "Q"
-			self:new_and(Q):cp(1, P, "q", 1, Q, "in", 1):cp(1, dec, "in", 5, Q, "in", 2)
-			local L = n .. "L"
-			self:new_and(L):cp(1, D, "q", 1, L, "in", 1):cp(1, nec, "q", 3, L, "in", 2)
-			local M = n .. "M"
-			self:new_and(M):cp(1, L, "q", 1, M, "in", 1):cp(1, nec, "q", 6, M, "in", 2)
-			local N = n .. "N"
-			self:new_and(N):cp(1, L, "q", 1, N, "in", 1):cp(1, dec, "in", 6, N, "in", 2)
-			local O = n .. "O"
-			self:new_and(O):cp(1, N, "q", 1, O, "in", 1):cp(1, dec, "in", 5, O, "in", 2)
-			local K = n .. "K"
-			self
-				:new_and(K, { width = 5 })
-				:cp(1, S, "q", 1, K, "in", 1)
-				:cp(1, J, "q", 1, K, "in", 2)
-				:cp(1, nec, "q", 5, K, "in", 3)
-				:cp(1, nec, "q", 6, K, "in", 4)
-				:cp(1, nec, "q", 7, K, "in", 5)
-			local S1 = n .. "S1"
-			self
-				:new_and(S1, { width = 3 })
-				:cp(1, N, "q", 1, S1, "in", 1)
-				:cp(1, F, "q", 1, S1, "in", 2)
-				:cp(1, nec, "q", 5, S1, "in", 3)
-			local S2 = n .. "S2"
-			self
-				:new_and(S2, { width = 4 })
-				:cp(1, N, "q", 1, S2, "in", 1)
-				:cp(1, nec, "q", 13, S2, "in", 3)
-				:cp(1, nec, "q", 15, S2, "in", 3)
-				:cp(1, nec, "q", 5, S2, "in", 3)
-			local S3 = n .. "S3"
-			self:new_or(S3):cp(1, S1, "q", 1, S3, "in", 1):cp(1, S2, "q", 1, S3, "in", 2)
-			self:c(S3, "q", dec, "s")
-			local R1 = n .. "R1"
-			self
-				:new_and(R1, { width = 5 })
-				:cp(1, N, "q", 1, R1, "in", 1)
-				:cp(1, W, "q", 1, R1, "in", 2)
-				:cp(1, dec, "in", 13, R1, "in", 3)
-				:cp(1, nec, "q", 14, R1, "in", 4)
-				:cp(1, dec, "in", 15, R1, "in", 5)
-			local R2 = n .. "R2"
-			self
-				:new_and(R2, { width = 3 })
-				:cp(1, N, "q", 1, R2, "in", 1)
-				:cp(1, W, "q", 1, R2, "in", 2)
-				:cp(1, nec, "q", 31, R2, "in", 3)
-			local R3 = n .. "R3"
-			self
-				:new_and(R3, { width = 4 })
-				:cp(1, N, "q", 1, R3, "in", 1)
-				:cp(1, nec, "q", 13, R3, "in", 2)
-				:cp(1, dec, "in", 5, R3, "in", 3)
-				:cp(1, S, "q", 1, R3, "in", 4)
-			local R4 = n .. "R4"
-			self
-				:new_and(R4, { width = 3 })
-				:cp(1, K, "q", 1, R4, "in", 1)
-				:cp(1, S, "q", 1, R4, "in", 2)
-				:cp(1, nec, "q", 31, R4, "in", 3)
-			local R5 = n .. "R5"
-			self
-				:new_and(R5, { width = 5 })
-				:cp(1, K, "q", 1, R5, "in", 1)
-				:cp(1, F, "q", 1, R5, "in", 2)
-				:cp(1, C, "q", 1, R5, "in", 3)
-				:cp(1, nec, "q", 31, R5, "in", 4)
-				:cp(1, nec, "q", 13, R5, "in", 5)
+			local function build_2ll(name, minterms)
+				for i, x in ipairs(minterms) do
+					build_minterm(name .. i, x)
+				end
+				self:new_or(name, { width = #minterms })
+				for i = 1, #minterms do
+					self:cp(1, name .. i, "q", 1, name, "in", i)
+				end
+			end
 
-			local R6 = n .. "R6"
-			self
-				:new_or(R6, { width = 6 })
-				:cp(1, R1, "q", 1, R6, "in", 1)
-				:cp(1, R2, "q", 1, R6, "in", 2)
-				:cp(1, R3, "q", 1, R6, "in", 3)
-				:cp(1, R4, "q", 1, R6, "in", 4)
-				:cp(1, R5, "q", 1, R6, "in", 5)
-				:c(R6, "q", dec, "r")
-			local I0 = n .. "I0"
-			self:new_and(I0, { width = 2 }):cp(1, O, "q", 1, I0, "in", 1):cp(1, nec, "q", 13, I0, "in", 2)
-			local I1 = n .. "I1"
-			self:new_and(I1, { width = 2 }):cp(1, O, "q", 1, I1, "in", 1):cp(1, dec, "in", 14, I1, "in", 2)
-			local I2 = n .. "I2"
-			self:new_and(I2, { width = 2 }):cp(1, Q, "q", 1, I2, "in", 1):cp(1, dec, "in", 13, I2, "in", 2)
-			local I3 = n .. "I3"
-			self:new_and(I3, { width = 2 }):cp(1, Q, "q", 1, I3, "in", 1):cp(1, dec, "in", 14, I3, "in", 2)
-			local I4 = n .. "I4"
-			self
-				:new_and(I4, { width = 3 })
-				:cp(1, O, "q", 1, I4, "in", 1)
-				:cp(1, E, "q", 1, I4, "in", 2)
-				:cp(1, dec, "in", 15, I4, "in", 3)
-			local I5 = n .. "I5"
-			self
-				:new_and(I5, { width = 3 })
-				:cp(1, O, "q", 1, I5, "in", 1)
-				:cp(1, E, "q", 1, I5, "in", 2)
-				:cp(1, nec, "q", 13, I5, "in", 3)
-			local I6 = n .. "I6"
-			self
-				:new_and(I6, { width = 3 })
-				:cp(1, M, "q", 1, I6, "in", 1)
-				:cp(1, nec, "q", 14, I6, "in", 2)
-				:cp(1, nec, "q", 5, I6, "in", 3)
-			local I7 = n .. "I7"
-			self
-				:new_and(I7, { width = 3 })
-				:cp(1, M, "q", 1, I7, "in", 1)
-				:cp(1, nec, "q", 15, I7, "in", 2)
-				:cp(1, nec, "q", 13, I7, "in", 3)
-			local I8 = n .. "I8"
-			self
-				:new_and(I8, { width = 4 })
-				:cp(1, E, "q", 1, I8, "in", 1)
-				:cp(1, Q, "q", 1, I8, "in", 2)
-				:cp(1, nec, "q", 15, I8, "in", 3)
-				:cp(1, nec, "q", 13, I8, "in", 4)
-			local I9 = n .. "I9"
-			self
-				:new_and(I9, { width = 5 })
-				:cp(1, F, "q", 1, I9, "in", 1)
-				:cp(1, T, "q", 1, I9, "in", 2)
-				:cp(1, nec, "q", 4, I9, "in", 3)
-				:cp(1, nec, "q", 13, I9, "in", 4)
-				:cp(1, dec, "in", 3, I9, "in", 5)
-			local IA = n .. "IA"
-			self
-				:new_or(IA, { width = 10 })
-				:cp(1, I0, "q", 1, IA, "in", 1)
-				:cp(1, I1, "q", 1, IA, "in", 2)
-				:cp(1, I2, "q", 1, IA, "in", 3)
-				:cp(1, I3, "q", 1, IA, "in", 4)
-				:cp(1, I4, "q", 1, IA, "in", 5)
-				:cp(1, I5, "q", 1, IA, "in", 6)
-				:cp(1, I6, "q", 1, IA, "in", 7)
-				:cp(1, I7, "q", 1, IA, "in", 8)
-				:cp(1, I8, "q", 1, IA, "in", 9)
-				:cp(1, I9, "q", 1, IA, "in", 10)
-			self:c(IA, "q", dec, "i")
+			local R = n .. "r"
+			build_2ll(R, {
+				"A'B'C'DEFGH'I'K'L'M'N'O'P'Q'",
+				"A'B'C'DEFGH'I'J'K'L'M'N'",
+				"A'CD'FGH'I'J'K'M'N'O'P'Q'",
+				"A'CD'FGHI'JK'M'N'O'P'Q'",
+				"A'CD'FGK'L'M'N'O'P'Q'",
+			})
 
-			--[[
-========================================
-             BBBB
-   B   B  BB 1113      B
-VKS7NOM6LJ43D5431CBEFGH5WPQRTSU   RISBUJ
-========================================
-----------01---0----1-------1-- | .1....
-A = b1b2
-J = b4 b3
-F = !b15!b14
-B = !b28!b27!b26
-C = !b32!b30!b29
-E = BC
-S = E F
-H = S b7 b6
-T = H !b5
-V = T J
-D = S!b7!b4
-G = b3 D b5
-I = !b4 !b3
-P = H I
-R = !b5 P
-U = R S
-W = b5 E
-Q = b5 P
-L = !b3 D
-M = !b6 L
-N = b6 L
-O = b5 M
-K = S !b7 !b6 J !b5
+			self:c(R, "q", dec, "r")
 
+			local I = n .. "i"
+			build_2ll(I, {
+				"BCD'E'FGH'K'L'M'N'O'P'Q'",
+				"A'CD'FGHI'JK'M'N'O'P'Q'",
+				"A'CD'FGK'L'M'N'O'P'Q'",
+				"ABC'D'FGH'I'J'",
+				"ABCD'E'FGJ",
+				"ABCD'E'FGI",
+				"A'B'C'D'E'FGI'",
+				"A'C'D'E'FGH'J'",
+				"A'B'CD'FGI",
+				"A'B'CD'FGJ'",
+			})
+			self:c(I, "q", dec, "i")
 
-]]
-			local illegal = n .. "illegal"
-			self
-				:new_nor(illegal, { width = 6 })
-				:cp(1, illegal, "in", 1, dec, "r", 1)
-				:cp(1, illegal, "in", 2, dec, "i", 1)
-				:cp(1, illegal, "in", 3, dec, "s", 1)
-				:cp(1, illegal, "in", 4, dec, "b", 1)
-				:cp(1, illegal, "in", 5, dec, "u", 1)
-				:c(illegal, "q", dec, "illegal")
-				:cp(1, illegal, "in", 6, dec, "j", 1)
+			local S = n .. "s"
+			build_2ll(S, { "BC'D'E'FGH'I'", "A'C'D'E'FGH'J'" })
+			self:c(S, "q", dec, "s")
+
+			local B = n .. "b"
+			build_2ll(B, { "ABC'D'E'FGH", "BC'D'E'FGH'I'" })
+			self:c(B, "q", dec, "b")
+
+			local U = n .. "u"
+			build_minterm(U, "A'CD'EFG")
+			self:c(U, "q", dec, "u")
+
+			local J = n .. "j"
+			build_minterm(J, "ABC'DEFG")
+			self:c(J, "q", dec, "j")
+
 			return self
 		end
 	)
