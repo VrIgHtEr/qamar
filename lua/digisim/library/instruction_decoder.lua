@@ -174,7 +174,7 @@ return function(simulation)
 				"A'B'C'DEFGH'I'J'K'L'M'N'",
 			})
 
-			self:c(R, "q", dec, "j")
+			self:c(R, "q", dec, "r")
 
 			local I = n .. "i"
 			build_2ll(I, {
@@ -189,19 +189,19 @@ return function(simulation)
 				"A'B'C'D'E'FGI'",
 				"ABCD'E'FGJ",
 			})
-			self:c(I, "q", dec, "j")
+			self:c(I, "q", dec, "i")
 
 			local S = n .. "s"
 			build_2ll(S, { "A'BC'D'E'FGH'J'", "A'BC'D'E'FGH'I'" })
-			self:c(S, "q", dec, "j")
+			self:c(S, "q", dec, "s")
 
 			local B = n .. "b"
 			build_2ll(B, { "ABC'D'E'FGH", "ABC'D'E'FGI'" })
-			self:c(B, "q", dec, "j")
+			self:c(B, "q", dec, "b")
 
 			local U = n .. "u"
 			build_minterm(U, "A'CD'EFG")
-			self:c(U, "q", dec, "j")
+			self:c(U, "q", dec, "u")
 
 			local J = n .. "j"
 			build_minterm(J, "ABC'DEFG")
