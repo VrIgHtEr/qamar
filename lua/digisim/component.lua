@@ -140,6 +140,19 @@ function component.new(name, handler, opts)
 						error("handler " .. name .. " returned invalid value " .. x .. " at index " .. i)
 					end
 				elseif type(x) == "table" then
+					if ret.outports[i].bits ~= #x then
+						error(
+							"Component "
+								.. ret.name
+								.. " returned "
+								.. #x
+								.. " bits in output "
+								.. i
+								.. " (expected "
+								.. ret.outports[i].bits
+								.. ")"
+						)
+					end
 					for j, v in ipairs(x) do
 						if type(v) ~= "number" then
 							error(
