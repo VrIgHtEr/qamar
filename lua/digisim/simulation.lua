@@ -296,13 +296,19 @@ local restable = {
 ---@param a signal
 ---@param b signal
 local function resolve(a, b)
-	return a == nil
-		or b == nil
-		or a < signal.unknown
-		or a > signal.high
-		or b < signal.unknown
-		or b > signal.high and signal.unknown
-		or restable[(7 * (a - signal.unknown) + (b - signal.unknown)) + 1]
+	xpcall(function()
+		return a == nil
+			or b == nil
+			or a < signal.unknown
+			or a > signal.high
+			or b < signal.unknown
+			or b > signal.high and signal.unknown
+			or restable[(7 * (a - signal.unknown) + (b - signal.unknown)) + 1]
+	end, function(err)
+		io.stderr:write("ERROR: " .. tostring(err) .. "\n")
+		io.stderr:write(debug.traceback() .. "\n")
+		return err
+	end)
 end
 
 ---@param time number
