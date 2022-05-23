@@ -336,6 +336,27 @@ local function tbl_count(tbl)
 	return ret
 end
 
+local table_cache = {}
+local num_cached_tables = 0
+local function get_cached_table()
+	if num_cached_tables == 0 then
+		return {}
+	end
+	local ret = table_cache[num_cached_tables]
+	table_cache[num_cached_tables] = nil
+	num_cached_tables = num_cached_tables - 1
+	return ret
+end
+
+local function cache_table(tbl)
+	for i = #tbl, 1, -1 do
+		tbl[i] = nil
+	end
+	num_cached_tables = num_cached_tables + 1
+	table_cache[num_cached_tables] = tbl
+end
+
+local inputs = {}
 function simulation:step()
 	if not self.simulation_started then
 		self:init_nets()
@@ -378,12 +399,11 @@ function simulation:step()
 
 		for _, c in pairs(dirty) do
 			if c.step then
-				local inputs = {}
 				for i, p in ipairs(c.inports) do
 					if p.bits == 1 then
 						inputs[i] = p.pins[1].net.latched_value
 					else
-						local v = {}
+						local v = get_cached_table()
 						inputs[i] = v
 
 						for j, x in ipairs(p.pins) do
@@ -392,6 +412,13 @@ function simulation:step()
 					end
 				end
 				local outputs = { c.step(self.time, unpack(inputs)) }
+				for i = #c.inports, 1, -1 do
+					local p = c.inports[i]
+					if p.bits > 1 then
+						cache_table(p)
+					end
+					inputs[i] = nil
+				end
 
 				---@param output pin
 				local function handle_output_value(value, output)
