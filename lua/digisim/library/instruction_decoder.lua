@@ -207,6 +207,17 @@ return function(simulation)
 			build_minterm(J, "ABC'DEFG")
 			self:c(J, "q", dec, "j")
 
+			local illegal = n .. "illegal"
+			self
+				:new_nor(illegal, { width = 6 })
+				:cp(1, illegal, "in", 1, R, "q", 1)
+				:cp(1, illegal, "in", 2, I, "q", 1)
+				:cp(1, illegal, "in", 3, S, "q", 1)
+				:cp(1, illegal, "in", 4, B, "q", 1)
+				:cp(1, illegal, "in", 5, U, "q", 1)
+				:cp(1, illegal, "in", 6, J, "q", 1)
+				:c(illegal, "q", dec, "illegal")
+
 			return self
 		end
 	)
