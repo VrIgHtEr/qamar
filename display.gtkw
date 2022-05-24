@@ -1,6 +1,6 @@
 [*]
 [*] GTKWave Analyzer v3.3.111 (w)1999-2020 BSI
-[*] Mon May 23 11:18:53 2022
+[*] Tue May 24 10:05:15 2022
 [*]
 [dumpfile] "(null)"
 [savefile] "/home/cedric/code/c/qamar/display.gtkw"
@@ -52,5 +52,15 @@ IDECODE.s
 IDECODE.b
 IDECODE.u
 IDECODE.j
+@200
+-
+@28
+SHIFT.arithmetic
+SHIFT.a[31:0]
+@24
+SHIFT.b[4:0]
+@28
+SHIFT.left
+SHIFT.q[31:0]
 [pattern_trace] 1
 [pattern_trace] 0

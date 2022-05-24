@@ -115,8 +115,9 @@ sim
 	:c(cu, "selb", regs, "selb")
 	:c(cu, "selw", regs, "selw")
 
-sim:new_instruction_decoder("IDECODE")
-sim:c(alu, "out", "IDECODE", "in")
+local idecode = "IDECODE"
+sim:new_instruction_decoder(idecode)
+sim:c(alu, "out", idecode, "in")
 -----------------------------------------------------------------------------------------------------
 local seq = "SEQ"
 sim:new_seq(seq, { width = 8 })
@@ -130,7 +131,12 @@ sim:c(memory, "write", "GND", "q")
 sim:c(memory, "oe", "VCC", "q")
 sim:c(memory, "address", buses, "d")
 -----------------------------------------------------------------------------------------------------
-sim:new_barrel_shifter("SHIFT", { width = constants.REGISTER_SELECT_WIDTH })
+local shift = "SHIFT"
+sim:new_barrel_shifter(shift, { width = constants.REGISTER_SELECT_WIDTH })
+sim:c(shift, "a", alu, "out")
+sim:c(idecode, "rs2", shift, "b")
+sim:new_clock("ARITHMETIC", { period = constants.CLOCK_PERIOD_TICKS * 2 }):c("ARITHMETIC", "q", shift, "arithmetic")
+sim:new_clock("LEFT", { period = constants.CLOCK_PERIOD_TICKS * 4 }):c("LEFT", "q", shift, "left")
 -----------------------------------------------------------------------------------------------------
 local max = 0
 while sim.time < constants.SIM_TIME do
