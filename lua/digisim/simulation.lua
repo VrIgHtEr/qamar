@@ -335,6 +335,7 @@ local function tbl_count(tbl)
 end
 
 local inputs = {}
+
 function simulation:step()
 	if not self.simulation_started then
 		self:init_nets()
@@ -391,7 +392,6 @@ function simulation:step()
 				end
 				local outputs = { c.step(self.time, unpack(inputs)) }
 				for i = #c.inports, 1, -1 do
-					local p = c.inports[i]
 					inputs[i] = nil
 				end
 

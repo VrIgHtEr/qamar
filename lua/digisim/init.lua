@@ -130,6 +130,8 @@ sim:c(memory, "write", "GND", "q")
 sim:c(memory, "oe", "VCC", "q")
 sim:c(memory, "address", buses, "d")
 -----------------------------------------------------------------------------------------------------
+sim:new_barrel_shifter("SHIFT", { width = constants.REGISTER_SELECT_WIDTH })
+-----------------------------------------------------------------------------------------------------
 local max = 0
 while sim.time < constants.SIM_TIME do
 	io.stderr:write("TIME: " .. sim.time .. "\n")
