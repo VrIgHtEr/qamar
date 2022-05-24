@@ -3,7 +3,6 @@
 local n = require("qamar.parser.types")
 local tconcat = require("qamar.util.table").tconcat
 local tinsert = require("qamar.util.table").tinsert
-local ipairs = ipairs
 local range = require("qamar.util.range")
 local N = require("qamar.parser.node").new
 

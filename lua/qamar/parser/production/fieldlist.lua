@@ -4,7 +4,6 @@ local token = require("qamar.lexer.types")
 local n = require("qamar.parser.types")
 local tconcat = require("qamar.util.table").tconcat
 local field = require("qamar.parser.production.field")
-local ipairs = ipairs
 local nfieldlist = n.fieldlist
 local tcomma = token.comma
 local tsemicolon = token.semicolon

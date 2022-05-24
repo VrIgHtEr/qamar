@@ -6,7 +6,6 @@ local tconcat = require("qamar.util.table").tconcat
 local tinsert = require("qamar.util.table").tinsert
 
 local var = require("qamar.parser.production.var").parser
-local ipairs = ipairs
 local nvarlist = n.varlist
 local tcomma = token.comma
 

@@ -7,7 +7,6 @@ local tinsert = require("qamar.util.table").tinsert
 
 local namelist = require("qamar.parser.production.namelist").parser
 local vararg = require("qamar.parser.production.vararg").parser
-local ipairs = ipairs
 local nparlist = n.parlist
 local tcomma = token.comma
 local N = require("qamar.parser.node").new

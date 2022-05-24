@@ -12,7 +12,6 @@ local tinsert = require("qamar.util.table").tinsert
 local name = require("qamar.parser.production.name").parser
 local attribute = require("qamar.parser.production.attrib").parser
 
-local ipairs = ipairs
 local mt = {
 	__index = require("qamar.parser.node"),
 	---@param self node_attnamelist
