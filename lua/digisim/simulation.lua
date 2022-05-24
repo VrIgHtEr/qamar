@@ -4,6 +4,10 @@ local connection = require("digisim.connection")
 local pq = require("digisim.pq")
 local vcd = require("digisim.vcd")
 local sigstr = vcd.sigstr
+local concat = table.concat
+local push = pq.push
+local peek = pq.peek
+local pop = pq.pop
 
 ---@class simulation
 ---@field components table<string,component>
@@ -336,6 +340,21 @@ end
 
 local inputs = {}
 
+---@param output pin
+local function handle_output_value(value, output, trace_ports, nextdirty)
+	if output.value ~= value then
+		output.value = value
+		for _, x in ipairs(output.net.trace_ports) do
+			trace_ports[x] = true
+		end
+		for _, x in ipairs(output.net.sensitivity_list) do
+			if x ~= output then
+				nextdirty[x.name] = x
+			end
+		end
+	end
+end
+
 function simulation:step()
 	if not self.simulation_started then
 		self:init_nets()
@@ -351,7 +370,7 @@ function simulation:step()
 			dirty[k] = v
 		end
 	else
-		local _, nexttimestamp = self.queue:peek()
+		local _, nexttimestamp = peek(self.queue)
 		if nexttimestamp ~= nil then
 			self.time = nexttimestamp - 1
 		end
@@ -361,12 +380,12 @@ function simulation:step()
 		local nextdirty = {}
 		self.time = self.time + 1
 		while true do
-			local val, ts = self.queue:peek()
+			local val, ts = peek(self.queue)
 			if ts == nil or ts > self.time then
 				break
 			end
 			dirty[val.name] = val
-			self.queue:pop()
+			pop(self.queue)
 		end
 		for _, c in pairs(dirty) do
 			for _, p in ipairs(c.inports) do
@@ -395,36 +414,22 @@ function simulation:step()
 					inputs[i] = nil
 				end
 
-				---@param output pin
-				local function handle_output_value(value, output)
-					if output.value ~= value then
-						output.value = value
-						for _, x in ipairs(output.net.trace_ports) do
-							trace_ports[x] = true
-						end
-						for _, x in ipairs(output.net.sensitivity_list) do
-							if x ~= output then
-								nextdirty[x.name] = x
-							end
-						end
-					end
-				end
 				local numoutputs = #outputs - 1
 				local sleep = outputs[numoutputs + 1]
 				if sleep > 0 then
-					self.queue:push(self.time + sleep, c)
+					push(self.queue, self.time + sleep, c)
 				end
 				for i = 1, numoutputs do
 					local value = outputs[i]
 					local output = c.outports[i]
 					if output.bits == 1 then
-						handle_output_value(value, output.pins[1])
+						handle_output_value(value, output.pins[1], trace_ports, nextdirty)
 					else
 						if #value ~= output.bits then
 							error(c.name .. ": " .. output.bits .. " " .. #value)
 						end
 						for j, x in ipairs(output.pins) do
-							handle_output_value(value[j], x)
+							handle_output_value(value[j], x, trace_ports, nextdirty)
 						end
 					end
 				end
@@ -443,8 +448,8 @@ function simulation:step()
 					local x = p.pins[len - i + 1]
 					val[i + 1] = sigstr(x.net.latched_value)
 				end
-				table.insert(val, " ")
-				val = table.concat(val)
+				val[len + 1] = " "
+				val = concat(val)
 			end
 			add_trace(self, p.name, self.time, val)
 		end

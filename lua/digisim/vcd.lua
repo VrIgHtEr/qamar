@@ -1,5 +1,11 @@
 local signal = require("digisim.signal")
 
+local low = signal.low
+local high = signal.high
+local z = signal.z
+local stdout = io.stdout
+local write = io.stdout.write
+
 ---@class trace
 ---@field identifier string
 ---@field value signal
@@ -28,7 +34,7 @@ function vcd.new()
 end
 
 function vcd.sigstr(sig)
-	return sig == signal.low and "0" or sig == signal.high and "1" or sig == signal.z and "z" or "x"
+	return sig == low and "0" or sig == high and "1" or sig == z and "z" or "x"
 end
 
 local function next_identifier(self)
@@ -61,7 +67,9 @@ end
 ---@return trace
 local function new_trace(self, name, bits)
 	if self.state == 0 then
-		io.stdout:write([[
+		write(
+			stdout,
+			[[
 $date
 Date text
 $end
@@ -71,7 +79,8 @@ $end
 $comment
 $end
 $timescale 1ns $end
-]])
+]]
+		)
 		self.state = 1
 	end
 	if self.state ~= 1 then
@@ -106,11 +115,11 @@ $timescale 1ns $end
 		error("not enough pieces")
 	end
 	for i = 1, #pieces - 1 do
-		io.stdout:write("$scope module " .. pieces[i] .. " $end\n")
+		write(stdout, "$scope module " .. pieces[i] .. " $end\n")
 	end
-	io.stdout:write("$var wire " .. bits .. " " .. ret.identifier .. " " .. pieces[#pieces] .. " $end\n")
+	write(stdout, "$var wire " .. bits .. " " .. ret.identifier .. " " .. pieces[#pieces] .. " $end\n")
 	for _ = 1, #pieces - 1 do
-		io.stdout:write("$upscope $end\n")
+		write(stdout, "$upscope $end\n")
 	end
 	self.traces[name] = ret
 	return ret
@@ -123,21 +132,24 @@ end
 function vcd:trace(name, time, sig)
 	if self.state == 1 then
 		self.state = 2
-		io.stdout:write([[
+		write(
+			stdout,
+			[[
 $enddefinitions $end
 $dumpvars
 $end
-]])
+]]
+		)
 	end
 	local trace = self:get(name)
 	trace.value = sig
 	if time > self.time then
 		self.time = time
 		self.index = self.index + 1
-		io.stdout:write("#" .. tostring(time) .. "\n")
+		write(stdout, "#" .. tostring(time) .. "\n")
 	end
 	self.index = self.index + 1
-	io.stdout:write(tostring(sig) .. trace.identifier .. "\n")
+	write(stdout, tostring(sig) .. trace.identifier .. "\n")
 end
 
 return vcd

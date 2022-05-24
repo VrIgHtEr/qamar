@@ -1,6 +1,7 @@
 ---@class pq
 local pq = { count = nil }
 local MT = { __index = pq }
+local floor = math.floor
 
 ---@return pq
 function pq.new()
@@ -19,21 +20,21 @@ end
 ---@param self pq
 ---@param index number
 local function float(self, index)
-	local p = math.floor(index / 2)
+	local p = floor(index / 2)
 	while p >= 1 do
 		if self[index][1] >= self[p][1] then
 			break
 		end
 		self[index], self[p] = self[p], self[index]
 		index = p
-		p = math.floor(index / 2)
+		p = floor(index / 2)
 	end
 end
 
 ---@param self pq
 ---@param index number
 local function sink(self, index)
-	local max = math.floor(self.count / 2)
+	local max = floor(self.count / 2)
 	while index <= max do
 		local c = index * 2
 		if c < self.count and self[c + 1][1] < self[c][1] then
