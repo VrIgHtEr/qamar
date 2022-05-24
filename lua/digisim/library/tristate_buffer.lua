@@ -1,5 +1,4 @@
 local signal = require("digisim.signal")
-local low = signal.low
 
 ---@class simulation
 ---@field new_tristate_buffer fun(circuit:simulation,name:string,opts:table|nil):simulation
@@ -32,7 +31,7 @@ return function(simulation)
 				end
 			end
 			return self:add_component(name, opts, function(_, a, en)
-				return low == en and z or a
+				return signal.low == en and z or a
 			end)
 		end
 	)

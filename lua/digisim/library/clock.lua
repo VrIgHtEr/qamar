@@ -2,8 +2,6 @@
 ---@field new_clock fun(circuit:simulation,name:string,opts:table|nil):simulation
 
 local signal = require("digisim.signal")
-local high = signal.high
-local low = signal.low
 
 ---@param simulation simulation
 return function(simulation)
@@ -27,7 +25,7 @@ return function(simulation)
 			end
 			local val = signal.high
 			circuit:add_component(name, opts, function()
-				val = val == high and low or high
+				val = val == signal.high and signal.low or signal.high
 				return val, period / 2
 			end)
 		end

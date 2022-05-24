@@ -3,11 +3,6 @@
 
 local bit = require("bit")
 local signal = require("digisim.signal")
-local z = signal.z
-local unknown = signal.unknown
-local low = signal.low
-local high = signal.high
-local ipairs = ipairs
 
 local function read_file(path)
 	local file, err, data = io.open(path, "rb")
@@ -46,10 +41,10 @@ return function(simulation)
 				outputs = { { "out", data_width } },
 			}
 
-			local prevWrite = unknown
+			local prevWrite = signal.unknown
 			local z = {}
 			for i = 1, data_width do
-				z[i] = z
+				z[i] = signal.z
 			end
 
 			local memory = {}
@@ -73,11 +68,11 @@ return function(simulation)
 				for i, x in ipairs(input) do
 					data = bit.bor(data, bit.lshift(x, i - 1))
 				end
-				if prevWrite == low and write == high then
+				if prevWrite == signal.low and write == signal.high then
 					memory[address] = data
 				end
 				prevWrite = write
-				if oe == high then
+				if oe == signal.high then
 					local ret = {}
 					local val = memory[address] or 0
 					for i = 0, data_width - 1 do
