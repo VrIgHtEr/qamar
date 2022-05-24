@@ -330,9 +330,12 @@ local function latch_values(time, p)
 	end
 end
 
-local next = next
-local function is_empty(tbl)
-	return next(tbl) == nil
+local function tbl_count(tbl)
+	local ret = -#tbl
+	for _ in pairs(tbl) do
+		ret = ret + 1
+	end
+	return ret
 end
 
 local inputs = {}
@@ -359,7 +362,6 @@ function simulation:step()
 	end
 	local maxstep = 1000
 	local ticks = 0
-	local queue = self.queue
 
 	---@type table<string,component>
 	local dirty = {}
@@ -368,38 +370,34 @@ function simulation:step()
 			dirty[k] = v
 		end
 	else
-		local _, nexttimestamp = peek(queue)
+		local _, nexttimestamp = peek(self.queue)
 		if nexttimestamp ~= nil then
 			self.time = nexttimestamp - 1
 		end
 	end
+	local count
 	repeat
 		local nextdirty = {}
-		local time = self.time + 1
-		self.time = time
+		self.time = self.time + 1
 		while true do
-			local val, ts = peek(queue)
-			if ts == nil or ts > time then
+			local val, ts = peek(self.queue)
+			if ts == nil or ts > self.time then
 				break
 			end
 			dirty[val.name] = val
-			pop(queue)
+			pop(self.queue)
 		end
 		for _, c in pairs(dirty) do
 			for _, p in ipairs(c.inports) do
-				latch_values(time, p)
+				latch_values(self.time, p)
 			end
 		end
 		---@type table<port,boolean>
 		local trace_ports = {}
 
 		for _, c in pairs(dirty) do
-			local step = c.step
-			local name = c.name
-			local inports = c.inports
-			local outports = c.outports
-			if step then
-				for i, p in ipairs(inports) do
+			if c.step then
+				for i, p in ipairs(c.inports) do
 					if p.bits == 1 then
 						inputs[i] = p.pins[1].net.latched_value
 					else
@@ -411,25 +409,24 @@ function simulation:step()
 						end
 					end
 				end
-				local outputs = { step(time, unpack(inputs)) }
-				for i = #inports, 1, -1 do
+				local outputs = { c.step(self.time, unpack(inputs)) }
+				for i = #c.inports, 1, -1 do
 					inputs[i] = nil
 				end
 
 				local numoutputs = #outputs - 1
 				local sleep = outputs[numoutputs + 1]
 				if sleep > 0 then
-					push(queue, time + sleep, c)
+					push(self.queue, self.time + sleep, c)
 				end
 				for i = 1, numoutputs do
 					local value = outputs[i]
-					local output = outports[i]
-					local bits = output.bits
-					if bits == 1 then
+					local output = c.outports[i]
+					if output.bits == 1 then
 						handle_output_value(value, output.pins[1], trace_ports, nextdirty)
 					else
-						if #value ~= bits then
-							error(name .. ": " .. bits .. " " .. #value)
+						if #value ~= output.bits then
+							error(c.name .. ": " .. output.bits .. " " .. #value)
 						end
 						for j, x in ipairs(output.pins) do
 							handle_output_value(value[j], x, trace_ports, nextdirty)
@@ -440,31 +437,31 @@ function simulation:step()
 		end
 
 		for p in pairs(trace_ports) do
-			latch_values(time + 1, p)
+			latch_values(self.time + 1, p)
 			local val
-			local pins = p.pins
 			if p.bits == 1 then
-				val = sigstr(pins[1].net.latched_value)
+				val = sigstr(p.pins[1].net.latched_value)
 			else
 				val = { "b" }
-				local len = #pins
+				local len = #p.pins
 				for i = 1, len do
-					local x = pins[len - i + 1]
+					local x = p.pins[len - i + 1]
 					val[i + 1] = sigstr(x.net.latched_value)
 				end
 				val[len + 1] = " "
 				val = concat(val)
 			end
-			add_trace(self, p.name, time, val)
+			add_trace(self, p.name, self.time, val)
 		end
 
 		dirty = nextdirty
+		count = tbl_count(dirty)
 		maxstep = maxstep - 1
 		ticks = ticks + 1
 		if maxstep == 0 then
 			error("circuit failed to stabilize")
 		end
-	until is_empty(dirty)
+	until count == 0
 	return self, ticks
 end
 
