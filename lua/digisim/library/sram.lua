@@ -7,7 +7,6 @@ local z = signal.z
 local unknown = signal.unknown
 local low = signal.low
 local high = signal.high
-local ipairs = ipairs
 
 local function read_file(path)
 	local file, err, data = io.open(path, "rb")

@@ -9,7 +9,6 @@ do
 end
 local port = require("digisim.port")
 local floor = math.floor
-local ipairs = ipairs
 
 ---@class component
 ---@field name string

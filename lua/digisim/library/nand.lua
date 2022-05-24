@@ -4,7 +4,6 @@
 local signal = require("digisim.signal")
 local low = signal.low
 local high = signal.high
-local ipairs = ipairs
 
 ---@param simulation simulation
 return function(simulation)

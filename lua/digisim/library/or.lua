@@ -2,7 +2,6 @@
 ---@field new_or fun(circuit:simulation,name:string,opts:table|nil):simulation
 
 local signal = require("digisim.signal")
-local ipairs = ipairs
 local low = signal.low
 local high = signal.high
 local constants = require("digisim.constants")
