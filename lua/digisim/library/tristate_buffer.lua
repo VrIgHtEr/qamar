@@ -31,7 +31,7 @@ return function(simulation)
 				end
 			end
 			return self:add_component(name, opts, function(_, a, en)
-				return signal.low == en and z or a
+				return 0 == en and z or a
 			end)
 		end
 	)

@@ -1,7 +1,6 @@
 ---@class simulation
 ---@field new_not fun(circuit:simulation,name:string,opts:table|nil):simulation
 
-local signal = require("digisim.signal")
 local constants = require("digisim.constants")
 
 ---@param simulation simulation
@@ -35,11 +34,11 @@ return function(simulation)
 			else
 				return s:add_component(n, opts, function(_, a)
 					if width == 1 then
-						return a == signal.low and signal.high or signal.low
+						return a == 0 and 1 or 0
 					else
 						local ret = {}
 						for i, x in ipairs(a) do
-							ret[i] = x == signal.low and signal.high or signal.low
+							ret[i] = x == 0 and 1 or 0
 						end
 						return ret
 					end

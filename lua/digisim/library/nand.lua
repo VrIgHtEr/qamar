@@ -1,8 +1,6 @@
 ---@class simulation
 ---@field new_nand fun(circuit:simulation,name:string,opts:table|nil):simulation
 
-local signal = require("digisim.signal")
-
 ---@param simulation simulation
 return function(simulation)
 	simulation:register_component(
@@ -23,11 +21,11 @@ return function(simulation)
 			opts.names = { inputs = { { "in", width } }, outputs = { "q" } }
 			return self:add_component(name, opts, function(_, a)
 				for _, x in ipairs(a) do
-					if x ~= signal.high then
-						return signal.high
+					if x ~= 1 then
+						return 1
 					end
 				end
-				return signal.low
+				return 0
 			end)
 		end
 	)
