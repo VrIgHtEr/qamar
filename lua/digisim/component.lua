@@ -1,7 +1,6 @@
 ---@diagnostic disable: need-check-nil
 local signal = require("digisim.signal")
 local port = require("digisim.port")
-local floor = math.floor
 
 ---@class component
 ---@field name string
@@ -71,7 +70,7 @@ function component.new(name, handler, opts)
 		elseif type(n[1]) ~= "string" or type(n[2]) ~= "number" then
 			error("invalid port definition")
 		else
-			width = floor(n[2])
+			width = math.floor(n[2])
 			pinname = n[1]
 			if width < 1 then
 				error("invalid port definition")
@@ -103,7 +102,7 @@ function component.new(name, handler, opts)
 		elseif type(n[1]) ~= "string" or type(n[2]) ~= "number" then
 			error("invalid port definition")
 		else
-			width = floor(n[2])
+			width = math.floor(n[2])
 			pinname = n[1]
 			if width < 1 then
 				error("invalid port definition")
@@ -136,7 +135,7 @@ function component.new(name, handler, opts)
 			for i = 1, outputs do
 				local x = o[i]
 				if type(x) == "number" then
-					x = floor(x)
+					x = math.floor(x)
 					if x <= signal.unknown or x >= signal.TOP then
 						error("handler " .. name .. " returned invalid value " .. x .. " at index " .. i)
 					end
@@ -168,7 +167,7 @@ function component.new(name, handler, opts)
 									.. "]"
 							)
 						end
-						v = floor(v)
+						v = math.floor(v)
 						if v <= signal.unknown or v >= signal.TOP then
 							error(
 								"handler "
@@ -192,7 +191,7 @@ function component.new(name, handler, opts)
 				if type(sleep) ~= "number" or sleep < 0 then
 					error("invalid sleep period")
 				end
-				sleep = floor(sleep)
+				sleep = math.floor(sleep)
 			else
 				sleep, o[outputs + 1] = 0, 0
 			end
