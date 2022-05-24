@@ -1,6 +1,8 @@
 ---@class simulation
 ---@field new_gnd fun(circuit:simulation,name:string,opts:table|nil):simulation
 
+local signal = require("digisim.signal")
+
 ---@param simulation simulation
 return function(simulation)
 	simulation:register_component(
@@ -20,7 +22,7 @@ return function(simulation)
 			end
 			opts.names = { inputs = {}, outputs = { { "q", width } } }
 
-			local ret = 0
+			local ret = signal.low
 			if width > 1 then
 				local t = {}
 				for i = 1, width do

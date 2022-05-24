@@ -28,7 +28,7 @@ function vcd.new()
 end
 
 function vcd.sigstr(sig)
-	return sig == 0 and "0" or sig == 1 and "1" or sig == -1 and "z" or "x"
+	return sig == signal.low and "0" or sig == signal.high and "1" or sig == signal.z and "z" or "x"
 end
 
 local function next_identifier(self)

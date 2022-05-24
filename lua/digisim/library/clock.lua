@@ -1,6 +1,8 @@
 ---@class simulation
 ---@field new_clock fun(circuit:simulation,name:string,opts:table|nil):simulation
 
+local signal = require("digisim.signal")
+
 ---@param simulation simulation
 return function(simulation)
 	simulation:register_component(
@@ -21,9 +23,9 @@ return function(simulation)
 			if period < 2 then
 				error("clock period too small")
 			end
-			local val = 1
+			local val = signal.high
 			circuit:add_component(name, opts, function()
-				val = val == 1 and 0 or 1
+				val = val == signal.high and signal.low or signal.high
 				return val, period / 2
 			end)
 		end

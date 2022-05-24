@@ -1,6 +1,8 @@
 ---@class simulation
 ---@field new_reset fun(circuit:simulation,name:string,opts:table|nil):simulation
 
+local signal = require("digisim.signal")
+
 ---@param simulation simulation
 return function(simulation)
 	simulation:register_component(
@@ -24,10 +26,10 @@ return function(simulation)
 			local initialized = false
 			circuit:add_component(name, opts, function()
 				if initialized then
-					return 1
+					return signal.high
 				end
 				initialized = true
-				return 0, period
+				return signal.low, period
 			end)
 		end
 	)

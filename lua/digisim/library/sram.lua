@@ -44,7 +44,7 @@ return function(simulation)
 			local prevWrite = signal.unknown
 			local z = {}
 			for i = 1, data_width do
-				z[i] = -1
+				z[i] = signal.z
 			end
 
 			local memory = {}
@@ -68,11 +68,11 @@ return function(simulation)
 				for i, x in ipairs(input) do
 					data = bit.bor(data, bit.lshift(x, i - 1))
 				end
-				if prevWrite == 0 and write == 1 then
+				if prevWrite == signal.low and write == signal.high then
 					memory[address] = data
 				end
 				prevWrite = write
-				if oe == 1 then
+				if oe == signal.high then
 					local ret = {}
 					local val = memory[address] or 0
 					for i = 0, data_width - 1 do

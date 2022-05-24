@@ -252,43 +252,43 @@ local restable = {
 	signal.weak,
 	signal.weak,
 	signal.weak,
-	0,
-	1,
+	signal.low,
+	signal.high,
 	signal.unknown,
 	signal.weak,
 	signal.weakhigh,
 	signal.weak,
 	signal.weakhigh,
-	0,
-	1,
+	signal.low,
+	signal.high,
 	signal.unknown,
 	signal.weak,
 	signal.weak,
 	signal.weaklow,
 	signal.weaklow,
-	0,
-	1,
+	signal.low,
+	signal.high,
 	signal.unknown,
 	signal.weak,
 	signal.weakhigh,
 	signal.weaklow,
-	-1,
-	0,
-	1,
+	signal.z,
+	signal.low,
+	signal.high,
 	signal.unknown,
-	0,
-	0,
-	0,
-	0,
-	0,
+	signal.low,
+	signal.low,
+	signal.low,
+	signal.low,
+	signal.low,
 	signal.unknown,
 	signal.unknown,
-	1,
-	1,
-	1,
-	1,
+	signal.high,
+	signal.high,
+	signal.high,
+	signal.high,
 	signal.unknown,
-	1,
+	signal.high,
 }
 
 ---@param a signal
@@ -297,9 +297,9 @@ local function resolve(a, b)
 	return a == nil
 		or b == nil
 		or a < signal.unknown
-		or a > 1
+		or a > signal.high
 		or b < signal.unknown
-		or b > 1 and signal.unknown
+		or b > signal.high and signal.unknown
 		or restable[(7 * (a - signal.unknown) + (b - signal.unknown)) + 1]
 end
 
@@ -308,16 +308,16 @@ end
 local function latch_values(time, p)
 	for _, x in ipairs(p.pins) do
 		if time > x.net.timestamp then
-			local sig = -1
+			local sig = signal.z
 			for _, z in ipairs(x.net.drivers) do
 				sig = resolve(sig, z.value)
 			end
-			if sig == 0 or sig == signal.weaklow then
-				x.net.latched_value = 0
-			elseif sig == 1 or sig == signal.weakhigh then
-				x.net.latched_value = 1
-			elseif sig == -1 then
-				x.net.latched_value = -1
+			if sig == signal.low or sig == signal.weaklow then
+				x.net.latched_value = signal.low
+			elseif sig == signal.high or sig == signal.weakhigh then
+				x.net.latched_value = signal.high
+			elseif sig == signal.z then
+				x.net.latched_value = signal.z
 			else
 				x.net.latched_value = signal.unknown
 			end
