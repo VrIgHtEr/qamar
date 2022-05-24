@@ -16,6 +16,7 @@ local concat = table.concat
 local sub = string.sub
 local len = string.len
 local tostring = tostring
+local ipairs = ipairs
 local setmetatable = setmetatable
 local trim = string.trim
 

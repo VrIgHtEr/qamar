@@ -8,6 +8,7 @@ local N = require("qamar.parser.node").new
 local range = require("qamar.util.range")
 
 local expression = require("qamar.parser.production.expression").parser
+local ipairs = ipairs
 local nexplist = n.explist
 local tcomma = token.comma
 
