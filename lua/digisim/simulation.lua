@@ -8,6 +8,20 @@ local concat = table.concat
 local push = pq.push
 local peek = pq.peek
 local pop = pq.pop
+local pairs = pairs
+local ipairs = ipairs
+
+local unknown, weak, weaklow, weakhigh, disconnected, low, high
+do
+	local signal = require("digisim.signal")
+	unknown = signal.unknown
+	weak = signal.weak
+	weaklow = signal.weaklow
+	weakhigh = signal.weakhigh
+	disconnected = signal.z
+	low = signal.low
+	high = signal.high
+end
 
 ---@class simulation
 ---@field components table<string,component>
@@ -31,7 +45,6 @@ function simulation.new()
 	}, MT)
 	return ret
 end
-local signal = require("digisim.signal")
 
 function simulation:init_nets()
 	if not self.roots then
@@ -244,55 +257,55 @@ u00000u
 u1111u1
 --]]
 local restable = {
-	signal.unknown,
-	signal.unknown,
-	signal.unknown,
-	signal.unknown,
-	signal.unknown,
-	signal.unknown,
-	signal.unknown,
-	signal.unknown,
-	signal.weak,
-	signal.weak,
-	signal.weak,
-	signal.weak,
-	signal.low,
-	signal.high,
-	signal.unknown,
-	signal.weak,
-	signal.weakhigh,
-	signal.weak,
-	signal.weakhigh,
-	signal.low,
-	signal.high,
-	signal.unknown,
-	signal.weak,
-	signal.weak,
-	signal.weaklow,
-	signal.weaklow,
-	signal.low,
-	signal.high,
-	signal.unknown,
-	signal.weak,
-	signal.weakhigh,
-	signal.weaklow,
-	signal.z,
-	signal.low,
-	signal.high,
-	signal.unknown,
-	signal.low,
-	signal.low,
-	signal.low,
-	signal.low,
-	signal.low,
-	signal.unknown,
-	signal.unknown,
-	signal.high,
-	signal.high,
-	signal.high,
-	signal.high,
-	signal.unknown,
-	signal.high,
+	unknown,
+	unknown,
+	unknown,
+	unknown,
+	unknown,
+	unknown,
+	unknown,
+	unknown,
+	weak,
+	weak,
+	weak,
+	weak,
+	low,
+	high,
+	unknown,
+	weak,
+	weakhigh,
+	weak,
+	weakhigh,
+	low,
+	high,
+	unknown,
+	weak,
+	weak,
+	weaklow,
+	weaklow,
+	low,
+	high,
+	unknown,
+	weak,
+	weakhigh,
+	weaklow,
+	disconnected,
+	low,
+	high,
+	unknown,
+	low,
+	low,
+	low,
+	low,
+	low,
+	unknown,
+	unknown,
+	high,
+	high,
+	high,
+	high,
+	unknown,
+	high,
 }
 
 ---@param a signal
@@ -300,32 +313,33 @@ local restable = {
 local function resolve(a, b)
 	return a == nil
 		or b == nil
-		or a < signal.unknown
-		or a > signal.high
-		or b < signal.unknown
-		or b > signal.high and signal.unknown
-		or restable[(7 * (a - signal.unknown) + (b - signal.unknown)) + 1]
+		or a < unknown
+		or a > high
+		or b < unknown
+		or b > high and unknown
+		or restable[(7 * (a - unknown) + (b - unknown)) + 1]
 end
 
 ---@param time number
 ---@param p port
 local function latch_values(time, p)
 	for _, x in ipairs(p.pins) do
-		if time > x.net.timestamp then
-			local sig = signal.z
-			for _, z in ipairs(x.net.drivers) do
+		local net = x.net
+		if time > net.timestamp then
+			local sig = disconnected
+			for _, z in ipairs(net.drivers) do
 				sig = resolve(sig, z.value)
 			end
-			if sig == signal.low or sig == signal.weaklow then
-				x.net.latched_value = signal.low
-			elseif sig == signal.high or sig == signal.weakhigh then
-				x.net.latched_value = signal.high
-			elseif sig == signal.z then
-				x.net.latched_value = signal.z
+			if sig == low or sig == weaklow then
+				net.latched_value = low
+			elseif sig == high or sig == weakhigh then
+				net.latched_value = high
+			elseif sig == disconnected then
+				net.latched_value = disconnected
 			else
-				x.net.latched_value = signal.unknown
+				net.latched_value = unknown
 			end
-			x.net.timestamp = time
+			net.timestamp = time
 		end
 	end
 end

@@ -2,6 +2,9 @@
 ---@field new_nor fun(circuit:simulation,name:string,opts:table|nil):simulation
 
 local signal = require("digisim.signal")
+local high = signal.high
+local low = signal.low
+local ipairs = ipairs
 local constants = require("digisim.constants")
 
 ---@param simulation simulation
@@ -34,11 +37,11 @@ return function(simulation)
 			else
 				return self:add_component(name, opts, function(_, a)
 					for _, x in ipairs(a) do
-						if x == signal.high then
-							return signal.low
+						if x == high then
+							return low
 						end
 					end
-					return signal.high
+					return high
 				end)
 			end
 		end

@@ -1,7 +1,15 @@
 ---@diagnostic disable: need-check-nil
-local signal = require("digisim.signal")
+
+local unknown, disconnected, TOP
+do
+	local signal = require("digisim.signal")
+	unknown = signal.unknown
+	disconnected = signal.z
+	TOP = signal.TOP
+end
 local port = require("digisim.port")
 local floor = math.floor
+local ipairs = ipairs
 
 ---@class component
 ---@field name string
@@ -121,11 +129,11 @@ function component.new(name, handler, opts)
 			for i = 1, #parts do
 				if type(parts[i]) == "table" then
 					for j, x in ipairs(parts[i]) do
-						if x == signal.unknown or x == signal.z then
+						if x == unknown or x == disconnected then
 							parts[i][j] = math.random(0, 1)
 						end
 					end
-				elseif parts[i] == signal.unknown or parts[i] == signal.z then
+				elseif parts[i] == unknown or parts[i] == disconnected then
 					parts[i] = math.random(0, 1)
 				end
 			end
@@ -137,7 +145,7 @@ function component.new(name, handler, opts)
 				local x = o[i]
 				if type(x) == "number" then
 					x = floor(x)
-					if x <= signal.unknown or x >= signal.TOP then
+					if x <= unknown or x >= TOP then
 						error("handler " .. name .. " returned invalid value " .. x .. " at index " .. i)
 					end
 				elseif type(x) == "table" then
@@ -169,7 +177,7 @@ function component.new(name, handler, opts)
 							)
 						end
 						v = floor(v)
-						if v <= signal.unknown or v >= signal.TOP then
+						if v <= unknown or v >= TOP then
 							error(
 								"handler "
 									.. name

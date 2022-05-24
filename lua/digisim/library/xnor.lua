@@ -3,6 +3,9 @@
 
 local signal = require("digisim.signal")
 local constants = require("digisim.constants")
+local ipairs = ipairs
+local low = signal.low
+local high = signal.high
 
 ---@param simulation simulation
 return function(simulation)
@@ -36,11 +39,11 @@ return function(simulation)
 				return self:add_component(name, opts, function(_, a)
 					local ret = false
 					for _, x in ipairs(a) do
-						if x == signal.high then
+						if x == high then
 							ret = not ret
 						end
 					end
-					return ret and signal.low or signal.high
+					return ret and low or high
 				end)
 			end
 		end
