@@ -3,6 +3,7 @@
 
 local signal = require("digisim.signal")
 local constants = require("digisim.constants")
+local ipairs = ipairs
 local low = signal.low
 local high = signal.high
 

@@ -8,6 +8,8 @@ local concat = table.concat
 local push = pq.push
 local peek = pq.peek
 local pop = pq.pop
+local pairs = pairs
+local ipairs = ipairs
 
 local unknown, weak, weaklow, weakhigh, disconnected, low, high
 do
