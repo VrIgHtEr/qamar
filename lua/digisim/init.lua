@@ -138,6 +138,13 @@ sim:c(idecode, "rs2", shift, "b")
 sim:new_clock("ARITHMETIC", { period = constants.CLOCK_PERIOD_TICKS * 2 }):c("ARITHMETIC", "q", shift, "arithmetic")
 sim:new_clock("LEFT", { period = constants.CLOCK_PERIOD_TICKS * 4 }):c("LEFT", "q", shift, "left")
 -----------------------------------------------------------------------------------------------------
+local d = "D"
+sim:new_ms_d_flipflop(d)
+sim:c(clk, "q", d, "clk")
+sim:c(rst, "q", d, "rst~")
+sim:cp(1, alu, "out", 1, d, "d", 1)
+-----------------------------------------------------------------------------------------------------
+
 local max = 0
 while sim.time < constants.SIM_TIME do
 	io.stderr:write("TIME: " .. sim.time .. "\n")
