@@ -203,6 +203,25 @@ return function(simulation)
 					:cp(8, b3, "q", 1, m3, "d1", 9)
 					:c(w3, "q", b3, "rising")
 					:c(f, "rising", b3, "falling")
+
+				local padding = f .. ".padding"
+				s:new_or_bank(padding)
+				local padding0 = padding .. 0
+				s:new_and_bank(padding0)
+				s:c(padding0, "q", padding, "a")
+				s:c(f16, "q", padding0, "a")
+				s:cp(1, b0, "q", 8, padding0, "b", 1)
+				local padding1 = padding .. 1
+				s:new_and_bank(padding1)
+				s:c(padding1, "q", padding, "b")
+				s:c(f32, "q", padding1, "a")
+				s:cp(1, b1, "q", 8, padding1, "b", 1)
+				for i = 1, 8 do
+					s:cp(1, padding, "q", 1, m1, "d0", i)
+				end
+				for i = 1, 16 do
+					s:cp(1, padding, "q", 1, m3, "d0", i)
+				end
 			end
 		end
 	)
