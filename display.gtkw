@@ -1,73 +1,41 @@
 [*]
 [*] GTKWave Analyzer v3.3.111 (w)1999-2020 BSI
-[*] Wed May 25 14:19:29 2022
+[*] Thu May 26 07:14:58 2022
 [*]
 [dumpfile] "(null)"
-[savefile] "/home/cedric/code/repos/qamar/display.gtkw"
+[savefile] "/home/cedric/code/c/qamar/display.gtkw"
 [timestart] 0
 [size] 1908 999
 [pos] -1 -1
 *-9.743276 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] CPU.
+[treeopen] CPU.lsu.
 [sst_width] 211
 [signals_width] 406
 [sst_expanded] 1
 [sst_vpaned_height] 562
-@24
-SEQ.out[7:0]
 @28
-SEQ.rising
-SEQ.rst~
+CPU.lsu.rst~
+CPU.lsu.b16
+CPU.lsu.b32
+CPU.lsu.clk
+CPU.lsu.trigin
 @200
 -
 @28
-CPU.alu.zero
-CPU.alu.carry
-@200
--
-@24
-CPU.buses.a[31:0]
-CPU.buses.b[31:0]
-CPU.buses.d[31:0]
-@200
--
-@24
-IDECODE.opcode[6:0]
-IDECODE.funct3[2:0]
-IDECODE.funct7[6:0]
-IDECODE.rs1[4:0]
-IDECODE.rs2[4:0]
-IDECODE.rd[4:0]
-@420
-IDECODE.imm[31:0]
-@28
-IDECODE.illegal
+CPU.lsu.trigout
 @200
 -
 @28
-IDECODE.in[31:0]
-IDECODE.r
-IDECODE.i
-IDECODE.s
-IDECODE.b
-IDECODE.u
-IDECODE.j
++{not started} CPU.lsu.nstarted.q
++{not started or finished} CPU.lsu.nstartedorfinished.q
 @200
 -
 @28
-SHIFT.arithmetic
-SHIFT.a[31:0]
-@24
-SHIFT.b[4:0]
-@28
-SHIFT.left
-SHIFT.q[31:0]
-@200
--
-@28
-D.rst~
-D.clk
-D.d
-D.q
++{stage 0} CPU.lsu.s0.q
++{stage 1} CPU.lsu.s1.q
++{stage 2} CPU.lsu.s2.q
+@29
++{stage 3} CPU.lsu.s3.q
 [pattern_trace] 1
 [pattern_trace] 0

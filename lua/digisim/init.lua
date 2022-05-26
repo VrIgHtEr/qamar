@@ -138,14 +138,91 @@ sim:c(idecode, "rs2", shift, "b")
 sim:new_clock("ARITHMETIC", { period = constants.CLOCK_PERIOD_TICKS * 2 }):c("ARITHMETIC", "q", shift, "arithmetic")
 sim:new_clock("LEFT", { period = constants.CLOCK_PERIOD_TICKS * 4 }):c("LEFT", "q", shift, "left")
 -----------------------------------------------------------------------------------------------------
-local d = "D"
-sim:new_ms_d_flipflop_bank(d)
-sim:c(clk, "q", d, "clk")
-sim:c(rst, "q", d, "rst~")
-sim:cp(1, alu, "out", 1, d, "d", 1)
+local lsu = "CPU.lsu"
+sim:new_load_store_unit(lsu):c(clk, "q", lsu, "clk")
+local lsutest = lsu .. ".TEST"
 
-local lsu = "LSU"
-sim:new_load_store_unit(lsu)
+local lsutestaddr = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
+local lsuprogram = {
+	--ti 16 32 rs address
+	{ 0, 0, 0, 0, lsutestaddr },
+
+	--read 8-bit
+	{ 1, 0, 0, 1, lsutestaddr },
+	{ 0, 0, 0, 1, lsutestaddr },
+
+	--read consecutive 8-bit
+	{ 1, 0, 0, 1, lsutestaddr },
+	{ 1, 0, 0, 1, lsutestaddr },
+	{ 0, 0, 0, 1, lsutestaddr },
+
+	--read 16-bit
+	{ 1, 1, 0, 1, lsutestaddr },
+	{ 0, 0, 0, 1, lsutestaddr },
+	{ 0, 0, 0, 1, lsutestaddr },
+
+	--read consecutive 16-bit
+	{ 1, 1, 0, 1, lsutestaddr },
+	{ 0, 0, 0, 1, lsutestaddr },
+	{ 1, 1, 0, 1, lsutestaddr },
+	{ 0, 0, 0, 1, lsutestaddr },
+	{ 0, 0, 0, 1, lsutestaddr },
+
+	--read 16-bit
+	{ 1, 1, 1, 1, lsutestaddr },
+	{ 0, 0, 0, 1, lsutestaddr },
+	{ 0, 0, 0, 1, lsutestaddr },
+	{ 0, 0, 0, 1, lsutestaddr },
+	{ 0, 0, 0, 1, lsutestaddr },
+
+	--read consecutive 16-bit
+	{ 1, 1, 1, 1, lsutestaddr },
+	{ 0, 0, 0, 1, lsutestaddr },
+	{ 0, 0, 0, 1, lsutestaddr },
+	{ 0, 0, 0, 1, lsutestaddr },
+	{ 1, 1, 1, 1, lsutestaddr },
+	{ 0, 0, 0, 1, lsutestaddr },
+	{ 0, 0, 0, 1, lsutestaddr },
+	{ 0, 0, 0, 1, lsutestaddr },
+	{ 0, 0, 0, 1, lsutestaddr },
+}
+local lsuloopindex = 2
+local lsuc = 0
+
+sim
+	:add_component(lsutest, {
+		trace = true,
+		names = {
+			inputs = {},
+			outputs = {
+				"trigin",
+				"b16",
+				"b32",
+				"rst~",
+				{ "address", 32 },
+			},
+		},
+	}, function()
+		lsuc = lsuc + 1
+		if lsuc > #lsuprogram then
+			lsuc = lsuloopindex
+			for i = 1, #lsutestaddr do
+				if lsutestaddr[i] == 0 then
+					lsutestaddr[i] = 1
+					break
+				end
+				lsutestaddr[i] = 0
+			end
+		end
+		local ret = { unpack(lsuprogram[lsuc]) }
+		ret[#ret + 1] = constants.CLOCK_PERIOD_TICKS
+		return unpack(ret)
+	end)
+	:c(lsutest, "trigin", lsu, "trigin")
+	:c(lsutest, "b16", lsu, "b16")
+	:c(lsutest, "b32", lsu, "b32")
+	:c(lsutest, "rst~", lsu, "rst~")
+	:c(lsutest, "address", lsu, "address")
 -----------------------------------------------------------------------------------------------------
 
 local max = 0
