@@ -164,7 +164,7 @@ return function(simulation)
 				s:cp(1, f32, "q", 1, m3, "sel", 1)
 
 				local w0 = f .. ".w0"
-				s:new_and_bank(w0):c(f, "falling", w0, "a"):c(trig, "q", w0, "b")
+				s:new_and_bank(w0):c(f, "rising", w0, "a"):c(s0, "q", w0, "b")
 				local b0 = f .. ".b0"
 				s
 					:new_ms_d_flipflop_bank(b0, { width = 8 })
@@ -172,9 +172,9 @@ return function(simulation)
 					:c(f, "rst~", b0, "rst~")
 					:cp(8, b0, "q", 1, t, "a", 1)
 					:c(w0, "q", b0, "rising")
-					:c(f, "rising", b0, "falling")
+					:c(f, "falling", b0, "falling")
 				local w1 = f .. ".w1"
-				s:new_and_bank(w1):c(f, "falling", w1, "a"):c(s0, "q", w1, "b")
+				s:new_and_bank(w1):c(f, "rising", w1, "a"):c(s1, "q", w1, "b")
 				local b1 = f .. ".b1"
 				s
 					:new_ms_d_flipflop_bank(b1, { width = 8 })
@@ -182,9 +182,9 @@ return function(simulation)
 					:c(f, "rst~", b1, "rst~")
 					:cp(8, b1, "q", 1, m1, "d1", 1)
 					:c(w1, "q", b1, "rising")
-					:c(f, "rising", b1, "falling")
+					:c(f, "falling", b1, "falling")
 				local w2 = f .. ".w2"
-				s:new_and_bank(w2):c(f, "falling", w2, "a"):c(s1, "q", w2, "b")
+				s:new_and_bank(w2):c(f, "rising", w2, "a"):c(s2, "q", w2, "b")
 				local b2 = f .. ".b2"
 				s
 					:new_ms_d_flipflop_bank(b2, { width = 8 })
@@ -192,9 +192,9 @@ return function(simulation)
 					:c(f, "rst~", b2, "rst~")
 					:cp(8, b2, "q", 1, m3, "d1", 1)
 					:c(w2, "q", b2, "rising")
-					:c(f, "rising", b2, "falling")
+					:c(f, "falling", b2, "falling")
 				local w3 = f .. ".w3"
-				s:new_and_bank(w3):c(f, "falling", w3, "a"):c(s2, "q", w3, "b")
+				s:new_and_bank(w3):c(f, "rising", w3, "a"):c(s3, "q", w3, "b")
 				local b3 = f .. ".b3"
 				s
 					:new_ms_d_flipflop_bank(b3, { width = 8 })
@@ -202,7 +202,7 @@ return function(simulation)
 					:c(f, "rst~", b3, "rst~")
 					:cp(8, b3, "q", 1, m3, "d1", 9)
 					:c(w3, "q", b3, "rising")
-					:c(f, "rising", b3, "falling")
+					:c(f, "falling", b3, "falling")
 
 				local padding = f .. ".padding"
 				s:new_or_bank(padding)
