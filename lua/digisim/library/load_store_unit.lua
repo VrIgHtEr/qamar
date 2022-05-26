@@ -19,8 +19,9 @@ return function(simulation)
 					"b16",
 					"b32",
 					"rst~",
+					"sext",
 				},
-				outputs = { "trigout" },
+				outputs = { "trigout", { "out", 32 } },
 			}
 			s:add_component(f, opts)
 
@@ -31,8 +32,8 @@ return function(simulation)
 			local s3 = f .. ".s3"
 			local control = f .. ".control"
 			local address = f .. ".address"
-			local amux = f .. ".amux"
 			local sram = f .. ".sram"
+			local t = f .. ".t"
 
 			do
 				s:new_sram(sram, { width = 32, file = opts.file })
@@ -60,6 +61,7 @@ return function(simulation)
 				s:c(f, "falling", control, "falling")
 				s:c(f, "rst~", control, "rst~")
 
+				local amux = f .. ".amux"
 				s:new_mux_bank(amux, { bits = 32, width = 1 })
 				s:c(trig, "q", amux, "sel")
 				s:c(f, "address", amux, "d1")
@@ -145,6 +147,62 @@ return function(simulation)
 					:cp(1, trigout3, "q", 1, trigout, "in", 3)
 					:c(s3, "q", trigout3, "a")
 					:c(f32, "q", trigout3, "b")
+
+				s:new_tristate_buffer(t, { width = 32 })
+				s:c(f, "trigout", t, "en")
+				s:c(t, "q", f, "out")
+
+				local m1 = f .. ".m1"
+				s:new_mux_bank(m1, { bits = 8, width = 1 })
+				s:cp(8, m1, "out", 1, t, "a", 9)
+				local m1s = f .. ".m1s"
+				s:new_or_bank(m1s):c(f16, "q", m1s, "a"):c(f32, "q", m1s, "b")
+				s:cp(1, m1s, "q", 1, m1, "sel", 1)
+				local m3 = f .. ".m3"
+				s:new_mux_bank(m3, { bits = 16, width = 1 })
+				s:cp(16, m3, "out", 1, t, "a", 17)
+				s:cp(1, f32, "q", 1, m3, "sel", 1)
+
+				local w0 = f .. ".w0"
+				s:new_and_bank(w0):c(f, "falling", w0, "a"):c(trig, "q", w0, "b")
+				local b0 = f .. ".b0"
+				s
+					:new_ms_d_flipflop_bank(b0, { width = 8 })
+					:c(sram, "out", b0, "d")
+					:c(f, "rst~", b0, "rst~")
+					:cp(8, b0, "q", 1, t, "a", 1)
+					:c(w0, "q", b0, "rising")
+					:c(f, "rising", b0, "falling")
+				local w1 = f .. ".w1"
+				s:new_and_bank(w1):c(f, "falling", w1, "a"):c(s0, "q", w1, "b")
+				local b1 = f .. ".b1"
+				s
+					:new_ms_d_flipflop_bank(b1, { width = 8 })
+					:c(sram, "out", b1, "d")
+					:c(f, "rst~", b1, "rst~")
+					:cp(8, b1, "q", 1, m1, "d1", 1)
+					:c(w1, "q", b1, "rising")
+					:c(f, "rising", b1, "falling")
+				local w2 = f .. ".w2"
+				s:new_and_bank(w2):c(f, "falling", w2, "a"):c(s1, "q", w2, "b")
+				local b2 = f .. ".b2"
+				s
+					:new_ms_d_flipflop_bank(b2, { width = 8 })
+					:c(sram, "out", b2, "d")
+					:c(f, "rst~", b2, "rst~")
+					:cp(8, b2, "q", 1, m3, "d1", 1)
+					:c(w2, "q", b2, "rising")
+					:c(f, "rising", b2, "falling")
+				local w3 = f .. ".w3"
+				s:new_and_bank(w3):c(f, "falling", w3, "a"):c(s2, "q", w3, "b")
+				local b3 = f .. ".b3"
+				s
+					:new_ms_d_flipflop_bank(b3, { width = 8 })
+					:c(sram, "out", b3, "d")
+					:c(f, "rst~", b3, "rst~")
+					:cp(8, b3, "q", 1, m3, "d1", 9)
+					:c(w3, "q", b3, "rising")
+					:c(f, "rising", b3, "falling")
 			end
 		end
 	)
