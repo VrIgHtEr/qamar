@@ -153,26 +153,33 @@ local lsuprogram = {
 	--read 8-bit
 	{ 1, 0, 0, 0, 1, lsutestaddr },
 	{ 0, 0, 0, 0, 1, lsutestaddr },
+	{ 0, 0, 0, 0, 1, lsutestaddr },
 
 	--read consecutive 8-bit
 	{ 1, 0, 0, 0, 1, lsutestaddr },
+	{ 0, 0, 0, 0, 1, lsutestaddr },
 	{ 1, 0, 0, 0, 1, lsutestaddr },
+	{ 0, 0, 0, 0, 1, lsutestaddr },
 	{ 0, 0, 0, 0, 1, lsutestaddr },
 
 	--read 16-bit
 	{ 1, 0, 1, 0, 1, lsutestaddr },
 	{ 0, 0, 0, 0, 1, lsutestaddr },
 	{ 0, 0, 0, 0, 1, lsutestaddr },
+	{ 0, 0, 0, 0, 1, lsutestaddr },
 
 	--read consecutive 16-bit
 	{ 1, 0, 1, 0, 1, lsutestaddr },
 	{ 0, 0, 0, 0, 1, lsutestaddr },
+	{ 0, 0, 0, 0, 1, lsutestaddr },
 	{ 1, 0, 1, 0, 1, lsutestaddr },
+	{ 0, 0, 0, 0, 1, lsutestaddr },
 	{ 0, 0, 0, 0, 1, lsutestaddr },
 	{ 0, 0, 0, 0, 1, lsutestaddr },
 
 	--read 32-bit
 	{ 1, 0, 1, 1, 1, lsutestaddr },
+	{ 0, 0, 0, 0, 1, lsutestaddr },
 	{ 0, 0, 0, 0, 1, lsutestaddr },
 	{ 0, 0, 0, 0, 1, lsutestaddr },
 	{ 0, 0, 0, 0, 1, lsutestaddr },
@@ -183,7 +190,9 @@ local lsuprogram = {
 	{ 0, 0, 0, 0, 1, lsutestaddr },
 	{ 0, 0, 0, 0, 1, lsutestaddr },
 	{ 0, 0, 0, 0, 1, lsutestaddr },
+	{ 0, 0, 0, 0, 1, lsutestaddr },
 	{ 1, 0, 1, 1, 1, lsutestaddr },
+	{ 0, 0, 0, 0, 1, lsutestaddr },
 	{ 0, 0, 0, 0, 1, lsutestaddr },
 	{ 0, 0, 0, 0, 1, lsutestaddr },
 	{ 0, 0, 0, 0, 1, lsutestaddr },
@@ -223,8 +232,8 @@ sim
 		return unpack(ret)
 	end)
 	:c(lsutest, "trigin", lsu, "trigin")
-	:c(lsutest, "b16", lsu, "b16")
-	:c(lsutest, "b32", lsu, "b32")
+	:cp(1, lsutest, "b16", 1, lsu, "control", 1)
+	:cp(1, lsutest, "b32", 1, lsu, "control", 2)
 	:c(lsutest, "rst~", lsu, "rst~")
 	:c(lsutest, "sext", lsu, "sext")
 	:c(lsutest, "address", lsu, "address")
