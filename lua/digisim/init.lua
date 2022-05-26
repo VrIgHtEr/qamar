@@ -143,6 +143,9 @@ sim:new_ms_d_flipflop_bank(d)
 sim:c(clk, "q", d, "clk")
 sim:c(rst, "q", d, "rst~")
 sim:cp(1, alu, "out", 1, d, "d", 1)
+
+local lsu = "LSU"
+sim:new_load_store_unit(lsu)
 -----------------------------------------------------------------------------------------------------
 
 local max = 0
