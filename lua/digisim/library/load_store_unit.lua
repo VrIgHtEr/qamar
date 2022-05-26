@@ -9,7 +9,7 @@ return function(simulation)
 		---@param f string
 		---@param opts boolean
 		function(s, f, opts)
-			opts = opts or {}
+			opts = opts or { file = nil }
 			opts.names = {
 				inputs = {
 					{ "address", 32 },
@@ -31,8 +31,14 @@ return function(simulation)
 			local s3 = f .. ".s3"
 			local control = f .. ".control"
 			local address = f .. ".address"
+			local amux = f .. ".amux"
+			local sram = f .. ".sram"
 
 			do
+				s:new_sram(sram, { width = 32, file = opts.file })
+				s:c("VCC", "q", sram, "oe")
+				s:c("GND", "q", sram, "write")
+
 				local ct = f .. ".ct"
 				s:new_and_bank(ct):c(f, "rising", ct, "a"):c(f, "trigin", ct, "b")
 				local startclk = f .. ".startclk"
@@ -53,11 +59,30 @@ return function(simulation)
 				s:c(startclk, "q", control, "rising")
 				s:c(f, "falling", control, "falling")
 				s:c(f, "rst~", control, "rst~")
+
+				s:new_mux_bank(amux, { bits = 32, width = 1 })
+				s:c(trig, "q", amux, "sel")
+				s:c(f, "address", amux, "d1")
 				s:new_ms_d_flipflop_bank(address, { width = 32 })
-				s:c(f, "address", address, "d")
-				s:c(startclk, "q", address, "rising")
+				s:c(amux, "out", address, "d")
+				s:c(f, "rising", address, "rising")
 				s:c(f, "falling", address, "falling")
 				s:c(f, "rst~", address, "rst~")
+				s:c(address, "q", sram, "address")
+
+				local pd
+				for i = 1, 32 do
+					local d = f .. ".increment.a" .. (i - 1)
+					s:new_half_adder(d)
+					s:cp(1, d, "sum", 1, amux, "d0", i)
+					s:cp(1, address, "q", i, d, "a", 1)
+					if i == 1 then
+						s:c("VCC", "q", d, "b")
+					else
+						s:c(pd, "carry", d, "b")
+					end
+					pd = d
+				end
 
 				local f8 = f .. ".f8"
 				s:new_and(f8):cp(2, control, "q~", 1, f8, "in", 1)
