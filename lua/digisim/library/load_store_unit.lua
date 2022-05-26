@@ -36,10 +36,6 @@ return function(simulation)
 			local t = f .. ".t"
 
 			do
-				s:new_sram(sram, { width = 32, file = opts.file })
-				s:c("VCC", "q", sram, "oe")
-				s:c("GND", "q", sram, "write")
-
 				local ct = f .. ".ct"
 				s:new_and_bank(ct):c(f, "rising", ct, "a"):c(f, "trigin", ct, "b")
 				local startclk = f .. ".startclk"
@@ -53,6 +49,16 @@ return function(simulation)
 					:c(f, "trigout", nstartedorfinished, "b")
 					:c(nstartedorfinished, "q", startclk, "b")
 				s:new_and_bank(trig):c(f, "trigin", trig, "a"):c(nstartedorfinished, "q", trig, "b")
+
+				local smux = f .. ".smux"
+				s:new_mux_bank(smux, { width = 1, bits = 32 })
+				s:c(trig, "q", smux, "sel")
+				s:c(f, "address", smux, "d1")
+
+				s:new_sram(sram, { width = 32, file = opts.file })
+				s:c("VCC", "q", sram, "oe")
+				s:c("GND", "q", sram, "write")
+				s:c(smux, "out", sram, "address")
 
 				s:new_ms_d_flipflop_bank(control, { width = 2 })
 				s:cp(1, f, "b16", 1, control, "d", 1)
@@ -70,7 +76,7 @@ return function(simulation)
 				s:c(f, "rising", address, "rising")
 				s:c(f, "falling", address, "falling")
 				s:c(f, "rst~", address, "rst~")
-				s:c(address, "q", sram, "address")
+				s:c(address, "q", smux, "d0")
 
 				local pd
 				for i = 1, 32 do
