@@ -16,12 +16,16 @@ return function(simulation)
 			end
 			width = math.floor(width)
 
-			opts.names = { inputs = { { "d", width }, "clk", "rst~" }, outputs = { { "q", width }, { "q~", width } } }
+			opts.names = {
+				inputs = { { "d", width }, "rising", "falling", "rst~" },
+				outputs = { { "q", width }, { "q~", width } },
+			}
 			s:add_component(f, opts)
 			for i = 1, width do
 				local d = f .. ".d" .. (i - 1)
 				s:new_ms_d_flipflop(d)
-				s:c(f, "clk", d, "clk")
+				s:c(f, "rising", d, "rising")
+				s:c(f, "falling", d, "falling")
 				s:c(f, "rst~", d, "rst~")
 				s:cp(1, f, "d", i, d, "d", 1)
 				s:cp(1, d, "q", 1, f, "q", i)

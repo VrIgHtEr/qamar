@@ -139,7 +139,7 @@ sim:new_clock("ARITHMETIC", { period = constants.CLOCK_PERIOD_TICKS * 2 }):c("AR
 sim:new_clock("LEFT", { period = constants.CLOCK_PERIOD_TICKS * 4 }):c("LEFT", "q", shift, "left")
 -----------------------------------------------------------------------------------------------------
 local lsu = "CPU.lsu"
-sim:new_load_store_unit(lsu):c(clk, "q", lsu, "clk")
+sim:new_load_store_unit(lsu):c(clk, "rising", lsu, "rising"):c(clk, "falling", lsu, "falling")
 local lsutest = lsu .. ".TEST"
 
 local lsutestaddr = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
@@ -168,14 +168,14 @@ local lsuprogram = {
 	{ 0, 0, 0, 1, lsutestaddr },
 	{ 0, 0, 0, 1, lsutestaddr },
 
-	--read 16-bit
+	--read 32-bit
 	{ 1, 1, 1, 1, lsutestaddr },
 	{ 0, 0, 0, 1, lsutestaddr },
 	{ 0, 0, 0, 1, lsutestaddr },
 	{ 0, 0, 0, 1, lsutestaddr },
 	{ 0, 0, 0, 1, lsutestaddr },
 
-	--read consecutive 16-bit
+	--read consecutive 32-bit
 	{ 1, 1, 1, 1, lsutestaddr },
 	{ 0, 0, 0, 1, lsutestaddr },
 	{ 0, 0, 0, 1, lsutestaddr },

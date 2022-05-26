@@ -10,7 +10,7 @@ return function(simulation)
 		---@param opts boolean
 		function(s, f, opts)
 			opts = opts or {}
-			opts.names = { inputs = { "d", "clk", "rst~" }, outputs = { "q", "q~" } }
+			opts.names = { inputs = { "d", "rising", "falling", "rst~" }, outputs = { "q", "q~" } }
 			s:add_component(f, opts)
 
 			local qb = f .. ".qb"
@@ -27,12 +27,9 @@ return function(simulation)
 			local dmn = f .. ".dmn"
 			local r = f .. ".rn"
 			local d = f .. ".dn"
-			local c = f .. ".cn"
 
 			s:new_not(r)
 			s:c(f, "rst~", r, "a")
-			s:new_not(c)
-			s:c(f, "clk", c, "a")
 			s:new_nand_bank(qb):new_nand_bank(qn)
 			s:c(qb, "q", f, "q")
 			s:c(qn, "q", f, "q~")
@@ -46,8 +43,8 @@ return function(simulation)
 			s:new_nand_bank(qsb):new_nand_bank(qsn)
 			s:c(qsb, "q", qrb, "b")
 			s:c(qsn, "q", qrn, "b")
-			s:c(c, "q", qsb, "a")
-			s:c(c, "q", qsn, "a")
+			s:c(f, "falling", qsb, "a")
+			s:c(f, "falling", qsn, "a")
 			s:new_nand_bank(mb):new_nand_bank(mn)
 			s:c(mb, "q", qsb, "b")
 			s:c(mn, "q", qsn, "b")
@@ -61,8 +58,8 @@ return function(simulation)
 			s:new_nand_bank(dmb):new_nand_bank(dmn)
 			s:c(dmb, "q", mrb, "b")
 			s:c(dmn, "q", mrn, "b")
-			s:c(f, "clk", dmb, "a")
-			s:c(f, "clk", dmn, "a")
+			s:c(f, "rising", dmb, "a")
+			s:c(f, "rising", dmn, "a")
 			s:new_not(d)
 			s:c(f, "d", dmb, "b")
 			s:c(d, "q", dmn, "b")
