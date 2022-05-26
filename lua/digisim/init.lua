@@ -197,6 +197,54 @@ local lsuprogram = {
 	{ 0, 0, 0, 0, 1, lsutestaddr },
 	{ 0, 0, 0, 0, 1, lsutestaddr },
 	{ 0, 0, 0, 0, 1, lsutestaddr },
+
+	--read 8-bit
+	{ 1, 1, 0, 0, 1, lsutestaddr },
+	{ 0, 1, 0, 0, 1, lsutestaddr },
+	{ 0, 1, 0, 0, 1, lsutestaddr },
+
+	--read consecutive 8-bit
+	{ 1, 1, 0, 0, 1, lsutestaddr },
+	{ 0, 1, 0, 0, 1, lsutestaddr },
+	{ 1, 1, 0, 0, 1, lsutestaddr },
+	{ 0, 1, 0, 0, 1, lsutestaddr },
+	{ 0, 1, 0, 0, 1, lsutestaddr },
+
+	--read 16-bit
+	{ 1, 1, 1, 0, 1, lsutestaddr },
+	{ 0, 1, 0, 0, 1, lsutestaddr },
+	{ 0, 1, 0, 0, 1, lsutestaddr },
+	{ 0, 1, 0, 0, 1, lsutestaddr },
+
+	--read consecutive 16-bit
+	{ 1, 1, 1, 0, 1, lsutestaddr },
+	{ 0, 1, 0, 0, 1, lsutestaddr },
+	{ 0, 1, 0, 0, 1, lsutestaddr },
+	{ 1, 1, 1, 0, 1, lsutestaddr },
+	{ 0, 1, 0, 0, 1, lsutestaddr },
+	{ 0, 1, 0, 0, 1, lsutestaddr },
+	{ 0, 1, 0, 0, 1, lsutestaddr },
+
+	--read 32-bit
+	{ 1, 1, 1, 1, 1, lsutestaddr },
+	{ 0, 1, 0, 0, 1, lsutestaddr },
+	{ 0, 1, 0, 0, 1, lsutestaddr },
+	{ 0, 1, 0, 0, 1, lsutestaddr },
+	{ 0, 1, 0, 0, 1, lsutestaddr },
+	{ 0, 1, 0, 0, 1, lsutestaddr },
+
+	--read consecutive 32-bit
+	{ 1, 1, 1, 1, 1, lsutestaddr },
+	{ 0, 1, 0, 0, 1, lsutestaddr },
+	{ 0, 1, 0, 0, 1, lsutestaddr },
+	{ 0, 1, 0, 0, 1, lsutestaddr },
+	{ 0, 1, 0, 0, 1, lsutestaddr },
+	{ 1, 1, 1, 1, 1, lsutestaddr },
+	{ 0, 1, 0, 0, 1, lsutestaddr },
+	{ 0, 1, 0, 0, 1, lsutestaddr },
+	{ 0, 1, 0, 0, 1, lsutestaddr },
+	{ 0, 1, 0, 0, 1, lsutestaddr },
+	{ 0, 1, 0, 0, 1, lsutestaddr },
 }
 local lsuloopindex = 2
 local lsuc = 0
