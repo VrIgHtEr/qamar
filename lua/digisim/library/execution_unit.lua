@@ -49,23 +49,32 @@ return function(simulation)
 				:c(c1, "q", s1, "d")
 				:c(c1, "q", f, "isched")
 
-			local cs0 = f .. ".cs0"
-			s:new_and_bank(cs0):c(s0, "q", cs0, "a"):c(f, "rising", cs0, "b")
+			local lsubuf = f .. ".lsubuf"
+			s:new_tristate_buffer(lsubuf, { width = 3 })
+			s:cp(1, "VCC", "q", 1, lsubuf, "a", 1)
+			s:cp(1, "VCC", "q", 1, lsubuf, "a", 2)
+			s:cp(1, "VCC", "q", 1, lsubuf, "a", 3)
+			s:c(c0, "q", lsubuf, "en")
+			s:cp(1, lsubuf, "q", 1, f, "lsu_trigin", 1)
+			s:cp(2, lsubuf, "q", 2, f, "lsu_control", 1)
+
+			local cc0 = f .. ".cc0"
+			s:new_and_bank(cc0):c(s0, "q", cc0, "a"):c(f, "rising", cc0, "b")
 
 			local ireg = f .. ".ireg"
 			s
 				:new_ms_d_flipflop_bank(ireg, { width = BITS })
 				:c(f, "rst~", ireg, "rst~")
 				:c(f, "falling", ireg, "falling")
-				:c(cs0, "q", ireg, "rising")
+				:c(cc0, "q", ireg, "rising")
 			local iregmux = f .. ".iregmux"
 			s
 				:new_mux_bank(iregmux, { bits = BITS, width = 1 })
 				:c(iregmux, "out", f, "ireg")
+				:c(iregmux, "out", ireg, "d")
 				:c(s0, "q", iregmux, "sel")
 				:c(f, "d", iregmux, "d1")
 				:c(ireg, "q", iregmux, "d0")
-				:c(iregmux, "out", ireg, "d")
 		end
 	)
 end

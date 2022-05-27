@@ -16,17 +16,8 @@ return function(simulation)
 			opts = opts or { trace = nil, file = nil }
 			opts.names = {
 				inputs = {
-					"alu_nota",
-					"alu_notb",
-					"alu_cin",
-					{ "alu_sel", 2 },
-					{ "rd", REGISTER_SELECT_WIDTH },
-					{ "rs1", REGISTER_SELECT_WIDTH },
-					{ "rs2", REGISTER_SELECT_WIDTH },
-					{ "lsu_control", 2 },
-					"lsu_sext",
-					"lsu_trigin",
 					"xu_trigin",
+					{ "address", BUS_WIDTH },
 					"rst~",
 				},
 				outputs = { "q" },
@@ -44,26 +35,19 @@ return function(simulation)
 						"alu_cin",
 						"lsu_sext",
 						"lsu_trigin",
+						"alu_oe",
 						"xu_trigin",
+						"isched",
 						{ "lsu_control", 2 },
 						{ "alu_sel", 2 },
 						{ "rd", REGISTER_SELECT_WIDTH },
 						{ "rs1", REGISTER_SELECT_WIDTH },
 						{ "rs2", REGISTER_SELECT_WIDTH },
+						{ "ireg", BUS_WIDTH },
 					},
 				},
 			})
-			s:c(core, "alu_nota", control, "alu_nota")
-			s:c(core, "alu_notb", control, "alu_notb")
-			s:c(core, "alu_cin", control, "alu_cin")
-			s:c(core, "alu_sel", control, "alu_sel")
-			s:c(core, "rd", control, "rd")
-			s:c(core, "rs1", control, "rs1")
-			s:c(core, "rs2", control, "rs2")
-			s:c(core, "lsu_sext", control, "lsu_sext")
-			s:c(core, "lsu_trigin", control, "lsu_trigin")
 			s:c(core, "xu_trigin", control, "xu_trigin")
-			s:c(core, "lsu_control", control, "lsu_control")
 			s:c(core, "rst~", control, "rst~")
 			------------------------------------------------------------------------------
 			do
@@ -77,6 +61,10 @@ return function(simulation)
 				s:new_pulldown(alu_cin):c(alu_cin, "q", control, "alu_cin")
 				local lsu_sext = control .. ".pulldown.lsu_sext"
 				s:new_pulldown(lsu_sext):c(lsu_sext, "q", control, "lsu_sext")
+				local alu_oe = control .. ".pulldown.alu_oe"
+				s:new_pulldown(alu_oe):c(alu_oe, "q", control, "alu_oe")
+				local isched = control .. ".pulldown.isched"
+				s:new_pulldown(isched):c(isched, "q", control, "isched")
 				local lsu_trigin = control .. ".pulldown.lsu_trigin"
 				s:new_pulldown(lsu_trigin):c(lsu_trigin, "q", control, "lsu_trigin")
 				local xu_trigin = control .. ".pulldown.xu_trigin"
@@ -94,6 +82,10 @@ return function(simulation)
 					s:new_pulldown(rs1):cp(1, rs1, "q", 1, control, "rs1", i)
 					local rs2 = control .. ".pulldown.rs2" .. (i - 1)
 					s:new_pulldown(rs2):cp(1, rs2, "q", 1, control, "rs2", i)
+				end
+				for i = 1, BUS_WIDTH do
+					local ireg = control .. ".pulldown.ireg" .. (i - 1)
+					s:new_pulldown(ireg):cp(1, ireg, "q", 1, control, "ireg", i)
 				end
 			end
 
@@ -113,6 +105,7 @@ return function(simulation)
 				},
 				trace = opts.trace,
 			})
+			s:c(core, "address", buses, "d")
 			for i = 1, BUS_WIDTH do
 				local a = buses .. ".pulldowns.a" .. (i - 1)
 				s:new_pulldown(a):cp(1, a, "q", 1, buses, "a", i)
@@ -128,7 +121,7 @@ return function(simulation)
 			s:c(control, "alu_notb", alu, "notb")
 			s:c(control, "alu_cin", alu, "cin")
 			s:c(control, "alu_sel", alu, "sel")
-			s:c(control, "rst~", alu, "oe")
+			s:c(control, "alu_oe", alu, "oe")
 			s:c(buses, "a", alu, "a")
 			s:c(buses, "b", alu, "b")
 			s:c(alu, "out", buses, "d")
@@ -158,18 +151,24 @@ return function(simulation)
 				:c(control, "lsu_trigin", lsu, "trigin")
 				:c(control, "rst~", lsu, "rst~")
 				:c(control, "lsu_sext", lsu, "sext")
+				:c(lsu, "out", buses, "d")
 			------------------------------------------------------------------------------
 			local idecode = core .. ".idecode"
 			s:new_instruction_decoder(idecode, { trace = opts.trace })
-			s:c(buses, "d", idecode, "in")
+			s:c(control, "ireg", idecode, "in")
 			------------------------------------------------------------------------------
 			local xu = core .. ".xu"
 			s:new_execution_unit(xu, { trace = opts.trace })
+			s:c(buses, "d", xu, "d")
 			s:c(clk, "rising", xu, "rising")
 			s:c(clk, "falling", xu, "falling")
 			s:c(control, "rst~", xu, "rst~")
 			s:c(control, "xu_trigin", xu, "trigin")
 			s:c(lsu, "trigout", xu, "lsu_trigout")
+			s:c(xu, "ireg", control, "ireg")
+			s:c(xu, "isched", control, "isched")
+			s:c(xu, "lsu_control", control, "lsu_control")
+			s:c(xu, "lsu_trigin", control, "lsu_trigin")
 		end
 	)
 end
