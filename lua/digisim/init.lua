@@ -2,66 +2,17 @@ local constants = require("digisim.constants")
 local simulation = require("digisim.simulation")
 
 io.stderr:write("building circuit...\n")
-local vcc = "VCC"
-local gnd = "GND"
-
-local clk = "CPU.clock"
-local rst = "CPU.reset~"
-local cu = "CPU.cu"
-local alu = "CPU.alu"
-local regs = "CPU.registers"
-local buses = "CPU.buses"
-local memory = "CPU.memory"
 
 local sim = simulation.new()
--- constants ----------------------------------------------------------------------------------------
-sim:new_vcc(vcc):new_gnd(gnd)
 
--- reset --------------------------------------------------------------------------------------------
-sim:new_reset(rst, { period = constants.STARTUP_TICKS, trace = true })
+local rst = "RESET"
+sim:new_reset(rst, { period = 32 })
 
--- clock --------------------------------------------------------------------------------------------
-sim:new_clock_module(clk, { period = constants.CLOCK_PERIOD_TICKS, chain_length = 2, trace = true })
+local core = "CPU"
+sim:new_core(core, { trace = true, file = "./lua/sram.dat" })
+sim:c(rst, "q", core, "rst~")
 
--- alu ----------------------------------------------------------------------------------------------
-sim:new_alu(alu, { width = constants.BUS_WIDTH, trace = true }):c(rst, "q", alu, "oe")
-
--- registers -----------------------------------------------------------------------------------------
-sim
-	:new_register_bank(regs, { width = constants.BUS_WIDTH, selwidth = constants.REGISTER_SELECT_WIDTH, trace = true })
-	:c(alu, "out", regs, "in")
-	:c(clk, "rising", regs, "rising")
-	:c(rst, "q", regs, "~rst")
-	:c(regs, "outa", alu, "a")
-	:c(regs, "outb", alu, "b")
-
--- buses ---------------------------------------------------------------------------------------------
-sim
-	:add_component(buses, {
-		names = {
-			inputs = {},
-			outputs = {
-				{ "a", constants.BUS_WIDTH },
-				{ "b", constants.BUS_WIDTH },
-				{ "d", constants.BUS_WIDTH },
-			},
-		},
-		trace = true,
-	})
-	:c(regs, "in", buses, "d")
-	:c(alu, "a", buses, "a")
-	:c(alu, "b", buses, "b")
-for i = 1, constants.BUS_WIDTH do
-	local a = buses .. ".pulldowns.a" .. (i - 1)
-	sim:new_pulldown(a):cp(1, a, "q", 1, buses, "a", i)
-	local b = buses .. ".pulldowns.b" .. (i - 1)
-	sim:new_pulldown(b):cp(1, b, "q", 1, buses, "b", i)
-	local d = buses .. ".pulldowns.d" .. (i - 1)
-	sim:new_pulldown(d):cp(1, d, "q", 1, buses, "d", i)
-end
--- buses ---------------------------------------------------------------------------------------------
-
-sim:new_sram(memory, { width = constants.BUS_WIDTH, data_width = 8, file = "./lua/sram.dat" })
+local cu = core .. ".cu"
 
 -- program -------------------------------------------------------------------------------------------
 local function reg(r)
@@ -107,43 +58,16 @@ sim:add_component(cu, {
 	return unpack(ret)
 end)
 sim
-	:c(cu, "op", alu, "sel")
-	:c(cu, "cin", alu, "cin")
-	:c(cu, "nota", alu, "nota")
-	:c(cu, "notb", alu, "notb")
-	:c(cu, "sela", regs, "sela")
-	:c(cu, "selb", regs, "selb")
-	:c(cu, "selw", regs, "selw")
+	:c(cu, "op", core, "alu_sel")
+	:c(cu, "cin", core, "alu_cin")
+	:c(cu, "nota", core, "alu_nota")
+	:c(cu, "notb", core, "alu_notb")
+	:c(cu, "sela", core, "rs1")
+	:c(cu, "selb", core, "rs2")
+	:c(cu, "selw", core, "rd")
+-----------------------------------------------------------------------------------------------------
 
-local idecode = "IDECODE"
-sim:new_instruction_decoder(idecode)
-sim:c(alu, "out", idecode, "in")
------------------------------------------------------------------------------------------------------
-local seq = "SEQ"
-sim:new_seq(seq, { width = 8 })
-sim:c(rst, "q", seq, "rst~")
-sim:c(clk, "rising", seq, "rising")
------------------------------------------------------------------------------------------------------
-local pc = "PC"
-sim:new_pc(pc, { width = constants.BUS_WIDTH })
------------------------------------------------------------------------------------------------------
-sim:c(memory, "write", "GND", "q")
-sim:c(memory, "oe", "VCC", "q")
-sim:c(memory, "address", buses, "d")
------------------------------------------------------------------------------------------------------
-local shift = "SHIFT"
-sim:new_barrel_shifter(shift, { width = constants.REGISTER_SELECT_WIDTH })
-sim:c(shift, "a", alu, "out")
-sim:c(idecode, "rs2", shift, "b")
-sim:new_clock("ARITHMETIC", { period = constants.CLOCK_PERIOD_TICKS * 2 }):c("ARITHMETIC", "q", shift, "arithmetic")
-sim:new_clock("LEFT", { period = constants.CLOCK_PERIOD_TICKS * 4 }):c("LEFT", "q", shift, "left")
------------------------------------------------------------------------------------------------------
-local lsu = "CPU.lsu"
-sim
-	:new_load_store_unit(lsu, { file = "./lua/sram.dat" })
-	:c(clk, "rising", lsu, "rising")
-	:c(clk, "falling", lsu, "falling")
-local lsutest = lsu .. ".TEST"
+local lsutest = core .. ".lsu.TEST"
 
 local lsutestaddr = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
 local lsuprogram = {
@@ -279,12 +203,10 @@ sim
 		ret[#ret + 1] = constants.CLOCK_PERIOD_TICKS
 		return unpack(ret)
 	end)
-	:c(lsutest, "trigin", lsu, "trigin")
-	:cp(1, lsutest, "b16", 1, lsu, "control", 1)
-	:cp(1, lsutest, "b32", 1, lsu, "control", 2)
-	:c(lsutest, "rst~", lsu, "rst~")
-	:c(lsutest, "sext", lsu, "sext")
-	:c(lsutest, "address", lsu, "address")
+	:c(lsutest, "trigin", core, "lsu_trigin")
+	:cp(1, lsutest, "b16", 1, core, "lsu_control", 1)
+	:cp(1, lsutest, "b32", 1, core, "lsu_control", 2)
+	:c(lsutest, "sext", core, "lsu_sext")
 -----------------------------------------------------------------------------------------------------
 
 local max = 0

@@ -25,6 +25,12 @@ function simulation.new()
 		queue = pq.new(),
 		simulation_started = false,
 	}, MT)
+	ret:add_component("VCC", { names = { outputs = { "q" } } }, function()
+		return 1
+	end)
+	ret:add_component("GND", { names = { outputs = { "q" } } }, function()
+		return 0
+	end)
 	return ret
 end
 local signal = require("digisim.signal")
