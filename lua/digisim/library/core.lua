@@ -26,6 +26,7 @@ return function(simulation)
 					{ "lsu_control", 2 },
 					"lsu_sext",
 					"lsu_trigin",
+					"xu_trigin",
 					"rst~",
 				},
 				outputs = { "q" },
@@ -43,6 +44,7 @@ return function(simulation)
 						"alu_cin",
 						"lsu_sext",
 						"lsu_trigin",
+						"xu_trigin",
 						{ "lsu_control", 2 },
 						{ "alu_sel", 2 },
 						{ "rd", REGISTER_SELECT_WIDTH },
@@ -60,6 +62,7 @@ return function(simulation)
 			s:c(core, "rs2", control, "rs2")
 			s:c(core, "lsu_sext", control, "lsu_sext")
 			s:c(core, "lsu_trigin", control, "lsu_trigin")
+			s:c(core, "xu_trigin", control, "xu_trigin")
 			s:c(core, "lsu_control", control, "lsu_control")
 			s:c(core, "rst~", control, "rst~")
 			------------------------------------------------------------------------------
@@ -76,6 +79,8 @@ return function(simulation)
 				s:new_pulldown(lsu_sext):c(lsu_sext, "q", control, "lsu_sext")
 				local lsu_trigin = control .. ".pulldown.lsu_trigin"
 				s:new_pulldown(lsu_trigin):c(lsu_trigin, "q", control, "lsu_trigin")
+				local xu_trigin = control .. ".pulldown.xu_trigin"
+				s:new_pulldown(xu_trigin):c(xu_trigin, "q", control, "xu_trigin")
 				for i = 1, 2 do
 					local lsu_control = control .. ".pullup.lsu_control" .. (i - 1)
 					s:new_pullup(lsu_control):cp(1, lsu_control, "q", 1, control, "lsu_control", i)
@@ -154,9 +159,17 @@ return function(simulation)
 				:c(control, "rst~", lsu, "rst~")
 				:c(control, "lsu_sext", lsu, "sext")
 			------------------------------------------------------------------------------
-			local idecode = "IDECODE"
+			local idecode = core .. ".idecode"
 			s:new_instruction_decoder(idecode, { trace = opts.trace })
 			s:c(buses, "d", idecode, "in")
+			------------------------------------------------------------------------------
+			local xu = core .. ".xu"
+			s:new_execution_unit(xu, { trace = opts.trace })
+			s:c(clk, "rising", xu, "rising")
+			s:c(clk, "falling", xu, "falling")
+			s:c(control, "rst~", xu, "rst~")
+			s:c(control, "xu_trigin", xu, "trigin")
+			s:c(lsu, "trigout", xu, "lsu_trigout")
 		end
 	)
 end
