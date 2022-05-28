@@ -38,12 +38,14 @@ return function(simulation)
 						"alu_oe",
 						"xu_trigin",
 						"isched",
+						"branch",
 						{ "lsu_control", 2 },
 						{ "alu_sel", 2 },
 						{ "rd", REGISTER_SELECT_WIDTH },
 						{ "rs1", REGISTER_SELECT_WIDTH },
 						{ "rs2", REGISTER_SELECT_WIDTH },
 						{ "ireg", BUS_WIDTH },
+						{ "pc", BUS_WIDTH },
 					},
 				},
 			})
@@ -65,6 +67,8 @@ return function(simulation)
 				s:new_pulldown(alu_oe):c(alu_oe, "q", control, "alu_oe")
 				local isched = control .. ".pulldown.isched"
 				s:new_pulldown(isched):c(isched, "q", control, "isched")
+				local branch = control .. ".pulldown.branch"
+				s:new_pulldown(branch):c(branch, "q", control, "branch")
 				local lsu_trigin = control .. ".pulldown.lsu_trigin"
 				s:new_pulldown(lsu_trigin):c(lsu_trigin, "q", control, "lsu_trigin")
 				local xu_trigin = control .. ".pulldown.xu_trigin"
@@ -86,6 +90,8 @@ return function(simulation)
 				for i = 1, BUS_WIDTH do
 					local ireg = control .. ".pulldown.ireg" .. (i - 1)
 					s:new_pulldown(ireg):cp(1, ireg, "q", 1, control, "ireg", i)
+					local pc = control .. ".pulldown.pc" .. (i - 1)
+					s:new_pulldown(pc):cp(1, pc, "q", 1, control, "pc", i)
 				end
 			end
 
@@ -152,6 +158,16 @@ return function(simulation)
 				:c(control, "rst~", lsu, "rst~")
 				:c(control, "lsu_sext", lsu, "sext")
 				:c(lsu, "out", buses, "d")
+			------------------------------------------------------------------------------
+			local pc = core .. ".pc"
+			s:new_program_counter(pc)
+			s:c(control, "rst~", pc, "rst~")
+			s:c(clk, "rising", pc, "rising")
+			s:c(clk, "falling", pc, "falling")
+			s:c(control, "branch", pc, "branch")
+			s:c(control, "xu_trigin", pc, "icomplete")
+			s:c(buses, "d", pc, "d")
+			s:c(pc, "pc", control, "pc")
 			------------------------------------------------------------------------------
 			local xu = core .. ".xu"
 			s:new_execution_unit(xu, { trace = opts.trace })

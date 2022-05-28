@@ -1,0 +1,77 @@
+---@class simulation
+---@field new_program_counter fun(circuit:simulation,name:string,opts:table|nil):simulation
+
+local BITS = 32
+
+---@param simulation simulation
+return function(simulation)
+	simulation:register_component(
+		"program_counter",
+		---@param s simulation
+		---@param f string
+		---@param opts boolean
+		function(s, f, opts)
+			opts = opts or {}
+			opts.names = {
+				inputs = {
+					"rst~",
+					"rising",
+					"falling",
+					"branch",
+					"icomplete",
+					{ "d", BITS },
+				},
+				outputs = {
+					{ "pc", BITS },
+				},
+			}
+			s:add_component(f, opts)
+
+			local latch_trigger = f .. ".trigger"
+			s:new_and_bank(latch_trigger):c(f, "rising", latch_trigger, "a"):c(f, "icomplete", latch_trigger, "b")
+			local pc = f .. ".register"
+			s
+				:new_ms_d_flipflop_bank(pc, { width = BITS })
+				:c(f, "rst~", pc, "rst~")
+				:c(latch_trigger, "q", pc, "rising")
+				:c(f, "falling", pc, "falling")
+
+			local mux = f .. ".mux"
+			s:new_mux_bank(mux, { width = 1, bits = BITS })
+			s:c(f, "branch", mux, "sel")
+			s:c(f, "d", mux, "d1")
+			s:cp(2, pc, "q", 1, mux, "d0", 1)
+			do
+				local padder
+				for i = 3, BITS do
+					local adder = f .. ".adder" .. (i - 1)
+					s:new_half_adder(adder)
+					s:cp(1, pc, "q", i, adder, "a", 1)
+					s:cp(1, adder, "sum", 1, mux, "d0", i)
+					if i == 3 then
+						s:c("VCC", "q", adder, "b")
+					else
+						s:c(padder, "carry", adder, "b")
+					end
+					padder = adder
+				end
+			end
+			s:c(mux, "out", f, "pc")
+			s:c(mux, "out", pc, "d")
+			local nbranch = f .. ".nbranch"
+			s:new_not(nbranch)
+			s:c(f, "branch", nbranch, "a")
+
+			local oe = f .. ".oe"
+			s:new_and_bank(oe)
+			s:c(f, "icomplete", oe, "a")
+			s:c(nbranch, "q", oe, "b")
+
+			local buf = f .. ".buf"
+			s:new_tristate_buffer(buf, { width = BITS })
+			s:c(oe, "q", buf, "en")
+			s:c(mux, "out", buf, "a")
+			s:c(buf, "q", f, "d")
+		end
+	)
+end

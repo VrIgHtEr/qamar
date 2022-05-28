@@ -54,14 +54,14 @@ local lsutestz = {
 local lsuprogram = {
 	--xu rs address
 	{ -1, 0, lsutestz },
-	--loop
 	{ 1, 1, lsutestaddr },
+	--loop
 	{ -1, 1, lsutestz },
 	{ -1, 1, lsutestz },
 	{ -1, 1, lsutestz },
 	{ -1, 1, lsutestz },
 	{ -1, 1, lsutestz },
-	{ -1, 1, lsutestz },
+	{ -1, 1, lsutestaddr },
 }
 local lsuloopindex = 3
 local lsuc = 0
