@@ -209,7 +209,7 @@ return function(simulation)
 			self:c(J, "q", dec, "j")
 
 			local aluop = n .. "aluop"
-			build_minterm(aluop, "A'BCD'E'FGK'M'N'O'P'Q'")
+			build_minterm(aluop, "A'BCD'E'")
 			self:c(aluop, "q", dec, "aluop")
 
 			local illegal = n .. "illegal"
