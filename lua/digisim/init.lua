@@ -53,15 +53,15 @@ local lsutestz = {
 }
 local lsuprogram = {
 	--xu rs address
-	{ -1, 0, lsutestz },
-	{ 1, 1, lsutestaddr },
+	{ -1, -1, 0, lsutestz },
+	{ 1, 1, 1, lsutestz },
 	--loop
-	{ -1, 1, lsutestz },
-	{ -1, 1, lsutestz },
-	{ -1, 1, lsutestz },
-	{ -1, 1, lsutestz },
-	{ -1, 1, lsutestz },
-	{ -1, 1, lsutestaddr },
+	{ -1, -1, 1, lsutestz },
+	{ -1, -1, 1, lsutestz },
+	{ -1, -1, 1, lsutestz },
+	{ -1, -1, 1, lsutestz },
+	{ -1, -1, 1, lsutestz },
+	{ -1, -1, 1, lsutestz },
 }
 local lsuloopindex = 3
 local lsuc = 0
@@ -72,6 +72,7 @@ sim:add_component(coretest, {
 		inputs = {},
 		outputs = {
 			"xu_trigin",
+			"branch",
 			"rst~",
 			{ "address", 32 },
 		},
@@ -93,7 +94,7 @@ sim:add_component(coretest, {
 	return unpack(ret)
 end)
 sim:c(coretest, "xu_trigin", core, "xu_trigin")
-sim:c(coretest, "address", core, "address")
+sim:c(coretest, "branch", core, "branch")
 -----------------------------------------------------------------------------------------------------
 
 local max = 0

@@ -17,7 +17,7 @@ return function(simulation)
 			opts.names = {
 				inputs = {
 					"xu_trigin",
-					{ "address", BUS_WIDTH },
+					"branch",
 					"rst~",
 				},
 				outputs = { "q" },
@@ -50,6 +50,7 @@ return function(simulation)
 				},
 			})
 			s:c(core, "xu_trigin", control, "xu_trigin")
+			s:c(core, "branch", control, "branch")
 			s:c(core, "rst~", control, "rst~")
 			------------------------------------------------------------------------------
 			do
@@ -111,7 +112,6 @@ return function(simulation)
 				},
 				trace = opts.trace,
 			})
-			s:c(core, "address", buses, "d")
 			for i = 1, BUS_WIDTH do
 				local a = buses .. ".pulldowns.a" .. (i - 1)
 				s:new_pulldown(a):cp(1, a, "q", 1, buses, "a", i)
