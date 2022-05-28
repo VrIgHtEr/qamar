@@ -153,10 +153,6 @@ return function(simulation)
 				:c(control, "lsu_sext", lsu, "sext")
 				:c(lsu, "out", buses, "d")
 			------------------------------------------------------------------------------
-			local idecode = core .. ".idecode"
-			s:new_instruction_decoder(idecode, { trace = opts.trace })
-			s:c(control, "ireg", idecode, "in")
-			------------------------------------------------------------------------------
 			local xu = core .. ".xu"
 			s:new_execution_unit(xu, { trace = opts.trace })
 			s:c(buses, "d", xu, "d")
@@ -169,6 +165,31 @@ return function(simulation)
 			s:c(xu, "isched", control, "isched")
 			s:c(xu, "lsu_control", control, "lsu_control")
 			s:c(xu, "lsu_trigin", control, "lsu_trigin")
+			------------------------------------------------------------------------------
+			local idecode = core .. ".idecode"
+			s:new_instruction_decoder(idecode, { trace = opts.trace })
+			s:c(control, "ireg", idecode, "in")
+			------------------------------------------------------------------------------
+			local i_addsub = core .. ".instructions.add_sub"
+			s:new_instruction_add_sub(i_addsub, { trace = opts.trace })
+			s:c(control, "rst~", i_addsub, "rst~")
+			s:c(clk, "rising", i_addsub, "rising")
+			s:c(clk, "falling", i_addsub, "falling")
+			s:c(control, "isched", i_addsub, "isched")
+			s:c(idecode, "r", i_addsub, "r")
+			s:c(idecode, "aluop", i_addsub, "aluop")
+			s:c(idecode, "funct3", i_addsub, "funct3")
+			s:c(idecode, "rs1", i_addsub, "rs1")
+			s:c(idecode, "rs2", i_addsub, "rs2")
+			s:c(idecode, "rd", i_addsub, "rd")
+			s:cp(1, idecode, "funct7", 6, i_addsub, "sub", 1)
+			s:c(i_addsub, "icomplete", control, "xu_trigin")
+			s:c(i_addsub, "sela", control, "rs1")
+			s:c(i_addsub, "selb", control, "rs2")
+			s:c(i_addsub, "selw", control, "rd")
+			s:c(i_addsub, "alu_oe", control, "alu_oe")
+			s:c(i_addsub, "alu_notb", control, "alu_notb")
+			s:c(i_addsub, "alu_cin", control, "alu_cin")
 		end
 	)
 end

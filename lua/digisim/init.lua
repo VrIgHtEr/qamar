@@ -53,19 +53,17 @@ local lsutestz = {
 }
 local lsuprogram = {
 	--xu rs address
-	{ 0, 0, lsutestz },
-
+	{ -1, 0, lsutestz },
 	--loop
 	{ 1, 1, lsutestaddr },
-	{ 0, 1, lsutestz },
-	{ 0, 1, lsutestz },
-	{ 0, 1, lsutestz },
-	{ 0, 1, lsutestz },
-	{ 0, 1, lsutestz },
-	{ 0, 1, lsutestz },
-	{ 0, 1, lsutestz },
+	{ -1, 1, lsutestz },
+	{ -1, 1, lsutestz },
+	{ -1, 1, lsutestz },
+	{ -1, 1, lsutestz },
+	{ -1, 1, lsutestz },
+	{ -1, 1, lsutestz },
 }
-local lsuloopindex = 2
+local lsuloopindex = 3
 local lsuc = 0
 
 sim:add_component(coretest, {
