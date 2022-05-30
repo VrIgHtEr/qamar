@@ -16,8 +16,6 @@ return function(simulation)
 			opts = opts or { trace = nil, file = nil }
 			opts.names = {
 				inputs = {
-					"xu_trigin",
-					"branch",
 					"rst~",
 				},
 				outputs = { "q" },
@@ -50,8 +48,6 @@ return function(simulation)
 					},
 				},
 			})
-			s:c(core, "xu_trigin", control, "xu_trigin")
-			s:c(core, "branch", control, "branch")
 			s:c(core, "rst~", control, "rst~")
 			------------------------------------------------------------------------------
 			do
@@ -330,6 +326,14 @@ return function(simulation)
 			s:c(i_ori, "alu_oe", control, "alu_oe")
 			s:c(i_ori, "imm_oe", control, "imm_oe")
 			s:c(i_ori, "alu_sel", control, "alu_sel")
+			------------------------------------------------------------------------------
+			local kickstarter = core .. ".kickstarter"
+			s:new_kickstarter(kickstarter)
+			s:c(control, "rst~", kickstarter, "rst~")
+			s:c(clk, "rising", kickstarter, "rising")
+			s:c(clk, "falling", kickstarter, "falling")
+			s:c(kickstarter, "branch", control, "branch")
+			s:c(kickstarter, "icomplete", control, "xu_trigin")
 		end
 	)
 end
