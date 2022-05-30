@@ -50,7 +50,7 @@ return function(simulation)
 			local bitwise = f .. ".bitwise"
 			s:new_and(bitwise):cp(2, f, "funct3", 2, bitwise, "in", 1)
 			local shift = f .. ".shift"
-			s:new_and(shift):cp(1, f, "funct3", 1, shift, "in", 1):cp(1, nf3, "q", 1, shift, "in", 2)
+			s:new_and(shift):cp(1, f, "funct3", 1, shift, "in", 1):cp(1, nf3, "q", 2, shift, "in", 2)
 			local sl = f .. ".setless"
 			s:new_and(sl):cp(1, nf3, "q", 3, sl, "in", 1):cp(1, f, "funct3", 2, sl, "in", 2)
 
