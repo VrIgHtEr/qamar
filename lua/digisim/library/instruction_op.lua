@@ -93,10 +93,14 @@ return function(simulation)
 			s:c(activated, "q", trignext, "d")
 			s:c(trignext, "q", f, "icomplete")
 
+			local cin = f .. ".cin"
+			s:new_and(cin)
+			s:cp(1, f, "sub", 1, cin, "in", 1)
+			s:cp(1, f, "opcode", 4, cin, "in", 2)
 			local notb = f .. ".notb"
-			s:new_and_bank(notb)
-			s:c(f, "sub", notb, "a")
-			s:c(add, "q", notb, "b")
+			s:new_and(notb)
+			s:cp(1, add, "q", 1, notb, "in", 1)
+			s:cp(1, cin, "q", 1, notb, "in", 2)
 
 			local buf1 = f .. ".buf1"
 			s:new_tristate_buffer(buf1, { width = 7 })
@@ -107,7 +111,7 @@ return function(simulation)
 				:cp(1, "VCC", "q", 1, buf1, "a", 3)
 				:cp(1, f, "opcode", 4, buf1, "a", 4)
 				:cp(1, nopcode, "q", 4, buf1, "a", 5)
-				:cp(1, f, "sub", 1, buf1, "a", 6)
+				:cp(1, cin, "q", 1, buf1, "a", 6)
 				:cp(1, notb, "q", 1, buf1, "a", 7)
 			s
 				:cp(1, buf1, "q", 1, f, "alu_oe", 1)
