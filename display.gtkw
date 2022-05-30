@@ -1,14 +1,16 @@
 [*]
 [*] GTKWave Analyzer v3.3.111 (w)1999-2020 BSI
-[*] Mon May 30 14:29:51 2022
+[*] Mon May 30 16:41:39 2022
 [*]
 [dumpfile] "(null)"
 [savefile] "/home/cedric/code/repos/qamar/display.gtkw"
 [timestart] 0
 [size] 1920 1006
-[pos] -7 -4
+[pos] -1 -1
 *-10.524915 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] CPU.
+[treeopen] CPU.instructions.
+[treeopen] CPU.instructions.op.
 [sst_width] 211
 [signals_width] 241
 [sst_expanded] 1
@@ -40,5 +42,21 @@ CPU.instructions.add_sub.isched
 +{A bus} CPU.buses.a[31:0]
 +{B bus} CPU.buses.b[31:0]
 +{D bus} CPU.buses.d[31:0]
+@200
+-
+@28
++{aluop} CPU.instructions.op.aluop.q
++{bitwise} CPU.instructions.op.bitwise.q
++{arithmetic} CPU.instructions.op.arithmetic.q
++{shift} CPU.instructions.op.shift.q
++{setless} CPU.instructions.op.setless.q
+@200
+-
+@28
++{visched} CPU.instructions.op.visched.q
++{vsub} CPU.instructions.op.vsub.q
++{vsubsel} CPU.instructions.op.vsubsel.q
++{activated} CPU.instructions.op.activated.q
++{trignext} CPU.instructions.op.trignext.q
 [pattern_trace] 1
 [pattern_trace] 0

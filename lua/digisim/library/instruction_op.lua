@@ -1,8 +1,6 @@
 ---@class simulation
 ---@field new_instruction_op fun(circuit:simulation,name:string,opts:table|nil):simulation
 
-local REGISTER_SELECT_WIDTH = 5
-
 ---@param simulation simulation
 return function(simulation)
 	simulation:register_component(
@@ -18,7 +16,6 @@ return function(simulation)
 					"rising",
 					"falling",
 					"isched",
-					"valid",
 					"sub",
 					{ "opcode", 5 },
 					{ "funct3", 3 },
@@ -34,9 +31,10 @@ return function(simulation)
 					"imm_oe",
 				},
 			}
+			s:add_component(f, opts)
+
 			local nopcode = f .. ".nopcode"
 			s:new_not(nopcode, { width = 5 }):c(f, "opcode", nopcode, "a")
-			s:add_component(f, opts)
 			local aluop = f .. ".aluop"
 			s:new_and(aluop, { width = 4 })
 			s:cp(1, nopcode, "q", 1, aluop, "in", 1)
@@ -76,6 +74,26 @@ return function(simulation)
 			s:cp(1, sll, "q", 1, vsubsel, "in", 4)
 			local vsub = f .. ".vsub"
 			s:new_nand(vsub):cp(1, nsub, "q", 1, vsub, "in", 1)
+			local visched = f .. ".visched"
+			s:new_and(visched, { width = 3 })
+			s
+				:cp(1, vsub, "q", 1, visched, "in", 1)
+				:cp(1, f, "isched", 1, visched, "in", 2)
+				:cp(1, aluop, "q", 1, visched, "in", 3)
+
+			local activated = f .. ".activated"
+			s:new_ms_d_flipflop(activated)
+			s:c(f, "rst~", activated, "rst~")
+			s:c(f, "rising", activated, "rising")
+			s:c(f, "falling", activated, "falling")
+			s:c(visched, "q", activated, "d")
+			local trignext = f .. ".trignext"
+			s:new_ms_d_flipflop(trignext)
+			s:c(f, "rst~", trignext, "rst~")
+			s:c(f, "rising", trignext, "rising")
+			s:c(f, "falling", trignext, "falling")
+			s:c(activated, "q", trignext, "d")
+			s:c(trignext, "q", f, "icomplete")
 		end
 	)
 end

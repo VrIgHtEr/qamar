@@ -328,6 +328,16 @@ return function(simulation)
 			s:c(i_ori, "imm_oe", control, "imm_oe")
 			s:c(i_ori, "alu_sel", control, "alu_sel")
 			------------------------------------------------------------------------------
+			local i_op = core .. ".instructions.op"
+			s:new_instruction_op(i_op, { trace = opts.trace })
+			s:c(control, "rst~", i_op, "rst~")
+			s:c(clk, "rising", i_op, "rising")
+			s:c(clk, "falling", i_op, "falling")
+			s:c(control, "isched", i_op, "isched")
+			s:cp(1, idecode, "funct7", 6, i_op, "sub", 1)
+			s:c(idecode, "funct3", i_op, "funct3")
+			s:cp(5, idecode, "opcode", 3, i_op, "opcode", 1)
+			------------------------------------------------------------------------------
 			local kickstarter = core .. ".kickstarter"
 			s:new_kickstarter(kickstarter)
 			s:c(control, "rst~", kickstarter, "rst~")
