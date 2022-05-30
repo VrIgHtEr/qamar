@@ -1,0 +1,10 @@
+#!/bin/env sh
+mkdir -p ./asm
+cd ./asm
+rm -rf a.out
+rm -rf test.dat
+riscv64-linux-gnu-as -march=rv32i ../test.asm
+objcopy -O ihex a.out test.hex
+mv test.bin ../lua/sram.dat
+cd ..
+rm -rf asm
