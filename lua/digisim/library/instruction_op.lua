@@ -29,6 +29,7 @@ return function(simulation)
 					"imm_oe",
 					"alu_notb",
 					"alu_cin",
+					"alu_left",
 				},
 			}
 			s:add_component(f, opts)

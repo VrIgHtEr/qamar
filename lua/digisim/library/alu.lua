@@ -76,8 +76,16 @@ return function(simulation)
 			sim:cp(1, f0, "carry", 1, alu, "carry", 1)
 			sim:c(f0, "sum", lm, "d0")
 
-			local f1 = alu .. ".sll"
-			sim:new_pulldown(f1, { width = width }):c(f1, "q", lm, "d1")
+			local nsel2 = alu .. ".nsel2"
+			sim:new_not(nsel2):cp(1, alu, "sel", 3, nsel2, "a", 1)
+			local f15 = alu .. ".sll"
+			sim:new_barrel_shifter(f15, { width = 5 })
+			sim:c(nsel2, "q", f15, "left")
+			sim:c(alu, "cin", f15, "arithmetic")
+			sim:c(alu, "a", f15, "a")
+			sim:cp(5, alu, "b", 1, f15, "b", 1)
+			sim:c(f15, "q", lm, "d1")
+			sim:c(f15, "q", lm, "d5")
 
 			local f2 = alu .. ".slt"
 			sim:new_pulldown(f2, { width = width }):c(f2, "q", lm, "d2")
@@ -90,9 +98,6 @@ return function(simulation)
 			sim:c(alu, "a", f4, "a")
 			sim:c(xb, "q", f4, "b")
 			sim:c(f4, "q", lm, "d4")
-
-			local f5 = alu .. ".srl"
-			sim:new_pulldown(f5, { width = width }):c(f5, "q", lm, "d3")
 
 			local f6 = alu .. ".or"
 			sim:new_or_bank(f6, { width = width })
