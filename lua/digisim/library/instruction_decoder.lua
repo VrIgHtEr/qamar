@@ -27,7 +27,8 @@ return function(simulation)
 					{ "rs2", 5 },
 					{ "funct7", 7 },
 					{ "imm", 32 },
-					{ "aluop" },
+					"aluop",
+					"aluimmop",
 				},
 			}
 			self:add_component(dec, opts)
@@ -231,6 +232,10 @@ return function(simulation)
 			local aluop = n .. "aluop"
 			build_minterm(aluop, "A'BCD'E'")
 			self:c(aluop, "q", dec, "aluop")
+
+			local aluimmop = n .. "aluimmop"
+			build_minterm(aluimmop, "A'B'CD'E'")
+			self:c(aluimmop, "q", dec, "aluimmop")
 
 			local illegal = n .. "illegal"
 			self

@@ -277,6 +277,23 @@ return function(simulation)
 			s:c(i_xor, "alu_notb", control, "alu_notb")
 			s:c(i_xor, "alu_cin", control, "alu_cin")
 			s:c(i_xor, "alu_sel", control, "alu_sel")
+			------------------------------------------------------------------------------
+			local i_addi = core .. ".instructions.addi"
+			s:new_instruction_addi(i_addi, { trace = opts.trace })
+			s:c(control, "rst~", i_addi, "rst~")
+			s:c(clk, "rising", i_addi, "rising")
+			s:c(clk, "falling", i_addi, "falling")
+			s:c(control, "isched", i_addi, "isched")
+			s:c(idecode, "i", i_addi, "i")
+			s:c(idecode, "aluimmop", i_addi, "aluimmop")
+			s:c(idecode, "funct3", i_addi, "funct3")
+			s:c(idecode, "rs1", i_addi, "rs1")
+			s:c(idecode, "rd", i_addi, "rd")
+			s:c(i_addi, "icomplete", control, "xu_trigin")
+			s:c(i_addi, "sela", control, "rs1")
+			s:c(i_addi, "selw", control, "rd")
+			s:c(i_addi, "alu_oe", control, "alu_oe")
+			s:c(i_addi, "imm_oe", control, "imm_oe")
 		end
 	)
 end
