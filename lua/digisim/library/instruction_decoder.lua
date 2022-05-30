@@ -11,7 +11,7 @@ return function(simulation)
 		function(self, dec, opts)
 			opts = opts or {}
 			opts.names = {
-				inputs = { { "in", 32 } },
+				inputs = { { "in", 32 }, "oe" },
 				outputs = {
 					"r",
 					"i",
@@ -39,9 +39,13 @@ return function(simulation)
 			self:cp(7, dec, "in", 26, dec, "funct7", 1)
 
 			-- decode I immediate
+			local cimmi = dec .. ".cimmi"
+			self:new_and_bank(cimmi)
+			self:c(dec, "oe", cimmi, "a")
+			self:c(dec, "i", cimmi, "b")
 			local immi = dec .. ".immi"
 			self:new_tristate_buffer(immi, { width = 32 })
-			self:c(dec, "i", immi, "en")
+			self:c(cimmi, "q", immi, "en")
 			self:cp(12, dec, "in", 21, immi, "a", 1)
 			for i = 13, 32 do
 				self:cp(1, dec, "in", 32, immi, "a", i)
@@ -49,9 +53,13 @@ return function(simulation)
 			self:c(immi, "q", dec, "imm")
 
 			-- decode S immediate
+			local cimms = dec .. ".cimms"
+			self:new_and_bank(cimms)
+			self:c(dec, "oe", cimms, "a")
+			self:c(dec, "s", cimms, "b")
 			local imms = dec .. ".imms"
 			self:new_tristate_buffer(imms, { width = 32 })
-			self:c(dec, "s", imms, "en")
+			self:c(cimms, "q", imms, "en")
 			self:cp(5, dec, "in", 8, imms, "a", 1)
 			self:cp(7, dec, "in", 26, imms, "a", 6)
 			for i = 13, 32 do
@@ -60,9 +68,13 @@ return function(simulation)
 			self:c(imms, "q", dec, "imm")
 
 			-- decode B immediate
+			local cimmb = dec .. ".cimmb"
+			self:new_and_bank(cimmb)
+			self:c(dec, "oe", cimmb, "a")
+			self:c(dec, "b", cimmb, "b")
 			local immb = dec .. ".immb"
 			self:new_tristate_buffer(immb, { width = 32 })
-			self:c(dec, "b", immb, "en")
+			self:c(cimmb, "q", immb, "en")
 			self:cp(1, "GND", "q", 1, immb, "a", 1)
 			self:cp(4, dec, "in", 9, immb, "a", 2)
 			self:cp(6, dec, "in", 26, immb, "a", 6)
@@ -74,9 +86,13 @@ return function(simulation)
 			self:c(immb, "q", dec, "imm")
 
 			-- decode U immediate
+			local cimmu = dec .. ".cimmu"
+			self:new_and_bank(cimmu)
+			self:c(dec, "oe", cimmu, "a")
+			self:c(dec, "u", cimmu, "b")
 			local immu = dec .. ".immu"
 			self:new_tristate_buffer(immu, { width = 32 })
-			self:c(dec, "u", immu, "en")
+			self:c(cimmu, "q", immu, "en")
 			self:cp(20, dec, "in", 13, immu, "a", 13)
 			for i = 1, 12 do
 				self:cp(1, "GND", "q", 1, immu, "a", i)
@@ -84,9 +100,13 @@ return function(simulation)
 			self:c(immu, "q", dec, "imm")
 
 			-- decode J immediate
+			local cimmj = dec .. ".cimmj"
+			self:new_and_bank(cimmj)
+			self:c(dec, "oe", cimmj, "a")
+			self:c(dec, "j", cimmj, "b")
 			local immj = dec .. ".immj"
 			self:new_tristate_buffer(immj, { width = 32 })
-			self:c(dec, "j", immj, "en")
+			self:c(cimmj, "q", immj, "en")
 			self:cp(1, "GND", "q", 1, immj, "a", 1)
 			self:cp(10, dec, "in", 22, immj, "a", 2)
 			self:cp(1, dec, "in", 21, immj, "a", 12)

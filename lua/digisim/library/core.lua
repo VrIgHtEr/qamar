@@ -39,6 +39,7 @@ return function(simulation)
 						"xu_trigin",
 						"isched",
 						"branch",
+						"imm_oe",
 						{ "lsu_control", 2 },
 						{ "alu_sel", 2 },
 						{ "rd", REGISTER_SELECT_WIDTH },
@@ -72,6 +73,8 @@ return function(simulation)
 				s:new_pulldown(branch):c(branch, "q", control, "branch")
 				local lsu_trigin = control .. ".pulldown.lsu_trigin"
 				s:new_pulldown(lsu_trigin):c(lsu_trigin, "q", control, "lsu_trigin")
+				local imm_oe = control .. ".pulldown.imm_oe"
+				s:new_pulldown(imm_oe):c(imm_oe, "q", control, "imm_oe")
 				local xu_trigin = control .. ".pulldown.xu_trigin"
 				s:new_pulldown(xu_trigin):c(xu_trigin, "q", control, "xu_trigin")
 				for i = 1, 2 do
@@ -184,7 +187,9 @@ return function(simulation)
 			------------------------------------------------------------------------------
 			local idecode = core .. ".idecode"
 			s:new_instruction_decoder(idecode, { trace = opts.trace })
+			s:c(control, "imm_oe", idecode, "oe")
 			s:c(control, "ireg", idecode, "in")
+			s:c(idecode, "imm", buses, "b")
 			------------------------------------------------------------------------------
 			local i_addsub = core .. ".instructions.add_sub"
 			s:new_instruction_add_sub(i_addsub, { trace = opts.trace })
