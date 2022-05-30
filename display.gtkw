@@ -1,98 +1,44 @@
 [*]
 [*] GTKWave Analyzer v3.3.111 (w)1999-2020 BSI
-[*] Sat May 28 06:37:51 2022
+[*] Mon May 30 10:25:17 2022
 [*]
 [dumpfile] "(null)"
-[savefile] "/home/cedric/code/repos/qamar/display.gtkw"
-[timestart] 0
-[size] 1920 1006
+[savefile] "/home/cedric/code/c/qamar/display.gtkw"
+[timestart] 42819
+[size] 1908 999
 [pos] -1 -1
-*-10.037658 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-10.524915 53123 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] CPU.
-[treeopen] CPU.instructions.
-[treeopen] CPU.instructions.add_sub.
 [sst_width] 211
-[signals_width] 406
+[signals_width] 241
 [sst_expanded] 1
-[sst_vpaned_height] 567
-@24
-CPU.lsu.address[31:0]
+[sst_vpaned_height] 562
 @28
-CPU.lsu.rst~
-CPU.lsu.trigin
+CPU.instructions.add_sub.rst~
+@200
+-
+@29
++{clock} CPU.clock.q
 @200
 -
 @28
-CPU.lsu.trigout
++{load stage 0} CPU.lsu.s0.q
++{load stage 1} CPU.lsu.s1.q
++{load stage 2} CPU.lsu.s2.q
++{load stage 3} CPU.lsu.s3.q
 @200
 -
 @28
-+{stage 0} CPU.lsu.s0.q
-+{stage 1} CPU.lsu.s1.q
-+{stage 2} CPU.lsu.s2.q
-+{stage 3} CPU.lsu.s3.q
-@200
--
-@820
-CPU.lsu.sram.out[7:0]
-CPU.buses.d[31:0]
+CPU.instructions.add_sub.isched
 @200
 -
 @22
-CPU.buses.d[31:0]
-CPU.control.ireg[31:0]
++{instruction} CPU.control.ireg[31:0]
 @200
 -
-@28
-CPU.instructions.add_sub.rst~
-CPU.instructions.add_sub.rising
-CPU.instructions.add_sub.falling
-CPU.instructions.add_sub.isched
-CPU.instructions.add_sub.r
-CPU.instructions.add_sub.aluop
-CPU.instructions.add_sub.sub
-CPU.instructions.add_sub.funct3[2:0]
-@c00024
-CPU.instructions.add_sub.rs1[4:0]
-@28
-+{CPU.instructions.add_sub.rs1[4]} (0)CPU.instructions.add_sub.rs1[4:0]
-+{CPU.instructions.add_sub.rs1[3]} (1)CPU.instructions.add_sub.rs1[4:0]
-+{CPU.instructions.add_sub.rs1[2]} (2)CPU.instructions.add_sub.rs1[4:0]
-+{CPU.instructions.add_sub.rs1[1]} (3)CPU.instructions.add_sub.rs1[4:0]
-+{CPU.instructions.add_sub.rs1[0]} (4)CPU.instructions.add_sub.rs1[4:0]
-@1401200
--group_end
-@c00024
-CPU.instructions.add_sub.rs2[4:0]
-@28
-+{CPU.instructions.add_sub.rs2[4]} (0)CPU.instructions.add_sub.rs2[4:0]
-+{CPU.instructions.add_sub.rs2[3]} (1)CPU.instructions.add_sub.rs2[4:0]
-+{CPU.instructions.add_sub.rs2[2]} (2)CPU.instructions.add_sub.rs2[4:0]
-+{CPU.instructions.add_sub.rs2[1]} (3)CPU.instructions.add_sub.rs2[4:0]
-+{CPU.instructions.add_sub.rs2[0]} (4)CPU.instructions.add_sub.rs2[4:0]
-@1401200
--group_end
-@c00024
-CPU.instructions.add_sub.rd[4:0]
-@28
-+{CPU.instructions.add_sub.rd[4]} (0)CPU.instructions.add_sub.rd[4:0]
-+{CPU.instructions.add_sub.rd[3]} (1)CPU.instructions.add_sub.rd[4:0]
-+{CPU.instructions.add_sub.rd[2]} (2)CPU.instructions.add_sub.rd[4:0]
-+{CPU.instructions.add_sub.rd[1]} (3)CPU.instructions.add_sub.rd[4:0]
-+{CPU.instructions.add_sub.rd[0]} (4)CPU.instructions.add_sub.rd[4:0]
-@1401200
--group_end
-@200
--
-@28
-CPU.instructions.add_sub.icomplete
 @24
-CPU.instructions.add_sub.sela[4:0]
-CPU.instructions.add_sub.selb[4:0]
-CPU.instructions.add_sub.selw[4:0]
-@28
-CPU.instructions.add_sub.alu_oe
-CPU.instructions.add_sub.alu_notb
-CPU.instructions.add_sub.alu_cin
++{A bus} CPU.buses.a[31:0]
++{B bus} CPU.buses.b[31:0]
++{D bus} CPU.buses.d[31:0]
 [pattern_trace] 1
 [pattern_trace] 0
