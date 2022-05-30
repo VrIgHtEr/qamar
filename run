@@ -1,2 +1,2 @@
 #!/bin/env sh
-build/linux-release/qamar | shmidcat | gtkwave -v -I display.gtkw $@
+build/linux-release/qamar | shmidcat | gtkwave -v -I display.gtkw -g -O /dev/null $@

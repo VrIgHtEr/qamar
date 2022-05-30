@@ -16,7 +16,7 @@ sim:c(rst, "q", core, "rst~")
 
 local max = 0
 while sim.time < constants.SIM_TIME do
-	io.stderr:write("TIME: " .. sim.time .. "\n")
+	--io.stderr:write("TIME: " .. sim.time .. "\n")
 	local x
 	_, x = sim:step()
 	max = math.max(max, x)

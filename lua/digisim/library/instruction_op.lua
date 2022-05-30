@@ -64,6 +64,8 @@ return function(simulation)
 			s:new_and(_or):cp(1, nf3, "q", 1, _or, "in", 1):cp(1, bitwise, "q", 1, _or, "in", 2)
 			local sll = f .. ".sll"
 			s:new_and(sll):cp(1, nf3, "q", 3, sll, "in", 1):cp(1, shift, "q", 1, sll, "in", 2)
+			local srl = f .. ".srl"
+			s:new_and(srl):cp(1, f, "funct3", 3, srl, "in", 1):cp(1, shift, "q", 1, srl, "in", 2)
 
 			local vsubsel = f .. ".vsubsel"
 			s:new_or(vsubsel, { width = 4 })
@@ -97,34 +99,42 @@ return function(simulation)
 			s:new_tristate_buffer(icomplete):c(trignext, "q", icomplete, "en"):c("VCC", "q", icomplete, "a")
 			s:c(icomplete, "q", f, "icomplete")
 
+			local cina = f .. ".cina"
+			s:new_and(cina)
+			s:cp(1, f, "sub", 1, cina, "in", 1)
+			s:cp(1, f, "opcode", 4, cina, "in", 2)
+			local cinb = f .. ".cinb"
+			s:new_and(cinb)
+			s:cp(1, f, "sub", 1, cinb, "in", 1)
+			s:cp(1, srl, "q", 1, cinb, "in", 2)
 			local cin = f .. ".cin"
-			s:new_and(cin)
-			s:cp(1, f, "sub", 1, cin, "in", 1)
-			s:cp(1, f, "opcode", 4, cin, "in", 2)
+			s:new_or(cin)
+			s:cp(1, cina, "q", 1, cin, "in", 1)
+			s:cp(1, cinb, "q", 1, cin, "in", 2)
 			local notb = f .. ".notb"
 			s:new_and(notb)
 			s:cp(1, add, "q", 1, notb, "in", 1)
 			s:cp(1, cin, "q", 1, notb, "in", 2)
 
-			local buf1 = f .. ".buf1"
-			s:new_tristate_buffer(buf1, { width = 7 })
-			s:c(activated, "q", buf1, "en")
+			local buf = f .. ".buf"
+			s:new_tristate_buffer(buf, { width = 7 })
+			s:c(activated, "q", buf, "en")
 			s
-				:cp(1, "VCC", "q", 1, buf1, "a", 1)
-				:cp(1, "VCC", "q", 1, buf1, "a", 2)
-				:cp(1, "VCC", "q", 1, buf1, "a", 3)
-				:cp(1, f, "opcode", 4, buf1, "a", 4)
-				:cp(1, nopcode, "q", 4, buf1, "a", 5)
-				:cp(1, cin, "q", 1, buf1, "a", 6)
-				:cp(1, notb, "q", 1, buf1, "a", 7)
+				:cp(1, "VCC", "q", 1, buf, "a", 1)
+				:cp(1, "VCC", "q", 1, buf, "a", 2)
+				:cp(1, "VCC", "q", 1, buf, "a", 3)
+				:cp(1, f, "opcode", 4, buf, "a", 4)
+				:cp(1, nopcode, "q", 4, buf, "a", 5)
+				:cp(1, cin, "q", 1, buf, "a", 6)
+				:cp(1, notb, "q", 1, buf, "a", 7)
 			s
-				:cp(1, buf1, "q", 1, f, "alu_oe", 1)
-				:cp(1, buf1, "q", 2, f, "rd", 1)
-				:cp(1, buf1, "q", 3, f, "rs1", 1)
-				:cp(1, buf1, "q", 4, f, "rs2", 1)
-				:cp(1, buf1, "q", 5, f, "imm_oe", 1)
-				:cp(1, buf1, "q", 6, f, "alu_cin", 1)
-				:cp(1, buf1, "q", 7, f, "alu_notb", 1)
+				:cp(1, buf, "q", 1, f, "alu_oe", 1)
+				:cp(1, buf, "q", 2, f, "rd", 1)
+				:cp(1, buf, "q", 3, f, "rs1", 1)
+				:cp(1, buf, "q", 4, f, "rs2", 1)
+				:cp(1, buf, "q", 5, f, "imm_oe", 1)
+				:cp(1, buf, "q", 6, f, "alu_cin", 1)
+				:cp(1, buf, "q", 7, f, "alu_notb", 1)
 		end
 	)
 end
