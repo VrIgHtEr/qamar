@@ -8,7 +8,6 @@ local signal = require("digisim.signal")
 ---@field traces table<string,trace>
 ---@field time number
 ---@field data string[]
----@field index number
 ---@field id number[]
 local vcd = {}
 local MT = {
@@ -20,7 +19,6 @@ function vcd.new()
 		time = -1,
 		traces = {},
 		data = {},
-		index = 0,
 		id = { 32 },
 		state = 0,
 	}, MT)
@@ -79,7 +77,6 @@ $timescale 1ns $end
 	end
 	local ret = {
 		identifier = next_identifier(self),
-		value = signal.unknown,
 	}
 
 	local pieces = {}
@@ -130,14 +127,14 @@ $end
 ]])
 	end
 	local trace = self:get(name)
-	trace.value = sig
 	if time > self.time then
 		self.time = time
-		self.index = self.index + 1
 		io.stdout:write("#" .. tostring(time) .. "\n")
 	end
-	self.index = self.index + 1
-	io.stdout:write(tostring(sig) .. trace.identifier .. "\n")
+	if trace.value ~= sig then
+		trace.value = sig
+		io.stdout:write(tostring(sig) .. trace.identifier .. "\n")
+	end
 end
 
 return vcd
