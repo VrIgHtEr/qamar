@@ -28,7 +28,6 @@ return function(simulation)
 				names = {
 					outputs = {
 						"rst~",
-						"alu_nota",
 						"alu_notb",
 						"alu_cin",
 						"lsu_sext",
@@ -38,11 +37,10 @@ return function(simulation)
 						"isched",
 						"branch",
 						"imm_oe",
+						"rd_oe",
+						"rs1_oe",
+						"rs2_oe",
 						{ "lsu_control", 2 },
-						{ "alu_sel", 2 },
-						{ "rd", REGISTER_SELECT_WIDTH },
-						{ "rs1", REGISTER_SELECT_WIDTH },
-						{ "rs2", REGISTER_SELECT_WIDTH },
 						{ "ireg", BUS_WIDTH },
 						{ "pc", BUS_WIDTH },
 					},
@@ -53,8 +51,6 @@ return function(simulation)
 			do
 				local rst = control .. ".pullup.rst~"
 				s:new_pullup(rst):c(rst, "q", control, "rst~")
-				local alu_nota = control .. ".pulldown.alu_nota"
-				s:new_pulldown(alu_nota):c(alu_nota, "q", control, "alu_nota")
 				local alu_notb = control .. ".pulldown.alu_notb"
 				s:new_pulldown(alu_notb):c(alu_notb, "q", control, "alu_notb")
 				local alu_cin = control .. ".pulldown.alu_cin"
@@ -71,21 +67,17 @@ return function(simulation)
 				s:new_pulldown(lsu_trigin):c(lsu_trigin, "q", control, "lsu_trigin")
 				local imm_oe = control .. ".pulldown.imm_oe"
 				s:new_pulldown(imm_oe):c(imm_oe, "q", control, "imm_oe")
+				local rs1_oe = control .. ".pulldown.rs1_oe"
+				s:new_pulldown(rs1_oe):c(rs1_oe, "q", control, "rs1_oe")
+				local rs2_oe = control .. ".pulldown.rs2_oe"
+				s:new_pulldown(rs2_oe):c(rs2_oe, "q", control, "rs2_oe")
+				local rd_oe = control .. ".pulldown.rd_oe"
+				s:new_pulldown(rd_oe):c(rd_oe, "q", control, "rd_oe")
 				local xu_trigin = control .. ".pulldown.xu_trigin"
 				s:new_pulldown(xu_trigin):c(xu_trigin, "q", control, "xu_trigin")
 				for i = 1, 2 do
 					local lsu_control = control .. ".pullup.lsu_control" .. (i - 1)
 					s:new_pullup(lsu_control):cp(1, lsu_control, "q", 1, control, "lsu_control", i)
-					local alu_sel = control .. ".pulldown.alu_sel" .. (i - 1)
-					s:new_pulldown(alu_sel):cp(1, alu_sel, "q", 1, control, "alu_sel", i)
-				end
-				for i = 1, REGISTER_SELECT_WIDTH do
-					local rd = control .. ".pulldown.rd" .. (i - 1)
-					s:new_pulldown(rd):cp(1, rd, "q", 1, control, "rd", i)
-					local rs1 = control .. ".pulldown.rs1" .. (i - 1)
-					s:new_pulldown(rs1):cp(1, rs1, "q", 1, control, "rs1", i)
-					local rs2 = control .. ".pulldown.rs2" .. (i - 1)
-					s:new_pulldown(rs2):cp(1, rs2, "q", 1, control, "rs2", i)
 				end
 				for i = 1, BUS_WIDTH do
 					local ireg = control .. ".pulldown.ireg" .. (i - 1)
@@ -97,7 +89,7 @@ return function(simulation)
 
 			------------------------------------------------------------------------------
 			local clk = core .. ".clock"
-			s:new_clock_module(clk, { period = PERIOD, chain_length = 2, trace = opts.trace })
+			s:new_clock_module(clk, { period = PERIOD, chain_length = 3, trace = opts.trace })
 			------------------------------------------------------------------------------
 			local buses = core .. ".buses"
 			s:add_component(buses, {
@@ -119,32 +111,6 @@ return function(simulation)
 				local d = buses .. ".pulldowns.d" .. (i - 1)
 				s:new_pulldown(d):cp(1, d, "q", 1, buses, "d", i)
 			end
-			------------------------------------------------------------------------------
-			local alu = core .. ".alu"
-			s:new_alu(alu, { width = BUS_WIDTH, trace = opts.trace })
-			s:c(control, "alu_nota", alu, "nota")
-			s:c(control, "alu_notb", alu, "notb")
-			s:c(control, "alu_cin", alu, "cin")
-			s:c(control, "alu_sel", alu, "sel")
-			s:c(control, "alu_oe", alu, "oe")
-			s:c(buses, "a", alu, "a")
-			s:c(buses, "b", alu, "b")
-			s:c(alu, "out", buses, "d")
-			------------------------------------------------------------------------------
-			local registers = core .. ".registers"
-			s
-				:new_register_bank(
-					registers,
-					{ width = BUS_WIDTH, selwidth = REGISTER_SELECT_WIDTH, trace = opts.trace }
-				)
-				:c(control, "rst~", registers, "~rst")
-				:c(clk, "rising", registers, "rising")
-				:c(buses, "d", registers, "in")
-				:c(control, "rs1", registers, "sela")
-				:c(control, "rs2", registers, "selb")
-				:c(control, "rd", registers, "selw")
-				:c(registers, "outa", buses, "a")
-				:c(registers, "outb", buses, "b")
 			------------------------------------------------------------------------------
 			local lsu = core .. ".lsu"
 			s
@@ -183,150 +149,38 @@ return function(simulation)
 			------------------------------------------------------------------------------
 			local idecode = core .. ".idecode"
 			s:new_instruction_decoder(idecode, { trace = opts.trace })
+			s:c(control, "rs1_oe", idecode, "rs1_oe")
+			s:c(control, "rs2_oe", idecode, "rs2_oe")
+			s:c(control, "rd_oe", idecode, "rd_oe")
 			s:c(control, "imm_oe", idecode, "oe")
 			s:c(control, "ireg", idecode, "in")
 			s:c(idecode, "imm", buses, "b")
 			s:c(idecode, "illegal", xu, "illegal")
 			------------------------------------------------------------------------------
-			local i_addsub = core .. ".instructions.add_sub"
-			s:new_instruction_add_sub(i_addsub, { trace = opts.trace })
-			s:c(control, "rst~", i_addsub, "rst~")
-			s:c(clk, "rising", i_addsub, "rising")
-			s:c(clk, "falling", i_addsub, "falling")
-			s:c(control, "isched", i_addsub, "isched")
-			s:c(idecode, "r", i_addsub, "r")
-			s:c(idecode, "aluop", i_addsub, "aluop")
-			s:c(idecode, "funct3", i_addsub, "funct3")
-			s:c(idecode, "rs1", i_addsub, "rs1")
-			s:c(idecode, "rs2", i_addsub, "rs2")
-			s:c(idecode, "rd", i_addsub, "rd")
-			s:cp(1, idecode, "funct7", 6, i_addsub, "sub", 1)
-			s:c(i_addsub, "icomplete", control, "xu_trigin")
-			s:c(i_addsub, "sela", control, "rs1")
-			s:c(i_addsub, "selb", control, "rs2")
-			s:c(i_addsub, "selw", control, "rd")
-			s:c(i_addsub, "alu_oe", control, "alu_oe")
-			s:c(i_addsub, "alu_notb", control, "alu_notb")
-			s:c(i_addsub, "alu_cin", control, "alu_cin")
+			local alu = core .. ".alu"
+			s:new_alu(alu, { width = BUS_WIDTH, trace = opts.trace })
+			s:c(control, "alu_notb", alu, "notb")
+			s:c(control, "alu_cin", alu, "cin")
+			s:c(idecode, "funct3", alu, "sel")
+			s:c(control, "alu_oe", alu, "oe")
+			s:c(buses, "a", alu, "a")
+			s:c(buses, "b", alu, "b")
+			s:c(alu, "out", buses, "d")
 			------------------------------------------------------------------------------
-			local i_and = core .. ".instructions.and"
-			s:new_instruction_and(i_and, { trace = opts.trace })
-			s:c(control, "rst~", i_and, "rst~")
-			s:c(clk, "rising", i_and, "rising")
-			s:c(clk, "falling", i_and, "falling")
-			s:c(control, "isched", i_and, "isched")
-			s:c(idecode, "r", i_and, "r")
-			s:c(idecode, "aluop", i_and, "aluop")
-			s:c(idecode, "funct3", i_and, "funct3")
-			s:c(idecode, "rs1", i_and, "rs1")
-			s:c(idecode, "rs2", i_and, "rs2")
-			s:c(idecode, "rd", i_and, "rd")
-			s:cp(1, idecode, "funct7", 6, i_and, "sub", 1)
-			s:c(i_and, "icomplete", control, "xu_trigin")
-			s:c(i_and, "sela", control, "rs1")
-			s:c(i_and, "selb", control, "rs2")
-			s:c(i_and, "selw", control, "rd")
-			s:c(i_and, "alu_oe", control, "alu_oe")
-			s:c(i_and, "alu_notb", control, "alu_notb")
-			s:c(i_and, "alu_cin", control, "alu_cin")
-			s:c(i_and, "alu_sel", control, "alu_sel")
-			------------------------------------------------------------------------------
-			local i_or = core .. ".instructions.or"
-			s:new_instruction_or(i_or, { trace = opts.trace })
-			s:c(control, "rst~", i_or, "rst~")
-			s:c(clk, "rising", i_or, "rising")
-			s:c(clk, "falling", i_or, "falling")
-			s:c(control, "isched", i_or, "isched")
-			s:c(idecode, "r", i_or, "r")
-			s:c(idecode, "aluop", i_or, "aluop")
-			s:c(idecode, "funct3", i_or, "funct3")
-			s:c(idecode, "rs1", i_or, "rs1")
-			s:c(idecode, "rs2", i_or, "rs2")
-			s:c(idecode, "rd", i_or, "rd")
-			s:cp(1, idecode, "funct7", 6, i_or, "sub", 1)
-			s:c(i_or, "icomplete", control, "xu_trigin")
-			s:c(i_or, "sela", control, "rs1")
-			s:c(i_or, "selb", control, "rs2")
-			s:c(i_or, "selw", control, "rd")
-			s:c(i_or, "alu_oe", control, "alu_oe")
-			s:c(i_or, "alu_notb", control, "alu_notb")
-			s:c(i_or, "alu_cin", control, "alu_cin")
-			s:c(i_or, "alu_sel", control, "alu_sel")
-			------------------------------------------------------------------------------
-			local i_xor = core .. ".instructions.xor"
-			s:new_instruction_xor(i_xor, { trace = opts.trace })
-			s:c(control, "rst~", i_xor, "rst~")
-			s:c(clk, "rising", i_xor, "rising")
-			s:c(clk, "falling", i_xor, "falling")
-			s:c(control, "isched", i_xor, "isched")
-			s:c(idecode, "r", i_xor, "r")
-			s:c(idecode, "aluop", i_xor, "aluop")
-			s:c(idecode, "funct3", i_xor, "funct3")
-			s:c(idecode, "rs1", i_xor, "rs1")
-			s:c(idecode, "rs2", i_xor, "rs2")
-			s:c(idecode, "rd", i_xor, "rd")
-			s:cp(1, idecode, "funct7", 6, i_xor, "sub", 1)
-			s:c(i_xor, "icomplete", control, "xu_trigin")
-			s:c(i_xor, "sela", control, "rs1")
-			s:c(i_xor, "selb", control, "rs2")
-			s:c(i_xor, "selw", control, "rd")
-			s:c(i_xor, "alu_oe", control, "alu_oe")
-			s:c(i_xor, "alu_notb", control, "alu_notb")
-			s:c(i_xor, "alu_cin", control, "alu_cin")
-			s:c(i_xor, "alu_sel", control, "alu_sel")
-			------------------------------------------------------------------------------
-			local i_addi = core .. ".instructions.addi"
-			s:new_instruction_addi(i_addi, { trace = opts.trace })
-			s:c(control, "rst~", i_addi, "rst~")
-			s:c(clk, "rising", i_addi, "rising")
-			s:c(clk, "falling", i_addi, "falling")
-			s:c(control, "isched", i_addi, "isched")
-			s:c(idecode, "i", i_addi, "i")
-			s:c(idecode, "aluimmop", i_addi, "aluimmop")
-			s:c(idecode, "funct3", i_addi, "funct3")
-			s:c(idecode, "rs1", i_addi, "rs1")
-			s:c(idecode, "rd", i_addi, "rd")
-			s:c(i_addi, "icomplete", control, "xu_trigin")
-			s:c(i_addi, "sela", control, "rs1")
-			s:c(i_addi, "selw", control, "rd")
-			s:c(i_addi, "alu_oe", control, "alu_oe")
-			s:c(i_addi, "imm_oe", control, "imm_oe")
-			------------------------------------------------------------------------------
-			local i_andi = core .. ".instructions.andi"
-			s:new_instruction_andi(i_andi, { trace = opts.trace })
-			s:c(control, "rst~", i_andi, "rst~")
-			s:c(clk, "rising", i_andi, "rising")
-			s:c(clk, "falling", i_andi, "falling")
-			s:c(control, "isched", i_andi, "isched")
-			s:c(idecode, "i", i_andi, "i")
-			s:c(idecode, "aluimmop", i_andi, "aluimmop")
-			s:c(idecode, "funct3", i_andi, "funct3")
-			s:c(idecode, "rs1", i_andi, "rs1")
-			s:c(idecode, "rd", i_andi, "rd")
-			s:c(i_andi, "icomplete", control, "xu_trigin")
-			s:c(i_andi, "sela", control, "rs1")
-			s:c(i_andi, "selw", control, "rd")
-			s:c(i_andi, "alu_oe", control, "alu_oe")
-			s:c(i_andi, "imm_oe", control, "imm_oe")
-			s:c(i_andi, "alu_sel", control, "alu_sel")
-			------------------------------------------------------------------------------
-			local i_ori = core .. ".instructions.ori"
-			s:new_instruction_ori(i_ori, { trace = opts.trace })
-			s:c(control, "rst~", i_ori, "rst~")
-			s:c(clk, "rising", i_ori, "rising")
-			s:c(clk, "falling", i_ori, "falling")
-			s:c(control, "isched", i_ori, "isched")
-			s:c(idecode, "i", i_ori, "i")
-			s:c(idecode, "aluimmop", i_ori, "aluimmop")
-			s:c(idecode, "funct3", i_ori, "funct3")
-			s:c(idecode, "rs1", i_ori, "rs1")
-			s:c(idecode, "rd", i_ori, "rd")
-			s:c(i_ori, "icomplete", control, "xu_trigin")
-			s:c(i_ori, "sela", control, "rs1")
-			s:c(i_ori, "selw", control, "rd")
-			s:c(i_ori, "alu_oe", control, "alu_oe")
-			s:c(i_ori, "imm_oe", control, "imm_oe")
-			s:c(i_ori, "alu_sel", control, "alu_sel")
+			local registers = core .. ".registers"
+			s
+				:new_register_bank(
+					registers,
+					{ width = BUS_WIDTH, selwidth = REGISTER_SELECT_WIDTH, trace = opts.trace }
+				)
+				:c(control, "rst~", registers, "~rst")
+				:c(clk, "rising", registers, "rising")
+				:c(buses, "d", registers, "in")
+				:c(idecode, "rs1", registers, "sela")
+				:c(idecode, "rs2", registers, "selb")
+				:c(idecode, "rd", registers, "selw")
+				:c(registers, "outa", buses, "a")
+				:c(registers, "outb", buses, "b")
 			------------------------------------------------------------------------------
 			local i_op = core .. ".instructions.op"
 			s:new_instruction_op(i_op, { trace = opts.trace })
@@ -337,6 +191,14 @@ return function(simulation)
 			s:cp(1, idecode, "funct7", 6, i_op, "sub", 1)
 			s:c(idecode, "funct3", i_op, "funct3")
 			s:cp(5, idecode, "opcode", 3, i_op, "opcode", 1)
+			s:c(i_op, "icomplete", control, "xu_trigin")
+			s:c(i_op, "alu_oe", control, "alu_oe")
+			s:c(i_op, "rd", control, "rd_oe")
+			s:c(i_op, "rs1", control, "rs1_oe")
+			s:c(i_op, "rs2", control, "rs2_oe")
+			s:c(i_op, "imm_oe", control, "imm_oe")
+			s:c(i_op, "alu_notb", control, "alu_notb")
+			s:c(i_op, "alu_cin", control, "alu_cin")
 			------------------------------------------------------------------------------
 			local kickstarter = core .. ".kickstarter"
 			s:new_kickstarter(kickstarter)

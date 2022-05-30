@@ -1,6 +1,6 @@
 [*]
 [*] GTKWave Analyzer v3.3.111 (w)1999-2020 BSI
-[*] Mon May 30 17:14:46 2022
+[*] Mon May 30 17:48:09 2022
 [*]
 [dumpfile] "(null)"
 [savefile] "/home/cedric/code/repos/qamar/display.gtkw"
@@ -59,9 +59,10 @@ CPU.instructions.op.icomplete
 @200
 -
 @28
+CPU.instructions.op.alu_oe
+CPU.instructions.op.rd
 CPU.instructions.op.rs1
 CPU.instructions.op.rs2
-CPU.instructions.op.sub
 CPU.instructions.op.imm_oe
 CPU.instructions.op.alu_cin
 CPU.instructions.op.alu_notb
