@@ -91,7 +91,10 @@ return function(simulation)
 			s:c(f, "rising", trignext, "rising")
 			s:c(f, "falling", trignext, "falling")
 			s:c(activated, "q", trignext, "d")
-			s:c(trignext, "q", f, "icomplete")
+
+			local icomplete = f .. ".icomplete"
+			s:new_tristate_buffer(icomplete):c(trignext, "q", icomplete, "en"):c("VCC", "q", icomplete, "a")
+			s:c(icomplete, "q", f, "icomplete")
 
 			local cin = f .. ".cin"
 			s:new_and(cin)
