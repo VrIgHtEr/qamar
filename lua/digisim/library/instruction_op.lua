@@ -16,7 +16,7 @@ return function(simulation)
 					"rising",
 					"falling",
 					"isched",
-					"sub",
+					{ "funct7", 7 },
 					{ "opcode", 5 },
 					{ "funct3", 3 },
 				},
@@ -67,6 +67,13 @@ return function(simulation)
 			local srl = f .. ".srl"
 			s:new_and(srl):cp(1, f, "funct3", 3, srl, "in", 1):cp(1, shift, "q", 1, srl, "in", 2)
 
+			local nf7 = f .. ".nf7"
+			s:new_not(nf7, { width = 7 }):c(f, "funct7", nf7, "a")
+			local f7z = f .. ".f7z"
+			s:new_and(f7z, { width = 6 })
+			s:cp(5, nf7, "q", 1, f7z, "in", 1)
+			s:cp(1, nf7, "q", 7, f7z, "in", 6)
+
 			local vsubsel = f .. ".vsubsel"
 			s:new_or(vsubsel, { width = 4 })
 			s:cp(1, bitwise, "q", 1, vsubsel, "in", 1)
@@ -74,13 +81,14 @@ return function(simulation)
 			s:cp(1, xor, "q", 1, vsubsel, "in", 3)
 			s:cp(1, sll, "q", 1, vsubsel, "in", 4)
 			local vsub = f .. ".vsub"
-			s:new_nand(vsub):cp(1, f, "sub", 1, vsub, "in", 1):cp(1, vsubsel, "q", 1, vsub, "in", 2)
+			s:new_nand(vsub):cp(1, f, "funct7", 6, vsub, "in", 1):cp(1, vsubsel, "q", 1, vsub, "in", 2)
 			local visched = f .. ".visched"
-			s:new_and(visched, { width = 3 })
+			s:new_and(visched, { width = 4 })
 			s
 				:cp(1, vsub, "q", 1, visched, "in", 1)
 				:cp(1, f, "isched", 1, visched, "in", 2)
 				:cp(1, aluop, "q", 1, visched, "in", 3)
+				:cp(1, f7z, "q", 1, visched, "in", 4)
 
 			local activated = f .. ".activated"
 			s:new_ms_d_flipflop(activated)
@@ -101,11 +109,11 @@ return function(simulation)
 
 			local cina = f .. ".cina"
 			s:new_and(cina)
-			s:cp(1, f, "sub", 1, cina, "in", 1)
+			s:cp(1, f, "funct7", 6, cina, "in", 1)
 			s:cp(1, f, "opcode", 4, cina, "in", 2)
 			local cinb = f .. ".cinb"
 			s:new_and(cinb)
-			s:cp(1, f, "sub", 1, cinb, "in", 1)
+			s:cp(1, f, "funct7", 6, cinb, "in", 1)
 			s:cp(1, srl, "q", 1, cinb, "in", 2)
 			local cin = f .. ".cin"
 			s:new_or(cin)
