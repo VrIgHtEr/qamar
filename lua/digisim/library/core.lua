@@ -186,6 +186,7 @@ return function(simulation)
 			s:c(control, "imm_oe", idecode, "oe")
 			s:c(control, "ireg", idecode, "in")
 			s:c(idecode, "imm", buses, "b")
+			s:c(idecode, "illegal", xu, "illegal")
 			------------------------------------------------------------------------------
 			local i_addsub = core .. ".instructions.add_sub"
 			s:new_instruction_add_sub(i_addsub, { trace = opts.trace })
