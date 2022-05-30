@@ -22,13 +22,13 @@ return function(simulation)
 				},
 				outputs = {
 					"icomplete",
-					"sela",
-					"selb",
-					"selw",
 					"alu_oe",
+					"rd",
+					"rs1",
+					"rs2",
+					"imm_oe",
 					"alu_notb",
 					"alu_cin",
-					"imm_oe",
 				},
 			}
 			s:add_component(f, opts)
@@ -92,6 +92,31 @@ return function(simulation)
 			s:c(f, "falling", trignext, "falling")
 			s:c(activated, "q", trignext, "d")
 			s:c(trignext, "q", f, "icomplete")
+
+			local notb = f .. ".notb"
+			s:new_and_bank(notb)
+			s:c(f, "sub", notb, "a")
+			s:c(add, "q", notb, "b")
+
+			local buf1 = f .. ".buf1"
+			s:new_tristate_buffer(buf1, { width = 7 })
+			s:c(activated, "q", buf1, "en")
+			s
+				:cp(1, "VCC", "q", 1, buf1, "a", 1)
+				:cp(1, "VCC", "q", 1, buf1, "a", 2)
+				:cp(1, "VCC", "q", 1, buf1, "a", 3)
+				:cp(1, f, "opcode", 4, buf1, "a", 4)
+				:cp(1, nopcode, "q", 4, buf1, "a", 5)
+				:cp(1, f, "sub", 1, buf1, "a", 6)
+				:cp(1, notb, "q", 1, buf1, "a", 7)
+			s
+				:cp(1, buf1, "q", 1, f, "alu_oe", 1)
+				:cp(1, buf1, "q", 2, f, "rd", 1)
+				:cp(1, buf1, "q", 3, f, "rs1", 1)
+				:cp(1, buf1, "q", 4, f, "rs2", 1)
+				:cp(1, buf1, "q", 5, f, "imm_oe", 1)
+				:cp(1, buf1, "q", 6, f, "alu_cin", 1)
+				:cp(1, buf1, "q", 7, f, "alu_notb", 1)
 		end
 	)
 end

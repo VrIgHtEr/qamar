@@ -1,6 +1,6 @@
 [*]
 [*] GTKWave Analyzer v3.3.111 (w)1999-2020 BSI
-[*] Mon May 30 16:41:39 2022
+[*] Mon May 30 17:14:46 2022
 [*]
 [dumpfile] "(null)"
 [savefile] "/home/cedric/code/repos/qamar/display.gtkw"
@@ -54,9 +54,16 @@ CPU.instructions.add_sub.isched
 -
 @28
 +{visched} CPU.instructions.op.visched.q
-+{vsub} CPU.instructions.op.vsub.q
-+{vsubsel} CPU.instructions.op.vsubsel.q
 +{activated} CPU.instructions.op.activated.q
-+{trignext} CPU.instructions.op.trignext.q
+CPU.instructions.op.icomplete
+@200
+-
+@28
+CPU.instructions.op.rs1
+CPU.instructions.op.rs2
+CPU.instructions.op.sub
+CPU.instructions.op.imm_oe
+CPU.instructions.op.alu_cin
+CPU.instructions.op.alu_notb
 [pattern_trace] 1
 [pattern_trace] 0
