@@ -16,52 +16,48 @@ sim:c(rst, "q", core, "rst~")
 
 local coretest = core .. ".TEST"
 
-local lsutestaddr = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
-local lsutestz = {
-	-1,
-	-1,
-	-1,
-	-1,
-	-1,
-	-1,
-	-1,
-	-1,
-	-1,
-	-1,
-	-1,
-	-1,
-	-1,
-	-1,
-	-1,
-	-1,
-	-1,
-	-1,
-	-1,
-	-1,
-	-1,
-	-1,
-	-1,
-	-1,
-	-1,
-	-1,
-	-1,
-	-1,
-	-1,
-	-1,
-	-1,
-	-1,
-}
 local lsuprogram = {
-	--xu rs address
-	{ -1, -1, 0, lsutestz },
-	{ 1, 1, 1, lsutestz },
+	--xu branch
+	{ -1, -1 },
+	{ 1, 1 },
 	--loop
-	{ -1, -1, 1, lsutestz },
-	{ -1, -1, 1, lsutestz },
-	{ -1, -1, 1, lsutestz },
-	{ -1, -1, 1, lsutestz },
-	{ -1, -1, 1, lsutestz },
-	{ -1, -1, 1, lsutestz },
+	{ -1, -1 },
+	{ -1, -1 },
+	{ -1, -1 },
+	{ -1, -1 },
+	{ -1, -1 },
+	{ -1, -1 },
+	{ -1, -1 },
+	{ -1, -1 },
+	{ -1, -1 },
+	{ -1, -1 },
+	{ -1, -1 },
+	{ -1, -1 },
+	{ -1, -1 },
+	{ -1, -1 },
+	{ -1, -1 },
+	{ -1, -1 },
+	{ -1, -1 },
+	{ -1, -1 },
+	{ -1, -1 },
+	{ -1, -1 },
+	{ -1, -1 },
+	{ -1, -1 },
+	{ -1, -1 },
+	{ -1, -1 },
+	{ -1, -1 },
+	{ -1, -1 },
+	{ -1, -1 },
+	{ -1, -1 },
+	{ -1, -1 },
+	{ -1, -1 },
+	{ -1, -1 },
+	{ -1, -1 },
+	{ -1, -1 },
+	{ -1, -1 },
+	{ -1, -1 },
+	{ -1, -1 },
+	{ -1, -1 },
 }
 local lsuloopindex = 3
 local lsuc = 0
@@ -73,21 +69,12 @@ sim:add_component(coretest, {
 		outputs = {
 			"xu_trigin",
 			"branch",
-			"rst~",
-			{ "address", 32 },
 		},
 	},
 }, function()
 	lsuc = lsuc + 1
 	if lsuc > #lsuprogram then
 		lsuc = lsuloopindex
-		for i = 3, #lsutestaddr do
-			if lsutestaddr[i] == 0 then
-				lsutestaddr[i] = 1
-				break
-			end
-			lsutestaddr[i] = 0
-		end
 	end
 	local ret = { unpack(lsuprogram[lsuc]) }
 	ret[#ret + 1] = constants.CLOCK_PERIOD_TICKS
