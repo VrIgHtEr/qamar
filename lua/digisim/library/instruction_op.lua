@@ -64,8 +64,6 @@ return function(simulation)
 			local sll = f .. ".sll"
 			s:new_and(sll):cp(1, nf3, "q", 3, sll, "in", 1):cp(1, shift, "q", 1, sll, "in", 2)
 
-			local nsub = f .. ".nsub"
-			s:new_not(nsub):c(f, "sub", nsub, "a")
 			local vsubsel = f .. ".vsubsel"
 			s:new_or(vsubsel, { width = 4 })
 			s:cp(1, bitwise, "q", 1, vsubsel, "in", 1)
@@ -73,7 +71,7 @@ return function(simulation)
 			s:cp(1, xor, "q", 1, vsubsel, "in", 3)
 			s:cp(1, sll, "q", 1, vsubsel, "in", 4)
 			local vsub = f .. ".vsub"
-			s:new_nand(vsub):cp(1, nsub, "q", 1, vsub, "in", 1)
+			s:new_nand(vsub):cp(1, f, "sub", 1, vsub, "in", 1):cp(1, vsubsel, "q", 1, vsub, "in", 2)
 			local visched = f .. ".visched"
 			s:new_and(visched, { width = 3 })
 			s
