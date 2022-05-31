@@ -1,13 +1,13 @@
 [*]
 [*] GTKWave Analyzer v3.3.111 (w)1999-2020 BSI
-[*] Tue May 31 14:20:29 2022
+[*] Tue May 31 15:07:24 2022
 [*]
 [dumpfile] "(null)"
 [savefile] "/home/cedric/code/repos/qamar/display.gtkw"
 [timestart] 0
 [size] 1920 1006
 [pos] -1 -1
-*-12.524915 1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-12.524915 257 257 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] CPU.
 [treeopen] CPU.instructions.branch.
 [sst_width] 211
@@ -21,7 +21,6 @@ CPU.control.rst~
 @200
 -
 @28
-CPU.instructions.op.icomplete
 +{load stage 0} CPU.lsu.s0.q
 +{load stage 1} CPU.lsu.s1.q
 +{load stage 2} CPU.lsu.s2.q
@@ -39,6 +38,8 @@ CPU.control.branch
 CPU.control.legal
 @200
 -
+@28
+CPU.instructions.op.icomplete
 @22
 +{instruction} CPU.control.ireg[31:0]
 @420
@@ -60,12 +61,12 @@ CPU.control.legal
 -group_end
 @200
 -
+@28
++{alu_op} CPU.alu.sel[2:0]
 @420
 +{A bus} CPU.buses.a[31:0]
 +{B bus} CPU.buses.b[31:0]
 +{D bus} CPU.buses.d[31:0]
-@200
--
 @28
 CPU.control.zero
 CPU.control.sign
