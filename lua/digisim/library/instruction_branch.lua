@@ -69,7 +69,7 @@ return function(simulation)
 			s:add_component(branch, {
 				names = { outputs = { "q" } },
 				function()
-					return 0
+					return 1
 				end,
 			})
 
@@ -106,10 +106,10 @@ return function(simulation)
 			local action = f .. ".action"
 			s:new_tristate_buffer(action, { width = 4 })
 			s:c(actionen, "q", action, "en")
-			s:cp(1, "GND", "q", 1, action, "a", 1)
-			s:cp(1, "GND", "q", 1, action, "a", 2)
-			s:cp(1, "GND", "q", 1, action, "a", 3)
-			s:cp(1, "GND", "q", 1, action, "a", 4)
+			s:cp(1, "VCC", "q", 1, action, "a", 1)
+			s:cp(1, "VCC", "q", 1, action, "a", 2)
+			s:cp(1, "VCC", "q", 1, action, "a", 3)
+			s:cp(1, "VCC", "q", 1, action, "a", 4)
 			s:cp(1, action, "q", 1, f, "alu_oe", 1)
 			s:cp(1, action, "q", 2, f, "imm_oe", 1)
 			s:cp(1, action, "q", 3, f, "pc_oe", 1)
