@@ -19,8 +19,8 @@ return function(simulation)
 					"falling",
 					"branch",
 					"icomplete",
-					"oe_b",
-					{ "b", BITS },
+					"oe_a",
+					{ "a", BITS },
 					{ "d", BITS },
 				},
 				outputs = {
@@ -69,11 +69,17 @@ return function(simulation)
 			s:c(f, "icomplete", oe, "a")
 			s:c(nbranch, "q", oe, "b")
 
-			local buf = f .. ".buf"
-			s:new_tristate_buffer(buf, { width = BITS })
-			s:c(oe, "q", buf, "en")
-			s:c(mux, "out", buf, "a")
-			s:c(buf, "q", f, "d")
+			local bufd = f .. ".bufd"
+			s:new_tristate_buffer(bufd, { width = BITS })
+			s:c(oe, "q", bufd, "en")
+			s:c(mux, "out", bufd, "a")
+			s:c(bufd, "q", f, "d")
+
+			local bufa = f .. ".bufa"
+			s:new_tristate_buffer(bufa, { width = BITS })
+			s:c(f, "oe_a", bufa, "en")
+			s:c(mux, "out", bufa, "a")
+			s:c(bufa, "q", f, "a")
 		end
 	)
 end

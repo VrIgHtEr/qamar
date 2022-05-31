@@ -131,9 +131,9 @@ return function(simulation)
 			s:c(clk, "falling", pc, "falling")
 			s:c(control, "branch", pc, "branch")
 			s:c(control, "xu_trigin", pc, "icomplete")
-			s:c(control, "pc_oe", pc, "oe_b")
+			s:c(control, "pc_oe", pc, "oe_a")
 			s:c(buses, "d", pc, "d")
-			s:c(buses, "b", pc, "b")
+			s:c(buses, "a", pc, "a")
 			s:c(pc, "pc", control, "pc")
 			------------------------------------------------------------------------------
 			local xu = core .. ".xu"
