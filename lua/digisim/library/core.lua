@@ -78,16 +78,12 @@ return function(simulation)
 				s:new_pulldown(rd_oe):c(rd_oe, "q", control, "rd_oe")
 				local xu_trigin = control .. ".pulldown.xu_trigin"
 				s:new_pulldown(xu_trigin):c(xu_trigin, "q", control, "xu_trigin")
-				for i = 1, 2 do
-					local lsu_control = control .. ".pullup.lsu_control" .. (i - 1)
-					s:new_pullup(lsu_control):cp(1, lsu_control, "q", 1, control, "lsu_control", i)
-				end
-				for i = 1, BUS_WIDTH do
-					local ireg = control .. ".pulldown.ireg" .. (i - 1)
-					s:new_pulldown(ireg):cp(1, ireg, "q", 1, control, "ireg", i)
-					local pc = control .. ".pulldown.pc" .. (i - 1)
-					s:new_pulldown(pc):cp(1, pc, "q", 1, control, "pc", i)
-				end
+				local lsu_control = control .. ".pulldown.lsu_control"
+				s:new_pulldown(lsu_control, { width = 2 }):c(lsu_control, "q", control, "lsu_control")
+				local ireg = control .. ".pulldown.ireg"
+				s:new_pulldown(ireg, { width = BUS_WIDTH }):c(ireg, "q", control, "ireg")
+				local pc = control .. ".pulldown.pc"
+				s:new_pulldown(pc, { width = BUS_WIDTH }):c(pc, "q", control, "pc")
 			end
 
 			------------------------------------------------------------------------------
@@ -106,14 +102,12 @@ return function(simulation)
 				},
 				trace = opts.trace,
 			})
-			for i = 1, BUS_WIDTH do
-				local a = buses .. ".pulldowns.a" .. (i - 1)
-				s:new_pulldown(a):cp(1, a, "q", 1, buses, "a", i)
-				local b = buses .. ".pulldowns.b" .. (i - 1)
-				s:new_pulldown(b):cp(1, b, "q", 1, buses, "b", i)
-				local d = buses .. ".pulldowns.d" .. (i - 1)
-				s:new_pulldown(d):cp(1, d, "q", 1, buses, "d", i)
-			end
+			local a = buses .. ".pulldowns.a"
+			s:new_pulldown(a, { width = BUS_WIDTH }):c(a, "q", buses, "a")
+			local b = buses .. ".pulldowns.b"
+			s:new_pulldown(b, { width = BUS_WIDTH }):c(b, "q", buses, "b")
+			local d = buses .. ".pulldowns.d"
+			s:new_pulldown(d, { width = BUS_WIDTH }):c(d, "q", buses, "d")
 			------------------------------------------------------------------------------
 			local lsu = core .. ".lsu"
 			s
@@ -128,7 +122,7 @@ return function(simulation)
 				:c(lsu, "out", buses, "d")
 			------------------------------------------------------------------------------
 			local pc = core .. ".pc"
-			s:new_program_counter(pc)
+			s:new_program_counter(pc, { trace = opts.trace })
 			s:c(control, "rst~", pc, "rst~")
 			s:c(clk, "rising", pc, "rising")
 			s:c(clk, "falling", pc, "falling")
@@ -192,7 +186,7 @@ return function(simulation)
 			s:c(control, "isched", i_op, "isched")
 			s:c(idecode, "funct7", i_op, "funct7")
 			s:c(idecode, "funct3", i_op, "funct3")
-			s:cp(5, idecode, "opcode", 3, i_op, "opcode", 1)
+			s:c(idecode, "opcode", i_op, "opcode")
 			s:c(i_op, "icomplete", control, "xu_trigin")
 			s:c(i_op, "alu_oe", control, "alu_oe")
 			s:c(i_op, "rd", control, "rd_oe")
@@ -204,7 +198,7 @@ return function(simulation)
 			s:c(i_op, "legal", control, "legal")
 			------------------------------------------------------------------------------
 			local kickstarter = core .. ".kickstarter"
-			s:new_kickstarter(kickstarter)
+			s:new_kickstarter(kickstarter, { trace = opts.trace })
 			s:c(control, "rst~", kickstarter, "rst~")
 			s:c(clk, "rising", kickstarter, "rising")
 			s:c(clk, "falling", kickstarter, "falling")

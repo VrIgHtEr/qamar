@@ -13,13 +13,11 @@ return function(simulation)
 			opts.names = {
 				inputs = { { "in", 32 }, "oe", "rs1_oe", "rs2_oe", "rd_oe" },
 				outputs = {
-					"r",
 					"i",
 					"s",
 					"b",
 					"u",
 					"j",
-					"illegal",
 					{ "opcode", 7 },
 					{ "rd", 5 },
 					{ "funct3", 3 },
@@ -27,8 +25,6 @@ return function(simulation)
 					{ "rs2", 5 },
 					{ "funct7", 7 },
 					{ "imm", 32 },
-					"aluop",
-					"aluimmop",
 				},
 			}
 			self:add_component(dec, opts)
@@ -209,17 +205,6 @@ return function(simulation)
 				end
 			end
 
-			local R = n .. "r"
-			build_2ll(R, {
-				"A'B'C'DEFGH'I'K'L'M'N'O'P'Q'",
-				"A'BCD'E'FGK'L'M'N'O'P'Q'",
-				"A'BCD'E'FGHI'JK'M'N'O'P'Q'",
-				"A'BCD'E'FGH'I'J'K'M'N'O'P'Q'",
-				"A'B'C'DEFGH'I'J'K'L'M'N'",
-			})
-
-			self:c(R, "q", dec, "r")
-
 			local I = n .. "i"
 			build_2ll(I, {
 				"A'B'CD'E'FGHK'M'N'O'P'Q'",
@@ -250,25 +235,6 @@ return function(simulation)
 			local J = n .. "j"
 			build_minterm(J, "ABC'DEFG")
 			self:c(J, "q", dec, "j")
-
-			local aluop = n .. "aluop"
-			build_minterm(aluop, "A'BCD'E'")
-			self:c(aluop, "q", dec, "aluop")
-
-			local aluimmop = n .. "aluimmop"
-			build_minterm(aluimmop, "A'B'CD'E'")
-			self:c(aluimmop, "q", dec, "aluimmop")
-
-			local illegal = n .. "illegal"
-			self
-				:new_nor(illegal, { width = 6 })
-				:cp(1, illegal, "in", 1, R, "q", 1)
-				:cp(1, illegal, "in", 2, I, "q", 1)
-				:cp(1, illegal, "in", 3, S, "q", 1)
-				:cp(1, illegal, "in", 4, B, "q", 1)
-				:cp(1, illegal, "in", 5, U, "q", 1)
-				:cp(1, illegal, "in", 6, J, "q", 1)
-				:c(illegal, "q", dec, "illegal")
 
 			return self
 		end

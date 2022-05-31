@@ -17,7 +17,7 @@ return function(simulation)
 					"falling",
 					"isched",
 					{ "funct7", 7 },
-					{ "opcode", 5 },
+					{ "opcode", 7 },
 					{ "funct3", 3 },
 				},
 				outputs = {
@@ -36,12 +36,12 @@ return function(simulation)
 			s:add_component(f, opts)
 
 			local nopcode = f .. ".nopcode"
-			s:new_not(nopcode, { width = 5 }):c(f, "opcode", nopcode, "a")
+			s:new_not(nopcode, { width = 5 }):cp(5, f, "opcode", 3, nopcode, "a", 1)
 			local aluop = f .. ".aluop"
 			s:new_and(aluop, { width = 4 })
 			s:cp(1, nopcode, "q", 1, aluop, "in", 1)
 			s:cp(1, nopcode, "q", 2, aluop, "in", 2)
-			s:cp(1, f, "opcode", 3, aluop, "in", 3)
+			s:cp(1, f, "opcode", 5, aluop, "in", 3)
 			s:cp(1, nopcode, "q", 5, aluop, "in", 4)
 
 			local nf3 = f .. ".nf3"
@@ -80,7 +80,7 @@ return function(simulation)
 			local ins = f .. ".ins"
 			s:new_and_bank(ins):c(nshift, "q", ins, "a"):cp(1, nopcode, "q", 4, ins, "b", 1)
 			local nios = f .. ".nios"
-			s:new_or_bank(nios):c(shift, "q", nios, "a"):cp(1, f, "opcode", 4, nios, "b", 1)
+			s:new_or_bank(nios):c(shift, "q", nios, "a"):cp(1, f, "opcode", 6, nios, "b", 1)
 			local nios7 = f .. ".nios7"
 			s:new_and_bank(nios7):c(nios, "q", nios7, "a"):cp(1, f7z, "q", 1, nios7, "b", 1)
 			local vf7 = f .. ".vf7"
@@ -132,7 +132,7 @@ return function(simulation)
 			local cina = f .. ".cina"
 			s:new_and(cina)
 			s:cp(1, f, "funct7", 6, cina, "in", 1)
-			s:cp(1, f, "opcode", 4, cina, "in", 2)
+			s:cp(1, f, "opcode", 6, cina, "in", 2)
 			local cinb = f .. ".cinb"
 			s:new_and(cinb)
 			s:cp(1, f, "funct7", 6, cinb, "in", 1)
@@ -153,7 +153,7 @@ return function(simulation)
 				:cp(1, "VCC", "q", 1, buf, "a", 1)
 				:cp(1, "VCC", "q", 1, buf, "a", 2)
 				:cp(1, "VCC", "q", 1, buf, "a", 3)
-				:cp(1, f, "opcode", 4, buf, "a", 4)
+				:cp(1, f, "opcode", 6, buf, "a", 4)
 				:cp(1, nopcode, "q", 4, buf, "a", 5)
 				:cp(1, cin, "q", 1, buf, "a", 6)
 				:cp(1, notb, "q", 1, buf, "a", 7)
