@@ -74,6 +74,17 @@ return function(simulation)
 			s:cp(5, nf7, "q", 1, f7z, "in", 1)
 			s:cp(1, nf7, "q", 7, f7z, "in", 6)
 
+			local nshift = f .. ".nshift"
+			s:new_not(nshift):c(shift, "q", nshift, "a")
+			local ins = f .. ".ins"
+			s:new_and_bank(ins):c(nshift, "q", ins, "a"):cp(1, nopcode, "q", 4, ins, "b", 1)
+			local nios = f .. ".nios"
+			s:new_or_bank(nios):c(shift, "q", nios, "a"):cp(1, f, "opcode", 4, nios, "b", 1)
+			local nios7 = f .. ".nios7"
+			s:new_and_bank(nios7):c(nios, "q", nios7, "a"):cp(1, f7z, "q", 1, nios7, "b", 1)
+			local vf7 = f .. ".vf7"
+			s:new_or_bank(vf7):c(ins, "q", vf7, "a"):c(nios7, "q", vf7, "b")
+
 			local vsubsel = f .. ".vsubsel"
 			s:new_or(vsubsel, { width = 4 })
 			s:cp(1, bitwise, "q", 1, vsubsel, "in", 1)
@@ -88,7 +99,7 @@ return function(simulation)
 				:cp(1, vsub, "q", 1, visched, "in", 1)
 				:cp(1, f, "isched", 1, visched, "in", 2)
 				:cp(1, aluop, "q", 1, visched, "in", 3)
-				:cp(1, f7z, "q", 1, visched, "in", 4)
+				:cp(1, vf7, "q", 1, visched, "in", 4)
 
 			local activated = f .. ".activated"
 			s:new_ms_d_flipflop(activated)
