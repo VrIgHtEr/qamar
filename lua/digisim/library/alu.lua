@@ -41,16 +41,6 @@ return function(simulation)
 			local lm = n .. "lm"
 			local out = n .. "out"
 
-			-- zero flag
-			if width == 1 then
-				sim:new_not(zero)
-				sim:cp(1, alu, "out", 1, zero, "a", 1)
-			else
-				sim:new_nor(zero, { width = width })
-				sim:cp(width, alu, "out", 1, zero, "in", 1)
-			end
-			sim:c(zero, "q", alu, "zero")
-
 			--output tristate buffer
 			sim:new_tristate_buffer(out, { width = width })
 			sim:c(alu, "oe", out, "en")
@@ -59,6 +49,16 @@ return function(simulation)
 			sim:new_mux_bank(lm, { width = 3, bits = width })
 			sim:c(alu, "sel", lm, "sel")
 			sim:c(lm, "out", out, "a")
+
+			-- zero flag
+			if width == 1 then
+				sim:new_not(zero)
+				sim:cp(1, lm, "d0", 1, zero, "a", 1)
+			else
+				sim:new_nor(zero, { width = width })
+				sim:cp(width, lm, "d0", 1, zero, "in", 1)
+			end
+			sim:c(zero, "q", alu, "zero")
 
 			--- conditional inverter for input B
 			sim:new_xor_bank(xb, { width = width })
