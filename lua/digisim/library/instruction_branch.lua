@@ -17,9 +17,7 @@ return function(simulation)
 					"falling",
 					"isched",
 					"zero",
-					"sign",
-					"signa",
-					"signb",
+					"lt",
 					{ "opcode", 7 },
 					{ "funct3", 3 },
 				},
@@ -27,6 +25,7 @@ return function(simulation)
 					"icomplete",
 					"legal",
 					"alu_oe",
+					"alu_u",
 					"rs1",
 					"rs2",
 					"imm_oe",
@@ -51,6 +50,15 @@ return function(simulation)
 			local legalf3 = f .. ".legalf3"
 			s:new_nand(legalf3):cp(1, nf3, "q", 3, legalf3, "in", 1):cp(1, f, "funct3", 2, legalf3, "in", 2)
 
+			local eq = f .. ".eq"
+			s:new_and(eq):cp(1, nf3, "q", 3, eq, "in", 1):cp(1, nf3, "q", 2, eq, "in", 2)
+
+			local uunsigned = f .. ".u"
+			s:new_and(uunsigned):cp(1, f, "funct3", 3, uunsigned, "in", 1):cp(1, f, "funct3", 2, uunsigned, "in", 2)
+
+			local signed = f .. ".s"
+			s:new_and(signed):cp(1, f, "funct3", 3, signed, "in", 1):cp(1, f, "funct3", 2, signed, "in", 2)
+
 			local legal = f .. ".legal"
 			s:new_and(legal)
 			s:cp(1, brop, "q", 1, legal, "in", 1):cp(1, legalf3, "q", 1, legal, "in", 2)
@@ -65,12 +73,19 @@ return function(simulation)
 			local visched = f .. ".visched"
 			s:new_and(visched):cp(1, f, "isched", 1, visched, "in", 1):cp(1, legal, "q", 1, visched, "in", 2)
 
+			local beq = f .. ".beq"
+			s:new_and_bank(beq):c(eq, "q", beq, "a"):c(f, "zero", beq, "b")
+			local neq = f .. ".neq"
+			s:new_not(neq):c(eq, "q", neq, "a")
+			local blt = f .. ".blt"
+			s:new_and_bank(blt):c(neq, "q", blt, "a"):c(f, "lt", blt, "b")
 			local branch = f .. ".branch"
-			s:add_component(branch, {
-				names = { outputs = { "q" } },
-			}, function()
-				return 1
-			end)
+			s:new_or(branch)
+			s:cp(1, beq, "q", 1, branch, "in", 1)
+			s:cp(1, blt, "q", 1, branch, "in", 2)
+
+			local decision = f .. ".decision"
+			s:new_xor(decision):cp(1, f, "funct3", 2, decision, "in", 1):cp(1, branch, "q", 1, decision, "in", 2)
 
 			local brlatchclk = f .. ".brlatchclk"
 			s:new_and_bank(brlatchclk):c(visched, "q", brlatchclk, "a"):c(f, "rising", brlatchclk, "b")
@@ -79,19 +94,21 @@ return function(simulation)
 			s:c(f, "rst~", brlatch, "rst~")
 			s:c(brlatchclk, "q", brlatch, "rising")
 			s:c(f, "falling", brlatch, "falling")
-			s:c(branch, "q", brlatch, "d")
+			s:c(decision, "q", brlatch, "d")
 
 			local test = f .. ".test"
-			s:new_tristate_buffer(test, { width = 4 })
+			s:new_tristate_buffer(test, { width = 5 })
 			s:c(visched, "q", test, "en")
 			s:cp(1, "VCC", "q", 1, test, "a", 1)
 			s:cp(1, "VCC", "q", 1, test, "a", 2)
 			s:cp(1, "VCC", "q", 1, test, "a", 3)
 			s:cp(1, "VCC", "q", 1, test, "a", 4)
+			s:cp(1, uunsigned, "q", 1, test, "a", 5)
 			s:cp(1, test, "q", 1, f, "rs1", 1)
 			s:cp(1, test, "q", 2, f, "rs2", 1)
 			s:cp(1, test, "q", 3, f, "alu_notb", 1)
 			s:cp(1, test, "q", 4, f, "alu_cin", 1)
+			s:cp(1, test, "q", 5, f, "alu_u", 1)
 
 			local activated = f .. ".activated"
 			s:new_ms_d_flipflop(activated)
