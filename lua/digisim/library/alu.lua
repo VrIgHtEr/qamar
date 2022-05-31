@@ -29,7 +29,9 @@ return function(simulation)
 				outputs = {
 					{ "out", width },
 					"zero",
-					"carry",
+					"sign",
+					"signa",
+					"signb",
 				},
 			}
 
@@ -49,16 +51,18 @@ return function(simulation)
 				sim:cp(width, alu, "out", 1, zero, "in", 1)
 			end
 			sim:c(zero, "q", alu, "zero")
+			sim:cp(1, alu, "a", width, alu, "signa", 1)
+			sim:cp(1, alu, "b", width, alu, "signb", 1)
 
 			--output tristate buffer
 			sim:new_tristate_buffer(out, { width = width })
 			sim:c(alu, "oe", out, "en")
 			sim:c(out, "q", alu, "out")
 
-			-- output multiplexer, selects either the adder, AND, OR or XOR output
 			sim:new_mux_bank(lm, { width = 3, bits = width })
 			sim:c(alu, "sel", lm, "sel")
 			sim:c(lm, "out", out, "a")
+			sim:cp(1, lm, "d0", width, alu, "sign", 1)
 
 			--- conditional inverter for input B
 			sim:new_xor_bank(xb, { width = width })
@@ -73,7 +77,6 @@ return function(simulation)
 			sim:c(alu, "a", f0, "a")
 			sim:c(xb, "q", f0, "b")
 			sim:cp(1, alu, "cin", 1, f0, "cin", 1)
-			sim:cp(1, f0, "carry", 1, alu, "carry", 1)
 			sim:c(f0, "sum", lm, "d0")
 
 			local nsel2 = alu .. ".nsel2"

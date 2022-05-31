@@ -43,6 +43,9 @@ return function(simulation)
 						"pc_oe",
 						"legal",
 						"zero",
+						"sign",
+						"signa",
+						"signb",
 						{ "lsu_control", 2 },
 						{ "ireg", BUS_WIDTH },
 						{ "pc", BUS_WIDTH },
@@ -56,6 +59,12 @@ return function(simulation)
 				s:new_pullup(rst):c(rst, "q", control, "rst~")
 				local legal = control .. ".pulldown.legal"
 				s:new_pulldown(legal):c(legal, "q", control, "legal")
+				local sign = control .. ".pulldown.sign"
+				s:new_pulldown(sign):c(sign, "q", control, "sign")
+				local signa = control .. ".pulldown.signa"
+				s:new_pulldown(signa):c(signa, "q", control, "signa")
+				local signb = control .. ".pulldown.signb"
+				s:new_pulldown(signb):c(signb, "q", control, "signb")
 				local alu_notb = control .. ".pulldown.alu_notb"
 				s:new_pulldown(alu_notb):c(alu_notb, "q", control, "alu_notb")
 				local alu_cin = control .. ".pulldown.alu_cin"
@@ -171,6 +180,9 @@ return function(simulation)
 			s:c(buses, "b", alu, "b")
 			s:c(alu, "out", buses, "d")
 			s:c(alu, "zero", control, "zero")
+			s:c(alu, "sign", control, "sign")
+			s:c(alu, "signa", control, "signa")
+			s:c(alu, "signb", control, "signb")
 			------------------------------------------------------------------------------
 			local registers = core .. ".registers"
 			s
@@ -213,6 +225,9 @@ return function(simulation)
 			s:c(clk, "falling", i_branch, "falling")
 			s:c(control, "isched", i_branch, "isched")
 			s:c(control, "zero", i_branch, "zero")
+			s:c(control, "sign", i_branch, "sign")
+			s:c(control, "signa", i_branch, "signa")
+			s:c(control, "signb", i_branch, "signb")
 			s:c(idecode, "opcode", i_branch, "opcode")
 			s:c(idecode, "funct3", i_branch, "funct3")
 			s:c(i_branch, "icomplete", control, "xu_trigin")
@@ -223,6 +238,8 @@ return function(simulation)
 			s:c(i_branch, "imm_oe", control, "imm_oe")
 			s:c(i_branch, "alu_notb", control, "alu_notb")
 			s:c(i_branch, "alu_cin", control, "alu_cin")
+			s:c(i_branch, "branch", control, "branch")
+			s:c(i_branch, "pc_oe", control, "pc_oe")
 			------------------------------------------------------------------------------
 			local kickstarter = core .. ".kickstarter"
 			s:new_kickstarter(kickstarter, { trace = opts.trace })
