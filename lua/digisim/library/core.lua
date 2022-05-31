@@ -155,7 +155,6 @@ return function(simulation)
 			s:c(control, "imm_oe", idecode, "oe")
 			s:c(control, "ireg", idecode, "in")
 			s:c(idecode, "imm", buses, "b")
-			s:c(idecode, "illegal", xu, "illegal")
 			------------------------------------------------------------------------------
 			local alu = core .. ".alu"
 			s:new_alu(alu, { width = BUS_WIDTH, trace = opts.trace })

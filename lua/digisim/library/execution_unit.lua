@@ -20,7 +20,6 @@ return function(simulation)
 					"falling",
 					"rst~",
 					"lsu_trigout",
-					"illegal",
 				},
 				outputs = {
 					"isched",
@@ -43,12 +42,13 @@ return function(simulation)
 			local c0 = f .. ".c0"
 			s:new_or_bank(c0):c(f, "trigin", c0, "a"):c(c00, "q", c0, "b"):c(c0, "q", s0, "d")
 
-			local nillegal = f .. ".nillegal"
-			s:new_not(nillegal):c(f, "illegal", nillegal, "a")
-			local c1 = f .. ".c1"
-			s:new_and_bank(c1):c(s0, "q", c1, "a"):c(f, "lsu_trigout", c1, "b"):c(c1, "q", s1, "d")
 			local isched = f .. ".isched"
-			s:new_and_bank(isched):c(c1, "q", isched, "a"):c(nillegal, "q", isched, "b"):c(isched, "q", f, "isched")
+			s
+				:new_and_bank(isched)
+				:c(s0, "q", isched, "a")
+				:c(f, "lsu_trigout", isched, "b")
+				:c(isched, "q", s1, "d")
+				:c(isched, "q", f, "isched")
 
 			local lsubuf = f .. ".lsubuf"
 			s:new_tristate_buffer(lsubuf, { width = 3 })
