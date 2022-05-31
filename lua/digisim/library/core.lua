@@ -42,6 +42,7 @@ return function(simulation)
 						"rs2_oe",
 						"pc_oe",
 						"legal",
+						"zero",
 						{ "lsu_control", 2 },
 						{ "ireg", BUS_WIDTH },
 						{ "pc", BUS_WIDTH },
@@ -81,6 +82,8 @@ return function(simulation)
 				s:new_pulldown(rd_oe):c(rd_oe, "q", control, "rd_oe")
 				local xu_trigin = control .. ".pulldown.xu_trigin"
 				s:new_pulldown(xu_trigin):c(xu_trigin, "q", control, "xu_trigin")
+				local zero = control .. ".pulldown.zero"
+				s:new_pulldown(zero):c(zero, "q", control, "zero")
 				local lsu_control = control .. ".pulldown.lsu_control"
 				s:new_pulldown(lsu_control, { width = 2 }):c(lsu_control, "q", control, "lsu_control")
 				local ireg = control .. ".pulldown.ireg"
@@ -167,6 +170,7 @@ return function(simulation)
 			s:c(buses, "a", alu, "a")
 			s:c(buses, "b", alu, "b")
 			s:c(alu, "out", buses, "d")
+			s:c(alu, "zero", control, "zero")
 			------------------------------------------------------------------------------
 			local registers = core .. ".registers"
 			s
@@ -201,6 +205,24 @@ return function(simulation)
 			s:c(i_op, "alu_notb", control, "alu_notb")
 			s:c(i_op, "alu_cin", control, "alu_cin")
 			s:c(i_op, "legal", control, "legal")
+			------------------------------------------------------------------------------
+			local i_branch = core .. ".instructions.branch"
+			s:new_instruction_branch(i_branch, { trace = opts.trace })
+			s:c(control, "rst~", i_branch, "rst~")
+			s:c(clk, "rising", i_branch, "rising")
+			s:c(clk, "falling", i_branch, "falling")
+			s:c(control, "isched", i_branch, "isched")
+			s:c(control, "zero", i_branch, "zero")
+			s:c(idecode, "opcode", i_branch, "opcode")
+			s:c(idecode, "funct3", i_branch, "funct3")
+			s:c(i_branch, "icomplete", control, "xu_trigin")
+			s:c(i_branch, "legal", control, "legal")
+			s:c(i_branch, "alu_oe", control, "alu_oe")
+			s:c(i_branch, "rs1", control, "rs1_oe")
+			s:c(i_branch, "rs2", control, "rs2_oe")
+			s:c(i_branch, "imm_oe", control, "imm_oe")
+			s:c(i_branch, "alu_notb", control, "alu_notb")
+			s:c(i_branch, "alu_cin", control, "alu_cin")
 			------------------------------------------------------------------------------
 			local kickstarter = core .. ".kickstarter"
 			s:new_kickstarter(kickstarter, { trace = opts.trace })

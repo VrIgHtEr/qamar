@@ -16,6 +16,7 @@ return function(simulation)
 					"rising",
 					"falling",
 					"isched",
+					"zero",
 					{ "opcode", 7 },
 					{ "funct3", 3 },
 				},
@@ -71,6 +72,18 @@ return function(simulation)
 			s:c(f, "rising", trignext, "rising")
 			s:c(f, "falling", trignext, "falling")
 			s:c(activated, "q", trignext, "d")
+
+			local test = f .. ".test"
+			s:new_tristate_buffer(test, { width = 4 })
+			s:c(visched, "q", test, "en")
+			s:cp(1, "VCC", "q", 1, test, "a", 1)
+			s:cp(1, "VCC", "q", 1, test, "a", 2)
+			s:cp(1, "VCC", "q", 1, test, "a", 3)
+			s:cp(1, "VCC", "q", 1, test, "a", 4)
+			s:cp(1, test, "q", 1, f, "rs1", 1)
+			s:cp(1, test, "q", 2, f, "rs2", 1)
+			s:cp(1, test, "q", 3, f, "alu_notb", 1)
+			s:cp(1, test, "q", 4, f, "alu_cin", 1)
 
 			local icomplete = f .. ".icomplete"
 			s:new_tristate_buffer(icomplete):c(trignext, "q", icomplete, "en"):c("VCC", "q", icomplete, "a")
