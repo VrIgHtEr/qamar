@@ -30,6 +30,7 @@ return function(simulation)
 						"rst~",
 						"alu_notb",
 						"alu_cin",
+						"alu_u",
 						"lsu_sext",
 						"lsu_trigin",
 						"alu_oe",
@@ -59,6 +60,8 @@ return function(simulation)
 				s:new_pullup(rst):c(rst, "q", control, "rst~")
 				local legal = control .. ".pulldown.legal"
 				s:new_pulldown(legal):c(legal, "q", control, "legal")
+				local alu_u = control .. ".pulldown.alu_u"
+				s:new_pulldown(alu_u):c(alu_u, "q", control, "alu_u")
 				local sign = control .. ".pulldown.sign"
 				s:new_pulldown(sign):c(sign, "q", control, "sign")
 				local signa = control .. ".pulldown.signa"
@@ -174,6 +177,7 @@ return function(simulation)
 			s:new_alu(alu, { width = BUS_WIDTH, trace = opts.trace })
 			s:c(control, "alu_notb", alu, "notb")
 			s:c(control, "alu_cin", alu, "cin")
+			s:c(control, "alu_u", alu, "u")
 			s:c(idecode, "funct3", alu, "sel")
 			s:c(control, "alu_oe", alu, "oe")
 			s:c(buses, "a", alu, "a")

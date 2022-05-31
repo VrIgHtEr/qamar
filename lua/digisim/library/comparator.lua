@@ -16,19 +16,11 @@ return function(simulation)
 			end
 			width = math.floor(width)
 			opts.names = { inputs = { { "a", width }, { "b", width } }, outputs = { "q" } }
-			local na = f .. ".na"
-			s:new_not(na, { width = width }):c(f, "a", na, "a")
 			s:add_component(f, opts)
-			local pd = f .. ".d0"
-			s:new_and_bank(pd):cp(1, na, "q", 1, pd, "a", 1):cp(1, f, "b", 1, pd, "b", 1)
-			for i = 2, width do
-				local a = f .. ".a" .. (i - 1)
-				s:new_and_bank(a):cp(1, na, "q", i, a, "a", 1):cp(1, f, "b", i, a, "b", 1)
-				local d = f .. ".d" .. (i - 1)
-				s:new_or_bank(d):c(pd, "q", d, "a"):c(a, "q", d, "b")
-				pd = d
-			end
-			s:c(pd, "q", f, "q")
+			local d = f .. ".d"
+			s:new_and_bank(d, { width = width }):c(f, "a", d, "a"):c(f, "b", d, "b")
+			local out = f .. ".out"
+			s:new_or(out, { width = width }):c(d, "q", out, "in"):c(out, "q", f, "q")
 		end
 	)
 end

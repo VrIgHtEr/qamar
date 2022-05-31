@@ -25,6 +25,7 @@ return function(simulation)
 					"notb",
 					{ "sel", 3 },
 					{ "oe" },
+					"u",
 				},
 				outputs = {
 					{ "out", width },
@@ -113,6 +114,11 @@ return function(simulation)
 			sim:c(alu, "a", f7, "a")
 			sim:c(xb, "q", f7, "b")
 			sim:c(f7, "q", lm, "d7")
+
+			local comparator = alu .. ".comparator"
+			sim:new_comparator(comparator, { width = width })
+			sim:cp(width - 1, alu, "a", 1, comparator, "a", 1)
+			sim:cp(width - 1, alu, "b", 1, comparator, "b", 1)
 
 			return sim
 		end
