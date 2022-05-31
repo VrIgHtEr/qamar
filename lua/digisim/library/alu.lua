@@ -30,7 +30,9 @@ return function(simulation)
 				outputs = {
 					{ "out", width },
 					"zero",
-					"lt",
+					"sign",
+					"signa",
+					"signb",
 				},
 			}
 
@@ -50,6 +52,8 @@ return function(simulation)
 				sim:cp(width, alu, "out", 1, zero, "in", 1)
 			end
 			sim:c(zero, "q", alu, "zero")
+			sim:cp(1, alu, "a", width, alu, "signa", 1)
+			sim:cp(1, alu, "b", width, alu, "signb", 1)
 
 			--output tristate buffer
 			sim:new_tristate_buffer(out, { width = width })
@@ -59,6 +63,7 @@ return function(simulation)
 			sim:new_mux_bank(lm, { width = 3, bits = width })
 			sim:c(alu, "sel", lm, "sel")
 			sim:c(lm, "out", out, "a")
+			sim:cp(1, lm, "d0", width, alu, "sign", 1)
 
 			--- conditional inverter for input B
 			sim:new_xor_bank(xb, { width = width })
@@ -115,21 +120,7 @@ return function(simulation)
 			sim:cp(width - 1, alu, "a", 1, comparator, "a", 1)
 			sim:cp(width - 1, alu, "b", 1, comparator, "b", 1)
 
-			local s = alu .. ".signed"
-			sim:new_and_bank(s):c(alu, "u", s, "a")
-
-			local cx = alu .. ".cx"
-			sim
-				:new_xor_bank(cx, { width = 2 })
-				:cp(1, s, "q", 1, cx, "a", 1)
-				:cp(1, s, "q", 1, cx, "a", 2)
-				:cp(1, alu, "a", width, cx, "b", 1)
-				:cp(1, alu, "b", width, cx, "b", 2)
-				:cp(1, cx, "q", 1, comparator, "a", width)
-				:cp(1, cx, "q", 2, comparator, "b", width)
-
-			local lt = alu .. ".lt"
-			sim:new_not(lt):c(comparator, "q", lt, "a"):c(lt, "q", alu, "lt")
+			return sim
 		end
 	)
 end
