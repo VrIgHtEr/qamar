@@ -111,9 +111,9 @@ return function(simulation)
 			s:cp(1, "GND", "q", 1, action, "a", 3)
 			s:cp(1, "GND", "q", 1, action, "a", 4)
 			s:cp(1, action, "q", 1, f, "alu_oe", 1)
-			s:cp(1, action, "q", 2, f, "imm_oe", 2)
-			s:cp(1, action, "q", 3, f, "pc_oe", 3)
-			s:cp(1, action, "q", 4, f, "branch", 4)
+			s:cp(1, action, "q", 2, f, "imm_oe", 1)
+			s:cp(1, action, "q", 3, f, "pc_oe", 1)
+			s:cp(1, action, "q", 4, f, "branch", 1)
 
 			local trignext = f .. ".trignext"
 			s:new_ms_d_flipflop(trignext)
