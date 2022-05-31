@@ -40,6 +40,7 @@ return function(simulation)
 						"rd_oe",
 						"rs1_oe",
 						"rs2_oe",
+						"legal",
 						{ "lsu_control", 2 },
 						{ "ireg", BUS_WIDTH },
 						{ "pc", BUS_WIDTH },
@@ -51,6 +52,8 @@ return function(simulation)
 			do
 				local rst = control .. ".pullup.rst~"
 				s:new_pullup(rst):c(rst, "q", control, "rst~")
+				local legal = control .. ".pulldown.legal"
+				s:new_pulldown(legal):c(legal, "q", control, "legal")
 				local alu_notb = control .. ".pulldown.alu_notb"
 				s:new_pulldown(alu_notb):c(alu_notb, "q", control, "alu_notb")
 				local alu_cin = control .. ".pulldown.alu_cin"
@@ -198,6 +201,7 @@ return function(simulation)
 			s:c(i_op, "imm_oe", control, "imm_oe")
 			s:c(i_op, "alu_notb", control, "alu_notb")
 			s:c(i_op, "alu_cin", control, "alu_cin")
+			s:c(i_op, "legal", control, "legal")
 			------------------------------------------------------------------------------
 			local kickstarter = core .. ".kickstarter"
 			s:new_kickstarter(kickstarter)

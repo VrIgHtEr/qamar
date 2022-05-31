@@ -22,6 +22,7 @@ return function(simulation)
 				},
 				outputs = {
 					"icomplete",
+					"legal",
 					"alu_oe",
 					"rd",
 					"rs1",
@@ -93,13 +94,23 @@ return function(simulation)
 			s:cp(1, sll, "q", 1, vsubsel, "in", 4)
 			local vsub = f .. ".vsub"
 			s:new_nand(vsub):cp(1, f, "funct7", 6, vsub, "in", 1):cp(1, vsubsel, "q", 1, vsub, "in", 2)
-			local visched = f .. ".visched"
-			s:new_and(visched, { width = 4 })
+
+			local legal = f .. ".legal"
+			s:new_and(legal, { width = 3 })
 			s
-				:cp(1, vsub, "q", 1, visched, "in", 1)
-				:cp(1, f, "isched", 1, visched, "in", 2)
-				:cp(1, aluop, "q", 1, visched, "in", 3)
-				:cp(1, vf7, "q", 1, visched, "in", 4)
+				:cp(1, vsub, "q", 1, legal, "in", 1)
+				:cp(1, aluop, "q", 1, legal, "in", 2)
+				:cp(1, vf7, "q", 1, legal, "in", 3)
+
+			local legalbuf = f .. ".legalbuf"
+			s
+				:new_tristate_buffer(legalbuf)
+				:c(legal, "q", legalbuf, "en")
+				:c("VCC", "q", legalbuf, "a")
+				:c(legalbuf, "q", f, "legal")
+
+			local visched = f .. ".visched"
+			s:new_and(visched):cp(1, f, "isched", 1, visched, "in", 1):cp(1, legal, "q", 1, visched, "in", 2)
 
 			local activated = f .. ".activated"
 			s:new_ms_d_flipflop(activated)
