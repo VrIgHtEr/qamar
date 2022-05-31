@@ -40,6 +40,7 @@ return function(simulation)
 						"rd_oe",
 						"rs1_oe",
 						"rs2_oe",
+						"pc_oe",
 						"legal",
 						{ "lsu_control", 2 },
 						{ "ireg", BUS_WIDTH },
@@ -70,6 +71,8 @@ return function(simulation)
 				s:new_pulldown(lsu_trigin):c(lsu_trigin, "q", control, "lsu_trigin")
 				local imm_oe = control .. ".pulldown.imm_oe"
 				s:new_pulldown(imm_oe):c(imm_oe, "q", control, "imm_oe")
+				local pc_oe = control .. ".pulldown.pc_oe"
+				s:new_pulldown(pc_oe):c(pc_oe, "q", control, "pc_oe")
 				local rs1_oe = control .. ".pulldown.rs1_oe"
 				s:new_pulldown(rs1_oe):c(rs1_oe, "q", control, "rs1_oe")
 				local rs2_oe = control .. ".pulldown.rs2_oe"
@@ -128,7 +131,9 @@ return function(simulation)
 			s:c(clk, "falling", pc, "falling")
 			s:c(control, "branch", pc, "branch")
 			s:c(control, "xu_trigin", pc, "icomplete")
+			s:c(control, "pc_oe", pc, "oe_b")
 			s:c(buses, "d", pc, "d")
+			s:c(buses, "b", pc, "b")
 			s:c(pc, "pc", control, "pc")
 			------------------------------------------------------------------------------
 			local xu = core .. ".xu"

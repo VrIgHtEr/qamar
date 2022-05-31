@@ -19,6 +19,8 @@ return function(simulation)
 					"falling",
 					"branch",
 					"icomplete",
+					"oe_b",
+					{ "b", BITS },
 					{ "d", BITS },
 				},
 				outputs = {
