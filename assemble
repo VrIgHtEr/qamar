@@ -3,9 +3,7 @@ mkdir -p ./asm
 cd ./asm
 rm -rf a.out
 rm -rf test.dat
-riscv64-linux-gnu-as -march=rv32i ../test.asm
-objcopy -O ihex a.out test.hex
-hex2bin test.hex
+riscv64-linux-gnu-as -march=rv32i ../test.asm && objcopy -O ihex a.out test.hex && hex2bin test.hex
 mv test.bin ../lua/sram.dat
 cd ..
 rm -rf asm
