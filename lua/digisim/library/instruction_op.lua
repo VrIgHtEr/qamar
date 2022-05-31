@@ -38,11 +38,12 @@ return function(simulation)
 			local nopcode = f .. ".nopcode"
 			s:new_not(nopcode, { width = 5 }):cp(5, f, "opcode", 3, nopcode, "a", 1)
 			local aluop = f .. ".aluop"
-			s:new_and(aluop, { width = 4 })
+			s:new_and(aluop, { width = 6 })
 			s:cp(1, nopcode, "q", 1, aluop, "in", 1)
 			s:cp(1, nopcode, "q", 2, aluop, "in", 2)
 			s:cp(1, f, "opcode", 5, aluop, "in", 3)
 			s:cp(1, nopcode, "q", 5, aluop, "in", 4)
+			s:cp(2, f, "opcode", 1, aluop, "in", 5)
 
 			local nf3 = f .. ".nf3"
 			s:new_not(nf3, { width = 3 }):c(f, "funct3", nf3, "a")
