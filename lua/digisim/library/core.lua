@@ -103,7 +103,7 @@ return function(simulation)
 
 			------------------------------------------------------------------------------
 			local clk = core .. ".clock"
-			s:new_clock_module(clk, { period = PERIOD, chain_length = 2, trace = opts.trace })
+			s:new_clock_module(clk, { period = PERIOD, chain_length = 4, trace = opts.trace })
 			------------------------------------------------------------------------------
 			local buses = core .. ".buses"
 			s:add_component(buses, {

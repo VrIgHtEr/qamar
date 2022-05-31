@@ -101,8 +101,15 @@ return function(simulation)
 			s:c(f, "falling", activated, "falling")
 			s:c(visched, "q", activated, "d")
 
+			local trignext = f .. ".trignext"
+			s:new_ms_d_flipflop(trignext)
+			s:c(f, "rst~", trignext, "rst~")
+			s:c(f, "rising", trignext, "rising")
+			s:c(f, "falling", trignext, "falling")
+			s:c(activated, "q", trignext, "d")
+
 			local actionen = f .. ".actionen"
-			s:new_and_bank(actionen):c(activated, "q", actionen, "a"):c(brlatch, "q", actionen, "b")
+			s:new_and_bank(actionen):c(trignext, "q", actionen, "a"):c(brlatch, "q", actionen, "b")
 			local action = f .. ".action"
 			s:new_tristate_buffer(action, { width = 4 })
 			s:c(actionen, "q", action, "en")
@@ -114,13 +121,6 @@ return function(simulation)
 			s:cp(1, action, "q", 2, f, "imm_oe", 1)
 			s:cp(1, action, "q", 3, f, "pc_oe", 1)
 			s:cp(1, action, "q", 4, f, "branch", 1)
-
-			local trignext = f .. ".trignext"
-			s:new_ms_d_flipflop(trignext)
-			s:c(f, "rst~", trignext, "rst~")
-			s:c(f, "rising", trignext, "rising")
-			s:c(f, "falling", trignext, "falling")
-			s:c(activated, "q", trignext, "d")
 
 			local icompletebuf = f .. ".icompletebuf"
 			s:new_tristate_buffer(icompletebuf):c(trignext, "q", icompletebuf, "en"):c("VCC", "q", icompletebuf, "a")

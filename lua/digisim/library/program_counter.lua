@@ -78,7 +78,7 @@ return function(simulation)
 			local bufa = f .. ".bufa"
 			s:new_tristate_buffer(bufa, { width = BITS })
 			s:c(f, "oe_a", bufa, "en")
-			s:c(mux, "out", bufa, "a")
+			s:c(pc, "q", bufa, "a")
 			s:c(bufa, "q", f, "a")
 		end
 	)
