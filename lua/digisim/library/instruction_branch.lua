@@ -68,10 +68,9 @@ return function(simulation)
 			local branch = f .. ".branch"
 			s:add_component(branch, {
 				names = { outputs = { "q" } },
-				function()
-					return 1
-				end,
-			})
+			}, function()
+				return 1
+			end)
 
 			local brlatchclk = f .. ".brlatchclk"
 			s:new_and_bank(brlatchclk):c(visched, "q", brlatchclk, "a"):c(f, "rising", brlatchclk, "b")
