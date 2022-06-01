@@ -22,6 +22,7 @@ return function(simulation)
 					"oe_a",
 					{ "a", BITS },
 					{ "d", BITS },
+					"clk~",
 				},
 				outputs = {
 					{ "pc", BITS },
@@ -69,15 +70,19 @@ return function(simulation)
 			s:c(f, "icomplete", oe, "a")
 			s:c(nbranch, "q", oe, "b")
 
+			local bufden = f .. ".bufden"
+			s:new_and_bank(bufden):c(f, "clk~", bufden, "a"):c(oe, "q", bufden, "b")
 			local bufd = f .. ".bufd"
 			s:new_tristate_buffer(bufd, { width = BITS })
-			s:c(oe, "q", bufd, "en")
+			s:c(bufden, "q", bufd, "en")
 			s:c(mux, "out", bufd, "a")
 			s:c(bufd, "q", f, "d")
 
+			local bufaen = f .. ".bufaen"
+			s:new_and_bank(bufaen):c(f, "clk~", bufaen, "a"):c(f, "oe_a", bufaen, "b")
 			local bufa = f .. ".bufa"
 			s:new_tristate_buffer(bufa, { width = BITS })
-			s:c(f, "oe_a", bufa, "en")
+			s:c(bufaen, "q", bufa, "en")
 			s:c(pc, "q", bufa, "a")
 			s:c(bufa, "q", f, "a")
 		end

@@ -109,6 +109,7 @@ return function(simulation)
 			------------------------------------------------------------------------------
 			local pc = core .. ".pc"
 			s:new_program_counter(pc, { trace = opts.trace })
+			s:c(clk, "~q", pc, "clk~")
 			s:c(control, "rst~", pc, "rst~")
 			s:c(clk, "rising", pc, "rising")
 			s:c(clk, "falling", pc, "falling")
@@ -158,11 +159,9 @@ return function(simulation)
 			s:c(alu, "lt", control, "alu_lt")
 			------------------------------------------------------------------------------
 			local registers = core .. ".registers"
+			s:new_register_bank(registers, { width = BUS_WIDTH, selwidth = REGISTER_SELECT_WIDTH, trace = opts.trace })
 			s
-				:new_register_bank(
-					registers,
-					{ width = BUS_WIDTH, selwidth = REGISTER_SELECT_WIDTH, trace = opts.trace }
-				)
+				:c(clk, "~q", registers, "clk~")
 				:c(control, "rst~", registers, "~rst")
 				:c(clk, "rising", registers, "rising")
 				:c(buses, "d", registers, "in")
@@ -247,6 +246,7 @@ return function(simulation)
 			------------------------------------------------------------------------------
 			local kickstarter = core .. ".kickstarter"
 			s:new_kickstarter(kickstarter, { trace = opts.trace })
+			s:c(clk, "~q", kickstarter, "clk~")
 			s:c(control, "rst~", kickstarter, "rst~")
 			s:c(clk, "rising", kickstarter, "rising")
 			s:c(clk, "falling", kickstarter, "falling")
