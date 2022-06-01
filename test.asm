@@ -3,8 +3,8 @@ addi a0,zero, 9
 addi a1,zero, 42
 mul:
 mv t0, a0
-xor a0, a0, a0
-xor t1, t1, t1
+li a0,0
+li t1,0
 mul_loop:
 beqz a1, mul_end
 andi t2, a1, 1
