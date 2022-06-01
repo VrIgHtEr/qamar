@@ -20,6 +20,7 @@ return function(simulation)
 					"falling",
 					"rst~",
 					"lsu_trigout",
+					"clk~",
 				},
 				outputs = {
 					"isched",
@@ -52,10 +53,10 @@ return function(simulation)
 
 			local lsubuf = f .. ".lsubuf"
 			s:new_tristate_buffer(lsubuf, { width = 3 })
+			s:c(c0, "q", lsubuf, "en")
 			s:cp(1, "VCC", "q", 1, lsubuf, "a", 1)
 			s:cp(1, "VCC", "q", 1, lsubuf, "a", 2)
 			s:cp(1, "VCC", "q", 1, lsubuf, "a", 3)
-			s:c(c0, "q", lsubuf, "en")
 			s:cp(1, lsubuf, "q", 1, f, "lsu_trigin", 1)
 			s:cp(2, lsubuf, "q", 2, f, "lsu_control", 1)
 

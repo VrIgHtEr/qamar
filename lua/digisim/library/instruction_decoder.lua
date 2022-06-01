@@ -11,7 +11,7 @@ return function(simulation)
 		function(self, dec, opts)
 			opts = opts or {}
 			opts.names = {
-				inputs = { { "in", 32 }, "oe", "rs1_oe", "rs2_oe", "rd_oe" },
+				inputs = { { "in", 32 }, "oe", "rs1_oe", "rs2_oe", "rd_oe", "clk~" },
 				outputs = {
 					"i",
 					"s",
@@ -34,33 +34,42 @@ return function(simulation)
 
 			local pd1 = dec .. ".pd1"
 			self:new_pulldown(pd1, { width = 5 }):c(pd1, "q", dec, "rs1")
+			local rs1en = dec .. ".rs1en"
+			self:new_and_bank(rs1en):c(dec, "clk~", rs1en, "a"):c(dec, "rs1_oe", rs1en, "b")
 			local rs1 = dec .. ".rs1"
 			self
 				:new_tristate_buffer(rs1, { width = 5 })
 				:c(rs1, "q", dec, "rs1")
-				:c(dec, "rs1_oe", rs1, "en")
+				:c(rs1en, "q", rs1, "en")
 				:cp(5, dec, "in", 16, rs1, "a", 1)
+			local rs2en = dec .. ".rs2en"
+			self:new_and_bank(rs2en):c(dec, "clk~", rs2en, "a"):c(dec, "rs2_oe", rs2en, "b")
 			local pd2 = dec .. ".pd2"
 			self:new_pulldown(pd2, { width = 5 }):c(pd2, "q", dec, "rs2")
 			local rs2 = dec .. ".rs2"
 			self
 				:new_tristate_buffer(rs2, { width = 5 })
 				:c(rs2, "q", dec, "rs2")
-				:c(dec, "rs2_oe", rs2, "en")
+				:c(rs2en, "q", rs2, "en")
 				:cp(5, dec, "in", 21, rs2, "a", 1)
 			local pdd = dec .. ".pdd"
 			self:new_pulldown(pdd, { width = 5 }):c(pdd, "q", dec, "rd")
+			local rden = dec .. ".rden"
+			self:new_and_bank(rden):c(dec, "clk~", rden, "a"):c(dec, "rd_oe", rden, "b")
 			local rd = dec .. ".rd"
 			self
 				:new_tristate_buffer(rd, { width = 5 })
 				:c(rd, "q", dec, "rd")
-				:c(dec, "rd_oe", rd, "en")
+				:c(rden, "q", rd, "en")
 				:cp(5, dec, "in", 8, rd, "a", 1)
+
+			local immen = dec .. ".immen"
+			self:new_and_bank(immen):c(dec, "clk~", immen, "a"):c(dec, "oe", immen, "b")
 
 			-- decode I immediate
 			local cimmi = dec .. ".cimmi"
 			self:new_and_bank(cimmi)
-			self:c(dec, "oe", cimmi, "a")
+			self:c(immen, "q", cimmi, "a")
 			self:c(dec, "i", cimmi, "b")
 			local immi = dec .. ".immi"
 			self:new_tristate_buffer(immi, { width = 32 })
@@ -74,7 +83,7 @@ return function(simulation)
 			-- decode S immediate
 			local cimms = dec .. ".cimms"
 			self:new_and_bank(cimms)
-			self:c(dec, "oe", cimms, "a")
+			self:c(immen, "q", cimms, "a")
 			self:c(dec, "s", cimms, "b")
 			local imms = dec .. ".imms"
 			self:new_tristate_buffer(imms, { width = 32 })
@@ -89,7 +98,7 @@ return function(simulation)
 			-- decode B immediate
 			local cimmb = dec .. ".cimmb"
 			self:new_and_bank(cimmb)
-			self:c(dec, "oe", cimmb, "a")
+			self:c(immen, "q", cimmb, "a")
 			self:c(dec, "b", cimmb, "b")
 			local immb = dec .. ".immb"
 			self:new_tristate_buffer(immb, { width = 32 })
@@ -107,7 +116,7 @@ return function(simulation)
 			-- decode U immediate
 			local cimmu = dec .. ".cimmu"
 			self:new_and_bank(cimmu)
-			self:c(dec, "oe", cimmu, "a")
+			self:c(immen, "q", cimmu, "a")
 			self:c(dec, "u", cimmu, "b")
 			local immu = dec .. ".immu"
 			self:new_tristate_buffer(immu, { width = 32 })
@@ -121,7 +130,7 @@ return function(simulation)
 			-- decode J immediate
 			local cimmj = dec .. ".cimmj"
 			self:new_and_bank(cimmj)
-			self:c(dec, "oe", cimmj, "a")
+			self:c(immen, "q", cimmj, "a")
 			self:c(dec, "j", cimmj, "b")
 			local immj = dec .. ".immj"
 			self:new_tristate_buffer(immj, { width = 32 })

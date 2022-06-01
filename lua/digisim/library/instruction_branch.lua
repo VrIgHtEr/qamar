@@ -20,6 +20,7 @@ return function(simulation)
 					"lt",
 					{ "opcode", 7 },
 					{ "funct3", 3 },
+					"clk~",
 				},
 				outputs = {
 					"icomplete",
@@ -63,10 +64,12 @@ return function(simulation)
 			s:new_and(legal)
 			s:cp(1, brop, "q", 1, legal, "in", 1):cp(1, legalf3, "q", 1, legal, "in", 2)
 
+			local legalbufen = f .. ".legalbufen"
+			s:new_and_bank(legalbufen):c(f, "clk~", legalbufen, "a"):c(legal, "q", legalbufen, "b")
 			local legalbuf = f .. ".legalbuf"
 			s
 				:new_tristate_buffer(legalbuf)
-				:c(legal, "q", legalbuf, "en")
+				:c(legalbufen, "q", legalbuf, "en")
 				:c("VCC", "q", legalbuf, "a")
 				:c(legalbuf, "q", f, "legal")
 
@@ -96,9 +99,11 @@ return function(simulation)
 			s:c(f, "falling", brlatch, "falling")
 			s:c(decision, "q", brlatch, "d")
 
+			local testen = f .. ".testen"
+			s:new_and_bank(testen):c(f, "clk~", testen, "a"):c(visched, "q", testen, "b")
 			local test = f .. ".test"
 			s:new_tristate_buffer(test, { width = 5 })
-			s:c(visched, "q", test, "en")
+			s:c(testen, "q", test, "en")
 			s:cp(1, "VCC", "q", 1, test, "a", 1)
 			s:cp(1, "VCC", "q", 1, test, "a", 2)
 			s:cp(1, "VCC", "q", 1, test, "a", 3)
@@ -125,7 +130,11 @@ return function(simulation)
 			s:c(activated, "q", trignext, "d")
 
 			local actionen = f .. ".actionen"
-			s:new_and_bank(actionen):c(trignext, "q", actionen, "a"):c(brlatch, "q", actionen, "b")
+			s
+				:new_and(actionen, { width = 3 })
+				:cp(1, trignext, "q", 1, actionen, "in", 1)
+				:cp(1, brlatch, "q", 1, actionen, "in", 2)
+				:cp(1, f, "clk~", 1, actionen, "in", 3)
 			local action = f .. ".action"
 			s:new_tristate_buffer(action, { width = 4 })
 			s:c(actionen, "q", action, "en")
@@ -138,8 +147,10 @@ return function(simulation)
 			s:cp(1, action, "q", 3, f, "pc_oe", 1)
 			s:cp(1, action, "q", 4, f, "branch", 1)
 
+			local icompleteen = f .. ".icompleteen"
+			s:new_and_bank(icompleteen):c(f, "clk~", icompleteen, "a"):c(trignext, "q", icompleteen, "b")
 			local icompletebuf = f .. ".icompletebuf"
-			s:new_tristate_buffer(icompletebuf):c(trignext, "q", icompletebuf, "en"):c("VCC", "q", icompletebuf, "a")
+			s:new_tristate_buffer(icompletebuf):c(icompleteen, "q", icompletebuf, "en"):c("VCC", "q", icompletebuf, "a")
 			s:c(icompletebuf, "q", f, "icomplete")
 		end
 	)
