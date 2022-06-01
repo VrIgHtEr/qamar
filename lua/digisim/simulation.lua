@@ -247,6 +247,7 @@ function simulation:fanout(a, porta, pina, b, portb, startb, len)
 	for i = 1, len do
 		self:cp(1, a, porta, pina, b, portb, startb + i - 1)
 	end
+	return self
 end
 
 ---@param a string
@@ -263,6 +264,7 @@ function simulation:high(a, porta, pina, len)
 	for i = 1, len do
 		self:cp(1, "VCC", "q", 1, a, porta, pina + i - 1)
 	end
+	return self
 end
 
 ---@param a string
@@ -279,6 +281,7 @@ function simulation:low(a, porta, pina, len)
 	for i = 1, len do
 		self:cp(1, "GND", "q", 1, a, porta, pina + i - 1)
 	end
+	return self
 end
 
 ---@param a string

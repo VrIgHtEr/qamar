@@ -1,3 +1,4 @@
+li x1, 1000000000
 addi a0,zero, 9
 addi a1,zero, 42
 mul:

@@ -208,6 +208,19 @@ return function(simulation)
 			s:c(i_branch, "branch", control, "branch")
 			s:c(i_branch, "pc_oe", control, "pc_oe")
 			------------------------------------------------------------------------------
+			local i_lui = core .. ".instructions.lui"
+			s:new_instruction_lui(i_lui, { trace = opts.trace })
+			s:c(control, "rst~", i_lui, "rst~")
+			s:c(clk, "rising", i_lui, "rising")
+			s:c(clk, "falling", i_lui, "falling")
+			s:c(control, "isched", i_lui, "isched")
+			s:c(idecode, "opcode", i_lui, "opcode")
+			s:c(i_lui, "icomplete", control, "xu_trigin")
+			s:c(i_lui, "legal", control, "legal")
+			s:c(i_lui, "alu_oe", control, "alu_oe")
+			s:c(i_lui, "rd", control, "rd_oe")
+			s:c(i_lui, "imm_oe", control, "imm_oe")
+			------------------------------------------------------------------------------
 			local kickstarter = core .. ".kickstarter"
 			s:new_kickstarter(kickstarter, { trace = opts.trace })
 			s:c(control, "rst~", kickstarter, "rst~")
