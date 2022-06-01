@@ -20,7 +20,7 @@ return function(simulation)
 			s:add_component(core, opts)
 			------------------------------------------------------------------------------
 			local clk = core .. ".clock"
-			s:new_clock_module(clk, { period = PERIOD, chain_length = 2, trace = opts.trace })
+			s:new_clock_module(clk, { period = PERIOD, chain_length = 3, trace = opts.trace })
 			------------------------------------------------------------------------------
 			local control = core .. ".control"
 			s:add_component(control, {
@@ -223,6 +223,20 @@ return function(simulation)
 			s:c(i_lui, "alu_oe", control, "alu_oe")
 			s:c(i_lui, "rd", control, "rd_oe")
 			s:c(i_lui, "imm_oe", control, "imm_oe")
+			------------------------------------------------------------------------------
+			local i_auipc = core .. ".instructions.auipc"
+			s:new_instruction_auipc(i_auipc, { trace = opts.trace })
+			s:c(control, "rst~", i_auipc, "rst~")
+			s:c(clk, "rising", i_auipc, "rising")
+			s:c(clk, "falling", i_auipc, "falling")
+			s:c(control, "isched", i_auipc, "isched")
+			s:c(idecode, "opcode", i_auipc, "opcode")
+			s:c(i_auipc, "icomplete", control, "xu_trigin")
+			s:c(i_auipc, "legal", control, "legal")
+			s:c(i_auipc, "alu_oe", control, "alu_oe")
+			s:c(i_auipc, "rd", control, "rd_oe")
+			s:c(i_auipc, "imm_oe", control, "imm_oe")
+			s:c(i_auipc, "pc_oe", control, "pc_oe")
 			------------------------------------------------------------------------------
 			local kickstarter = core .. ".kickstarter"
 			s:new_kickstarter(kickstarter, { trace = opts.trace })
