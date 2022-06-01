@@ -73,10 +73,6 @@ return function(simulation)
 				s:pulldown(control, "ireg", 1, BUS_WIDTH)
 				s:pulldown(control, "pc", 1, BUS_WIDTH)
 			end
-
-			------------------------------------------------------------------------------
-			local clk = core .. ".clock"
-			s:new_clock_module(clk, { period = PERIOD, chain_length = 4, trace = opts.trace })
 			------------------------------------------------------------------------------
 			local buses = core .. ".buses"
 			s:add_component(buses, {
@@ -93,6 +89,9 @@ return function(simulation)
 			s:pulldown(buses, "a", 1, BUS_WIDTH)
 			s:pulldown(buses, "b", 1, BUS_WIDTH)
 			s:pulldown(buses, "d", 1, BUS_WIDTH)
+			------------------------------------------------------------------------------
+			local clk = core .. ".clock"
+			s:new_clock_module(clk, { period = PERIOD, chain_length = 4, trace = opts.trace })
 			------------------------------------------------------------------------------
 			local lsu = core .. ".lsu"
 			s
