@@ -231,6 +231,80 @@ function simulation:cp(len, a, porta, starta, b, portb, startb)
 	return self
 end
 
+---@param a string
+---@param porta string
+---@param pina number
+---@param b string
+---@param portb string
+---@param startb number
+---@param len number
+---@return simulation
+function simulation:fanout(a, porta, pina, b, portb, startb, len)
+	len = len == nil and 1 or len
+	if len < 1 then
+		error("invalid length")
+	end
+	for i = 1, len do
+		self:cp(1, a, porta, pina, b, portb, startb + i - 1)
+	end
+end
+
+---@param a string
+---@param porta string
+---@param pina number|nil
+---@param len number|nil
+---@return simulation
+function simulation:high(a, porta, pina, len)
+	pina = pina == nil and 1 or pina
+	len = len == nil and 1 or len
+	if len < 1 then
+		error("invalid length")
+	end
+	for i = 1, len do
+		self:cp(1, "VCC", "q", 1, a, porta, pina + i - 1)
+	end
+end
+
+---@param a string
+---@param porta string
+---@param pina number|nil
+---@param len number|nil
+---@return simulation
+function simulation:low(a, porta, pina, len)
+	pina = pina == nil and 1 or pina
+	len = len == nil and 1 or len
+	if len < 1 then
+		error("invalid length")
+	end
+	for i = 1, len do
+		self:cp(1, "GND", "q", 1, a, porta, pina + i - 1)
+	end
+end
+
+---@param a string
+---@param porta string
+---@param pina number|nil
+---@param len number|nil
+---@return simulation
+function simulation:pullup(a, porta, pina, len)
+	pina = pina == nil and 1 or pina
+	len = len == nil and 1 or len
+	local pull = a .. "." .. porta .. "#up" .. (pina - 1) .. "#" .. len
+	return self:new_pullup(pull, { width = len }):cp(len, pull, "q", 1, a, porta, pina)
+end
+
+---@param a string
+---@param porta string
+---@param pina number|nil
+---@param len number|nil
+---@return simulation
+function simulation:pulldown(a, porta, pina, len)
+	pina = pina == nil and 1 or pina
+	len = len == nil and 1 or len
+	local pull = a .. "." .. porta .. "#down" .. (pina - 1) .. "#" .. len
+	return self:new_pulldown(pull, { width = len }):cp(len, pull, "q", 1, a, porta, pina)
+end
+
 ---@param sim simulation
 ---@param name string
 ---@param time number

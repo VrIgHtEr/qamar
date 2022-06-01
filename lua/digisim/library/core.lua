@@ -15,10 +15,7 @@ return function(simulation)
 		function(s, core, opts)
 			opts = opts or { trace = nil, file = nil }
 			opts.names = {
-				inputs = {
-					"rst~",
-				},
-				outputs = { "q" },
+				inputs = { "rst~" },
 			}
 			s:add_component(core, opts)
 
@@ -54,48 +51,27 @@ return function(simulation)
 			s:c(core, "rst~", control, "rst~")
 			------------------------------------------------------------------------------
 			do
-				local rst = control .. ".pullup.rst~"
-				s:new_pullup(rst):c(rst, "q", control, "rst~")
-				local alu_u = control .. ".pulldown.alu_u"
-				s:new_pulldown(alu_u):c(alu_u, "q", control, "alu_u")
-				local legal = control .. ".pulldown.legal"
-				s:new_pulldown(legal):c(legal, "q", control, "legal")
-				local alu_lt = control .. ".pulldown.alu_lt"
-				s:new_pulldown(alu_lt):c(alu_lt, "q", control, "alu_lt")
-				local alu_notb = control .. ".pulldown.alu_notb"
-				s:new_pulldown(alu_notb):c(alu_notb, "q", control, "alu_notb")
-				local alu_cin = control .. ".pulldown.alu_cin"
-				s:new_pulldown(alu_cin):c(alu_cin, "q", control, "alu_cin")
-				local lsu_sext = control .. ".pulldown.lsu_sext"
-				s:new_pulldown(lsu_sext):c(lsu_sext, "q", control, "lsu_sext")
-				local alu_oe = control .. ".pulldown.alu_oe"
-				s:new_pulldown(alu_oe):c(alu_oe, "q", control, "alu_oe")
-				local isched = control .. ".pulldown.isched"
-				s:new_pulldown(isched):c(isched, "q", control, "isched")
-				local branch = control .. ".pulldown.branch"
-				s:new_pulldown(branch):c(branch, "q", control, "branch")
-				local lsu_trigin = control .. ".pulldown.lsu_trigin"
-				s:new_pulldown(lsu_trigin):c(lsu_trigin, "q", control, "lsu_trigin")
-				local imm_oe = control .. ".pulldown.imm_oe"
-				s:new_pulldown(imm_oe):c(imm_oe, "q", control, "imm_oe")
-				local pc_oe = control .. ".pulldown.pc_oe"
-				s:new_pulldown(pc_oe):c(pc_oe, "q", control, "pc_oe")
-				local rs1_oe = control .. ".pulldown.rs1_oe"
-				s:new_pulldown(rs1_oe):c(rs1_oe, "q", control, "rs1_oe")
-				local rs2_oe = control .. ".pulldown.rs2_oe"
-				s:new_pulldown(rs2_oe):c(rs2_oe, "q", control, "rs2_oe")
-				local rd_oe = control .. ".pulldown.rd_oe"
-				s:new_pulldown(rd_oe):c(rd_oe, "q", control, "rd_oe")
-				local xu_trigin = control .. ".pulldown.xu_trigin"
-				s:new_pulldown(xu_trigin):c(xu_trigin, "q", control, "xu_trigin")
-				local zero = control .. ".pulldown.zero"
-				s:new_pulldown(zero):c(zero, "q", control, "zero")
-				local lsu_control = control .. ".pulldown.lsu_control"
-				s:new_pulldown(lsu_control, { width = 2 }):c(lsu_control, "q", control, "lsu_control")
-				local ireg = control .. ".pulldown.ireg"
-				s:new_pulldown(ireg, { width = BUS_WIDTH }):c(ireg, "q", control, "ireg")
-				local pc = control .. ".pulldown.pc"
-				s:new_pulldown(pc, { width = BUS_WIDTH }):c(pc, "q", control, "pc")
+				s:pullup(control, "rst~")
+				s:pulldown(control, "alu_u")
+				s:pulldown(control, "legal")
+				s:pulldown(control, "alu_lt")
+				s:pulldown(control, "alu_notb")
+				s:pulldown(control, "alu_cin")
+				s:pulldown(control, "alu_oe")
+				s:pulldown(control, "lsu_sext")
+				s:pulldown(control, "isched")
+				s:pulldown(control, "branch")
+				s:pulldown(control, "lsu_trigin")
+				s:pulldown(control, "imm_oe")
+				s:pulldown(control, "pc_oe")
+				s:pulldown(control, "rs1_oe")
+				s:pulldown(control, "rs2_oe")
+				s:pulldown(control, "rd_oe")
+				s:pulldown(control, "xu_trigin")
+				s:pulldown(control, "zero")
+				s:pulldown(control, "lsu_control", 1, 2)
+				s:pulldown(control, "ireg", 1, BUS_WIDTH)
+				s:pulldown(control, "pc", 1, BUS_WIDTH)
 			end
 
 			------------------------------------------------------------------------------
@@ -114,12 +90,9 @@ return function(simulation)
 				},
 				trace = opts.trace,
 			})
-			local a = buses .. ".pulldowns.a"
-			s:new_pulldown(a, { width = BUS_WIDTH }):c(a, "q", buses, "a")
-			local b = buses .. ".pulldowns.b"
-			s:new_pulldown(b, { width = BUS_WIDTH }):c(b, "q", buses, "b")
-			local d = buses .. ".pulldowns.d"
-			s:new_pulldown(d, { width = BUS_WIDTH }):c(d, "q", buses, "d")
+			s:pulldown(buses, "a", 1, BUS_WIDTH)
+			s:pulldown(buses, "b", 1, BUS_WIDTH)
+			s:pulldown(buses, "d", 1, BUS_WIDTH)
 			------------------------------------------------------------------------------
 			local lsu = core .. ".lsu"
 			s
