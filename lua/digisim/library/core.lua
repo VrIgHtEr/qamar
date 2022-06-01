@@ -18,7 +18,10 @@ return function(simulation)
 				inputs = { "rst~" },
 			}
 			s:add_component(core, opts)
-
+			------------------------------------------------------------------------------
+			local clk = core .. ".clock"
+			s:new_clock_module(clk, { period = PERIOD, chain_length = 2, trace = opts.trace })
+			------------------------------------------------------------------------------
 			local control = core .. ".control"
 			s:add_component(control, {
 				trace = opts.trace,
@@ -89,9 +92,6 @@ return function(simulation)
 			s:pulldown(buses, "a", 1, BUS_WIDTH)
 			s:pulldown(buses, "b", 1, BUS_WIDTH)
 			s:pulldown(buses, "d", 1, BUS_WIDTH)
-			------------------------------------------------------------------------------
-			local clk = core .. ".clock"
-			s:new_clock_module(clk, { period = PERIOD, chain_length = 4, trace = opts.trace })
 			------------------------------------------------------------------------------
 			local lsu = core .. ".lsu"
 			s
