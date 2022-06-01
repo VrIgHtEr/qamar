@@ -45,6 +45,7 @@ return function(simulation)
 						"pc_oe",
 						"legal",
 						"zero",
+						{ "alu_sel", 3 },
 						{ "lsu_control", 2 },
 						{ "ireg", BUS_WIDTH },
 						{ "pc", BUS_WIDTH },
@@ -75,6 +76,7 @@ return function(simulation)
 				s:pulldown(control, "lsu_control", 1, 2)
 				s:pulldown(control, "ireg", 1, BUS_WIDTH)
 				s:pulldown(control, "pc", 1, BUS_WIDTH)
+				s:pulldown(control, "alu_sel", 1, 3)
 			end
 			------------------------------------------------------------------------------
 			local buses = core .. ".buses"
@@ -144,8 +146,8 @@ return function(simulation)
 			s:c(control, "alu_notb", alu, "notb")
 			s:c(control, "alu_cin", alu, "cin")
 			s:c(control, "alu_u", alu, "u")
-			s:c(idecode, "funct3", alu, "sel")
 			s:c(control, "alu_oe", alu, "oe")
+			s:c(control, "alu_sel", alu, "sel")
 			s:c(buses, "a", alu, "a")
 			s:c(buses, "b", alu, "b")
 			s:c(alu, "out", buses, "d")
@@ -177,6 +179,7 @@ return function(simulation)
 			s:c(idecode, "funct3", i_op, "funct3")
 			s:c(idecode, "opcode", i_op, "opcode")
 			s:c(i_op, "icomplete", control, "xu_trigin")
+			s:c(i_op, "alu_sel", control, "alu_sel")
 			s:c(i_op, "alu_oe", control, "alu_oe")
 			s:c(i_op, "rd", control, "rd_oe")
 			s:c(i_op, "rs1", control, "rs1_oe")

@@ -30,6 +30,7 @@ return function(simulation)
 					"imm_oe",
 					"alu_notb",
 					"alu_cin",
+					{ "alu_sel", 3 },
 				},
 			}
 			s:add_component(f, opts)
@@ -155,7 +156,7 @@ return function(simulation)
 			s:cp(1, cin, "q", 1, notb, "in", 2)
 
 			local buf = f .. ".buf"
-			s:new_tristate_buffer(buf, { width = 7 })
+			s:new_tristate_buffer(buf, { width = 10 })
 			s:c(activated, "q", buf, "en")
 			s
 				:cp(1, "VCC", "q", 1, buf, "a", 1)
@@ -165,6 +166,7 @@ return function(simulation)
 				:cp(1, nopcode, "q", 4, buf, "a", 5)
 				:cp(1, cin, "q", 1, buf, "a", 6)
 				:cp(1, notb, "q", 1, buf, "a", 7)
+				:cp(3, f, "funct3", 1, buf, "a", 8)
 			s
 				:cp(1, buf, "q", 1, f, "alu_oe", 1)
 				:cp(1, buf, "q", 2, f, "rd", 1)
@@ -173,6 +175,7 @@ return function(simulation)
 				:cp(1, buf, "q", 5, f, "imm_oe", 1)
 				:cp(1, buf, "q", 6, f, "alu_cin", 1)
 				:cp(1, buf, "q", 7, f, "alu_notb", 1)
+				:cp(3, buf, "q", 8, f, "alu_sel", 1)
 		end
 	)
 end
