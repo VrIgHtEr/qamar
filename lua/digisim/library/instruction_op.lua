@@ -44,6 +44,11 @@ return function(simulation)
 			s:cp(1, nopcode, "q", 5, aluop, "in", 4)
 			s:cp(2, f, "opcode", 1, aluop, "in", 5)
 
+			local miscmemop = f .. ".miscmem"
+			s:new_and(miscmemop, { width = 7 })
+			s:cp(4, f, "opcode", 1, miscmemop, "in", 1)
+			s:cp(3, nopcode, "q", 3, miscmemop, "in", 5)
+
 			local nf3 = f .. ".nf3"
 			s:new_not(nf3, { width = 3 }):c(f, "funct3", nf3, "a")
 			local arithmetic = f .. ".arithmetic"
@@ -95,11 +100,14 @@ return function(simulation)
 			local vsub = f .. ".vsub"
 			s:new_nand(vsub):cp(1, f, "funct7", 6, vsub, "in", 1):cp(1, vsubsel, "q", 1, vsub, "in", 2)
 
+			local validop = f .. ".validop"
+			s:new_or(validop):cp(1, aluop, "q", 1, validop, "in", 1):cp(1, miscmemop, "q", 1, validop, "in", 2)
+
 			local legal = f .. ".legal"
 			s:new_and(legal, { width = 3 })
 			s
 				:cp(1, vsub, "q", 1, legal, "in", 1)
-				:cp(1, aluop, "q", 1, legal, "in", 2)
+				:cp(1, validop, "q", 1, legal, "in", 2)
 				:cp(1, vf7, "q", 1, legal, "in", 3)
 
 			local legalbuf = f .. ".legalbuf"

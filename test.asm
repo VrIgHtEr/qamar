@@ -1,21 +1,18 @@
-addi x1,x0, 9
-addi x2,x0, 42
-
+addi a0,zero, 9
+addi a1,zero, 42
 mul:
-xor x3, x3, x3
-add x4, x2, x0
-xor x5, x5, x5
+add t0, a0, zero
+xor a0, a0, a0
+xor t1, t1, t1
 mul_loop:
-beq x4, x0, mul_end
-andi x6,x4,1
-beq x6, x0, mul_continue
-sll x6, x1, x5
-add x3, x3, x6
+beq a1, zero, mul_end
+andi t2, a1, 1
+beq t2, zero, mul_continue
+sll t2, t0, t1
+add a0, a0, t2
 mul_continue:
-srli x4, x4, 1
-addi x5, x5, 1
-beq x0,x0,mul_loop
+srli a1, a1, 1
+addi t1, t1, 1
+beq zero, zero, mul_loop
 mul_end:
-xor x5,x5,x5
-xor x6,x6,x6
 
