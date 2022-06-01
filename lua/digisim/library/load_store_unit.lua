@@ -33,6 +33,9 @@ return function(simulation)
 			s:c("VCC", "q", sram, "oe")
 			s:c("GND", "q", sram, "write")
 
+			local sram_pd = f .. ".sram_pd"
+			s:new_pulldown(sram_pd, { width = byte_bits }):c(sram_pd, "q", sram, "in")
+
 			local addrmux = f .. ".addrmux"
 			s:new_mux_bank(addrmux, { width = 1, bits = bits })
 			s:c(f, "address", addrmux, "d0")

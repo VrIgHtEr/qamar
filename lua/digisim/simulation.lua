@@ -64,6 +64,9 @@ function simulation:init_nets()
 					end
 					input.net.drivers = drivers
 				end
+				if #input.net.drivers == 0 then
+					error("disconnected input: " .. input.name)
+				end
 			end
 		end
 		for _, p in ipairs(v.outports) do
