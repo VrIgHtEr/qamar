@@ -113,23 +113,46 @@ function simulation:init_nets()
 			end
 		end
 	end
-	local sweep = {}
+	local mark = {}
 	for n, v in pairs(self.components) do
 		if v.trace then
-			sweep[n] = true
+			mark[n] = true
 		end
 		for _, port in ipairs(v.inports) do
 			for _, pin in pairs(port.pins) do
-				pin.connections = nil
 				for _, driver in ipairs(pin.net.drivers) do
-					sweep[driver.port.component.name] = true
-					sweep[n] = true
+					mark[driver.port.component.name] = true
+					mark[n] = true
 				end
 			end
 		end
 	end
-	for x in pairs(sweep) do
+	for x in pairs(mark) do
 		self.components[x] = nil
+	end
+	self.connections = nil
+	for _, v in pairs(self.components) do
+		for _, port in ipairs(v.inports) do
+			for _, pin in pairs(port.pins) do
+				pin.net.pins = nil
+				pin.net.num_pins = nil
+			end
+		end
+		for _, port in ipairs(v.outports) do
+			for _, pin in pairs(port.pins) do
+				pin.connections = nil
+				local newpins = {}
+				local newpincount = 0
+				for n, netpin in pairs(pin.net.pins) do
+					if self.components[netpin.port.component.name] then
+						newpins[n] = netpin
+						newpincount = newpincount + 1
+					end
+				end
+				pin.net.pins = newpins
+				pin.net.num_pins = newpincount
+			end
+		end
 	end
 end
 

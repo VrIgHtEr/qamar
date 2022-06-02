@@ -1,6 +1,6 @@
 return {
 	SIM_TIME = 262144,
-	DEBUG_TRACE_ALL_OUTPUTS = true,
+	DEBUG_TRACE_ALL_OUTPUTS = false,
 	TRACE_INPUTS = true,
 	STARTUP_TICKS = 12,
 	NAND_ONLY = false,
