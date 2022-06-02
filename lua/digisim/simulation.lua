@@ -58,7 +58,7 @@ function simulation:init_nets()
 				if not input.net.drivers then
 					local drivers = {}
 					for _, x in pairs(input.net.pins) do
-						if not x.is_input then
+						if not x.is_input and x.port.component.step then
 							table.insert(drivers, x)
 						end
 					end
@@ -77,7 +77,7 @@ function simulation:init_nets()
 				if not output.net.drivers then
 					local drivers = {}
 					for _, x in pairs(output.net.pins) do
-						if not x.is_input then
+						if not x.is_input and x.port.component.step then
 							table.insert(drivers, x)
 						end
 					end
@@ -112,6 +112,24 @@ function simulation:init_nets()
 				end
 			end
 		end
+	end
+	local sweep = {}
+	for n, v in pairs(self.components) do
+		if v.trace then
+			sweep[n] = true
+		end
+		for _, port in ipairs(v.inports) do
+			for _, pin in pairs(port.pins) do
+				pin.connections = nil
+				for _, driver in ipairs(pin.net.drivers) do
+					sweep[driver.port.component.name] = true
+					sweep[n] = true
+				end
+			end
+		end
+	end
+	for x in pairs(sweep) do
+		self.components[x] = nil
 	end
 end
 
