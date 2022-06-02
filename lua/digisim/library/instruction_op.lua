@@ -19,7 +19,6 @@ return function(simulation)
 					{ "funct7", 7 },
 					{ "opcode", 7 },
 					{ "funct3", 3 },
-					"clk~",
 				},
 				outputs = {
 					"icomplete",
@@ -112,12 +111,10 @@ return function(simulation)
 				:cp(1, validop, "q", 1, legal, "in", 2)
 				:cp(1, vf7, "q", 1, legal, "in", 3)
 
-			local legalbufen = f .. ".legalbufen"
-			s:new_and_bank(legalbufen):c(f, "clk~", legalbufen, "a"):c(legal, "q", legalbufen, "b")
 			local legalbuf = f .. ".legalbuf"
 			s
 				:new_tristate_buffer(legalbuf)
-				:c(legalbufen, "q", legalbuf, "en")
+				:c(legal, "q", legalbuf, "en")
 				:c("VCC", "q", legalbuf, "a")
 				:c(legalbuf, "q", f, "legal")
 
@@ -137,10 +134,8 @@ return function(simulation)
 			s:c(f, "falling", trignext, "falling")
 			s:c(activated, "q", trignext, "d")
 
-			local icompleteen = f .. ".icompleteen"
-			s:new_and_bank(icompleteen):c(f, "clk~", icompleteen, "a"):c(trignext, "q", icompleteen, "b")
 			local icomplete = f .. ".icomplete"
-			s:new_tristate_buffer(icomplete):c(icompleteen, "q", icomplete, "en"):c("VCC", "q", icomplete, "a")
+			s:new_tristate_buffer(icomplete):c(trignext, "q", icomplete, "en"):c("VCC", "q", icomplete, "a")
 			s:c(icomplete, "q", f, "icomplete")
 
 			local cina = f .. ".cina"
@@ -160,11 +155,9 @@ return function(simulation)
 			s:cp(1, add, "q", 1, notb, "in", 1)
 			s:cp(1, cin, "q", 1, notb, "in", 2)
 
-			local bufen = f .. ".bufen"
-			s:new_and_bank(bufen):c(f, "clk~", bufen, "a"):c(activated, "q", bufen, "b")
 			local buf = f .. ".buf"
 			s:new_tristate_buffer(buf, { width = 10 })
-			s:c(bufen, "q", buf, "en")
+			s:c(activated, "q", buf, "en")
 			s
 				:cp(1, "VCC", "q", 1, buf, "a", 1)
 				:cp(1, "VCC", "q", 1, buf, "a", 2)

@@ -98,7 +98,6 @@ return function(simulation)
 			local lsu = core .. ".lsu"
 			s:new_load_store_unit(lsu, { file = opts.file, trace = opts.trace })
 			s
-				:c(clk, "~q", lsu, "clk~")
 				:c(clk, "rising", lsu, "rising")
 				:c(clk, "falling", lsu, "falling")
 				:c(buses, "d", lsu, "address")
@@ -110,7 +109,6 @@ return function(simulation)
 			------------------------------------------------------------------------------
 			local pc = core .. ".pc"
 			s:new_program_counter(pc, { trace = opts.trace })
-			s:c(clk, "~q", pc, "clk~")
 			s:c(control, "rst~", pc, "rst~")
 			s:c(clk, "rising", pc, "rising")
 			s:c(clk, "falling", pc, "falling")
@@ -123,7 +121,6 @@ return function(simulation)
 			------------------------------------------------------------------------------
 			local xu = core .. ".xu"
 			s:new_execution_unit(xu, { trace = opts.trace })
-			s:c(clk, "~q", xu, "clk~")
 			s:c(buses, "d", xu, "d")
 			s:c(clk, "rising", xu, "rising")
 			s:c(clk, "falling", xu, "falling")
@@ -137,7 +134,6 @@ return function(simulation)
 			------------------------------------------------------------------------------
 			local idecode = core .. ".idecode"
 			s:new_instruction_decoder(idecode, { trace = opts.trace })
-			s:c(clk, "~q", idecode, "clk~")
 			s:c(control, "rs1_oe", idecode, "rs1_oe")
 			s:c(control, "rs2_oe", idecode, "rs2_oe")
 			s:c(control, "rd_oe", idecode, "rd_oe")
@@ -147,7 +143,6 @@ return function(simulation)
 			------------------------------------------------------------------------------
 			local alu = core .. ".alu"
 			s:new_alu(alu, { width = BUS_WIDTH, trace = opts.trace })
-			s:c(clk, "~q", alu, "clk~")
 			s:c(control, "alu_notb", alu, "notb")
 			s:c(control, "alu_cin", alu, "cin")
 			s:c(control, "alu_u", alu, "u")
@@ -162,7 +157,6 @@ return function(simulation)
 			local registers = core .. ".registers"
 			s:new_register_bank(registers, { width = BUS_WIDTH, selwidth = REGISTER_SELECT_WIDTH, trace = opts.trace })
 			s
-				:c(clk, "~q", registers, "clk~")
 				:c(control, "rst~", registers, "~rst")
 				:c(clk, "rising", registers, "rising")
 				:c(buses, "d", registers, "in")
@@ -177,7 +171,6 @@ return function(simulation)
 			s:c(control, "rst~", i_op, "rst~")
 			s:c(clk, "rising", i_op, "rising")
 			s:c(clk, "falling", i_op, "falling")
-			s:c(clk, "~q", i_op, "clk~")
 			s:c(control, "isched", i_op, "isched")
 			s:c(idecode, "funct7", i_op, "funct7")
 			s:c(idecode, "funct3", i_op, "funct3")
@@ -198,7 +191,6 @@ return function(simulation)
 			s:c(control, "rst~", i_branch, "rst~")
 			s:c(clk, "rising", i_branch, "rising")
 			s:c(clk, "falling", i_branch, "falling")
-			s:c(clk, "~q", i_branch, "clk~")
 			s:c(control, "isched", i_branch, "isched")
 			s:c(control, "zero", i_branch, "zero")
 			s:c(control, "alu_lt", i_branch, "lt")
@@ -218,7 +210,6 @@ return function(simulation)
 			------------------------------------------------------------------------------
 			local i_lui = core .. ".instructions.lui"
 			s:new_instruction_lui(i_lui, { trace = opts.trace })
-			s:c(clk, "~q", i_lui, "clk~")
 			s:c(control, "rst~", i_lui, "rst~")
 			s:c(clk, "rising", i_lui, "rising")
 			s:c(clk, "falling", i_lui, "falling")
@@ -232,7 +223,6 @@ return function(simulation)
 			------------------------------------------------------------------------------
 			local i_auipc = core .. ".instructions.auipc"
 			s:new_instruction_auipc(i_auipc, { trace = opts.trace })
-			s:c(clk, "~q", i_auipc, "clk~")
 			s:c(control, "rst~", i_auipc, "rst~")
 			s:c(clk, "rising", i_auipc, "rising")
 			s:c(clk, "falling", i_auipc, "falling")
@@ -247,7 +237,6 @@ return function(simulation)
 			------------------------------------------------------------------------------
 			local kickstarter = core .. ".kickstarter"
 			s:new_kickstarter(kickstarter, { trace = opts.trace })
-			s:c(clk, "~q", kickstarter, "clk~")
 			s:c(control, "rst~", kickstarter, "rst~")
 			s:c(clk, "rising", kickstarter, "rising")
 			s:c(clk, "falling", kickstarter, "falling")

@@ -19,7 +19,7 @@ return function(simulation)
 				error("invalid width")
 			end
 			opts.names = {
-				inputs = { { "in", width }, "rising", "write", "oea", "oeb", "~rst", "clk~" },
+				inputs = { { "in", width }, "rising", "write", "oea", "oeb", "~rst" },
 				outputs = { { "outa", width }, { "outb", width } },
 			}
 			self:add_component(name, opts)
@@ -27,15 +27,10 @@ return function(simulation)
 			local write = name .. ".wa"
 			self:new_and(write):cp(1, name, "rising", 1, write, "in", 1):cp(1, name, "write", 1, write, "in", 2)
 
-			local bufaen = name .. ".bufaen"
-			self:new_and_bank(bufaen):c(name, "clk~", bufaen, "a"):c(name, "oea", bufaen, "b")
-			local bufben = name .. ".bufben"
-			self:new_and_bank(bufben):c(name, "clk~", bufben, "a"):c(name, "oeb", bufben, "b")
-
 			local oa = name .. ".bufa"
 			local ob = name .. ".bufb"
-			self:new_tristate_buffer(oa, { width = width }):c(oa, "q", name, "outa"):c(bufaen, "q", oa, "en")
-			self:new_tristate_buffer(ob, { width = width }):c(ob, "q", name, "outb"):c(bufben, "q", ob, "en")
+			self:new_tristate_buffer(oa, { width = width }):c(oa, "q", name, "outa"):c(name, "oea", oa, "en")
+			self:new_tristate_buffer(ob, { width = width }):c(ob, "q", name, "outb"):c(name, "oeb", ob, "en")
 
 			for i = 1, width do
 				local b = name .. ".bits.b" .. (i - 1)

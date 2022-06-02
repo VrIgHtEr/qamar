@@ -20,7 +20,6 @@ return function(simulation)
 					"falling",
 					"rst~",
 					"lsu_trigout",
-					"clk~",
 				},
 				outputs = {
 					"isched",

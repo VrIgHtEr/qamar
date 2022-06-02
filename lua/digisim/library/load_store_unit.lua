@@ -23,7 +23,6 @@ return function(simulation)
 					"trigin",
 					"rst~",
 					"sext",
-					"clk~",
 				},
 				outputs = { "trigout", { "out", bits } },
 			}
@@ -135,12 +134,10 @@ return function(simulation)
 			local a1 = f .. ".a1"
 			s:new_and_bank(a1):c(noe, "q", a1, "a"):c(s1, "q", a1, "b"):c(a1, "q", s2, "d")
 
-			local bufen = f .. ".bufen"
-			s:new_and_bank(bufen):c(f, "clk~", bufen, "a"):c(oe, "q", bufen, "b")
 			local output = f .. ".output"
 			s:new_tristate_buffer(output, { width = bits })
 			s:c(output, "q", f, "out")
-			s:c(bufen, "q", output, "en")
+			s:c(oe, "q", output, "en")
 
 			local lb0 = f .. ".lb0"
 			s:new_and_bank(lb0):c(s0, "d", lb0, "a"):c(f, "rising", lb0, "b")

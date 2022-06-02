@@ -17,7 +17,6 @@ return function(simulation)
 					"falling",
 					"isched",
 					{ "opcode", 7 },
-					"clk~",
 				},
 				outputs = {
 					"icomplete",
@@ -38,12 +37,10 @@ return function(simulation)
 			s:cp(2, f, "opcode", 5, legal, "in", 5)
 			s:cp(1, nopcode, "q", 5, legal, "in", 7)
 
-			local legalbufen = f .. ".legalbufen"
-			s:new_and_bank(legalbufen):c(f, "clk~", legalbufen, "a"):c(legal, "q", legalbufen, "b")
 			local legalbuf = f .. ".legalbuf"
 			s
 				:new_tristate_buffer(legalbuf)
-				:c(legalbufen, "q", legalbuf, "en")
+				:c(legal, "q", legalbuf, "en")
 				:c("VCC", "q", legalbuf, "a")
 				:c(legalbuf, "q", f, "legal")
 
@@ -63,16 +60,12 @@ return function(simulation)
 			s:c(f, "falling", trignext, "falling")
 			s:c(activated, "q", trignext, "d")
 
-			local icompleteen = f .. ".icompleteen"
-			s:new_and_bank(icompleteen):c(f, "clk~", icompleteen, "a"):c(trignext, "q", icompleteen, "b")
 			local icomplete = f .. ".icomplete"
-			s:new_tristate_buffer(icomplete):c(icompleteen, "q", icomplete, "en"):c("VCC", "q", icomplete, "a")
+			s:new_tristate_buffer(icomplete):c(trignext, "q", icomplete, "en"):c("VCC", "q", icomplete, "a")
 			s:c(icomplete, "q", f, "icomplete")
 
-			local bufen = f .. ".bufen"
-			s:new_and_bank(bufen):c(f, "clk~", bufen, "a"):c(activated, "q", bufen, "b")
 			local buf = f .. ".buf"
-			s:new_tristate_buffer(buf, { width = 3 }):high(buf, "a", 1, 3):c(bufen, "q", buf, "en")
+			s:new_tristate_buffer(buf, { width = 3 }):high(buf, "a", 1, 3):c(activated, "q", buf, "en")
 			s:cp(1, buf, "q", 1, f, "alu_oe", 1):cp(1, buf, "q", 2, f, "rd", 1):cp(1, buf, "q", 3, f, "imm_oe", 1)
 		end
 	)

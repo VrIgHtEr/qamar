@@ -34,7 +34,6 @@ return function(simulation)
 					{ "sela", selwidth },
 					{ "selb", selwidth },
 					{ "selw", selwidth },
-					"clk~",
 					"~rst",
 				},
 				outputs = { { "outa", width }, { "outb", width } },
@@ -62,7 +61,6 @@ return function(simulation)
 				local n = r .. (i - 1)
 				if i > 1 then
 					self:new_register(n, { width = width })
-					self:c(name, "clk~", n, "clk~")
 					self:c(name, "~rst", n, "~rst")
 					self:c(name, "rising", n, "rising")
 					self:cp(1, selw, "q", i, n, "write", 1)

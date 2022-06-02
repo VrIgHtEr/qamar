@@ -26,7 +26,6 @@ return function(simulation)
 					{ "sel", 3 },
 					{ "oe" },
 					"u",
-					"clk~",
 				},
 				outputs = {
 					{ "out", width },
