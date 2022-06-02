@@ -96,8 +96,9 @@ return function(simulation)
 			s:pulldown(buses, "d", 1, BUS_WIDTH)
 			------------------------------------------------------------------------------
 			local lsu = core .. ".lsu"
+			s:new_load_store_unit(lsu, { file = opts.file, trace = opts.trace })
 			s
-				:new_load_store_unit(lsu, { file = opts.file, trace = opts.trace })
+				:c(clk, "~q", lsu, "clk~")
 				:c(clk, "rising", lsu, "rising")
 				:c(clk, "falling", lsu, "falling")
 				:c(buses, "d", lsu, "address")

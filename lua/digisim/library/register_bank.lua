@@ -46,38 +46,23 @@ return function(simulation)
 			self:new_pulldown(pull .. ".selb", { width = selwidth }):c(pull .. ".selb", "q", name, "selb")
 			self:new_pulldown(pull .. ".selw", { width = selwidth }):c(pull .. ".selw", "q", name, "selw")
 
-			local ena = name .. ".ena"
-			self
-				:new_and_bank(ena, { width = selwidth })
-				:fanout(name, "clk~", 1, ena, "a", 1, selwidth)
-				:c(name, "sela", ena, "b")
-			local enb = name .. ".enb"
-			self
-				:new_and_bank(enb, { width = selwidth })
-				:fanout(name, "clk~", 1, enb, "a", 1, selwidth)
-				:c(name, "selb", enb, "b")
-			local enw = name .. ".enw"
-			self
-				:new_and_bank(enw, { width = selwidth })
-				:fanout(name, "clk~", 1, enw, "a", 1, selwidth)
-				:c(name, "selw", enw, "b")
-
 			local sela = name .. ".sela"
 			local selb = name .. ".selb"
 			local selw = name .. ".selw"
 
 			self:new_binary_decoder(sela, { width = selwidth })
-			self:c(ena, "q", sela, "in")
+			self:c(name, "sela", sela, "in")
 			self:new_binary_decoder(selb, { width = selwidth })
-			self:c(enb, "q", selb, "in")
+			self:c(name, "selb", selb, "in")
 			self:new_binary_decoder(selw, { width = selwidth })
-			self:c(enw, "q", selw, "in")
+			self:c(name, "selw", selw, "in")
 
 			local r = name .. ".r"
 			for i = 1, numregs do
 				local n = r .. (i - 1)
 				if i > 1 then
 					self:new_register(n, { width = width })
+					self:c(name, "clk~", n, "clk~")
 					self:c(name, "~rst", n, "~rst")
 					self:c(name, "rising", n, "rising")
 					self:cp(1, selw, "q", i, n, "write", 1)
@@ -86,8 +71,6 @@ return function(simulation)
 					self:c(name, "outb", n, "outb")
 					self:cp(1, sela, "q", i, n, "oea", 1)
 					self:cp(1, selb, "q", i, n, "oeb", 1)
-				else
-					--	self:new_register_zero(n, { width = width })
 				end
 			end
 			return self
