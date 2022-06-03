@@ -66,7 +66,7 @@ return function(simulation)
 			local immnshift = f .. ".immnshift"
 			s:new_and_bank(immnshift):cp(1, nopcode, "q", 4, immnshift, "a", 1):c(nshift, "q", immnshift, "b")
 			local vf7z = f .. ".vf7z"
-			s:new_and_bank(vf7z):c(immnshift, "q", vf7z, "a"):c(immshiftnimmf7z, "q", vf7z, "b")
+			s:new_or_bank(vf7z):c(immnshift, "q", vf7z, "a"):c(immshiftnimmf7z, "q", vf7z, "b")
 
 			local add = f .. ".add"
 			s:new_and(add, { width = 3 }):c(nf3, "q", add, "in")
