@@ -27,10 +27,8 @@ sltiu x3, x1, 0
 li x2, -val
 slt x3, x1, x2
 sltu x3, x1, x2
-#slti x3, x1, -val
-#sltiu x3, x1, -val
-slt x3, x1, x2
-sltu x3, x1, x2
+slti x3, x1, -val
+sltiu x3, x1, -val
 
 li x1, 1000000000
 addi a0,zero, 9
