@@ -89,16 +89,20 @@ return function(simulation)
 			sim:c(f15, "q", lm, "d1")
 			sim:c(f15, "q", lm, "d5")
 
-			--slt
-			sim:cp(1, alu, "lt", 1, lm, "d2", 1)
-			sim:pulldown(lm, "d2", 2, width - 1)
-			--sltu
-			sim:cp(1, alu, "lt", 1, lm, "d3", 1)
-			sim:pulldown(lm, "d3", 2, width - 1)
-
+			--slt/u
+			local comp = alu .. ".comp"
+			sim:new_comparator(comp, { width = width })
+			sim:cp(width - 1, xa, "q", 1, comp, "a", 1)
+			sim:cp(width - 1, xb, "q", 1, comp, "b", 1)
 			local inva = alu .. ".inva"
 			sim:new_and_bank(inva):c(nsel2, "q", inva, "a"):cp(1, alu, "sel", 2, inva, "b", 1)
 			sim:fanout(inva, "q", 1, xa, "b", 1, width)
+			--slt
+			sim:cp(1, comp, "q", 1, lm, "d2", 1)
+			sim:pulldown(lm, "d2", 2, width - 1)
+			--sltu
+			sim:cp(1, comp, "q", 1, lm, "d3", 1)
+			sim:pulldown(lm, "d3", 2, width - 1)
 
 			local f4 = alu .. ".xor"
 			sim:new_xor_bank(f4, { width = width })
@@ -118,13 +122,10 @@ return function(simulation)
 			sim:c(xb, "q", f7, "b")
 			sim:c(f7, "q", lm, "d7")
 
-			local a_gt_b = alu .. ".a_gt_b"
-			sim:new_comparator(a_gt_b, { width = width })
-			sim:cp(width - 1, xa, "q", 1, a_gt_b, "a", 1)
-			sim:cp(width - 1, xb, "q", 1, a_gt_b, "b", 1)
-
+			local u = alu .. ".u"
+			sim:new_or_bank(u):c(alu, "u", u, "a"):cp(1, alu, "sel", 1, u, "b", 1)
 			local signed = alu .. ".signed"
-			sim:new_not(signed):c(alu, "u", signed, "a")
+			sim:new_not(signed):c(u, "q", signed, "a")
 
 			local cx = alu .. ".cx"
 			sim
@@ -133,13 +134,13 @@ return function(simulation)
 				:cp(1, signed, "q", 1, cx, "a", 2)
 				:cp(1, xa, "q", width, cx, "b", 1)
 				:cp(1, xb, "q", width, cx, "b", 2)
-				:cp(1, cx, "q", 1, a_gt_b, "a", width)
-				:cp(1, cx, "q", 2, a_gt_b, "b", width)
+				:cp(1, cx, "q", 1, comp, "a", width)
+				:cp(1, cx, "q", 2, comp, "b", width)
 
 			local nzero = alu .. ".nzero"
 			sim:new_not(nzero):c(alu, "zero", nzero, "a")
 			local a_le_b = alu .. ".a_le_b"
-			sim:new_not(a_le_b):c(a_gt_b, "q", a_le_b, "a")
+			sim:new_not(a_le_b):c(comp, "q", a_le_b, "a")
 			local lt = alu .. ".lt"
 			sim:new_and_bank(lt):c(nzero, "q", lt, "a"):c(a_le_b, "q", lt, "b"):c(lt, "q", alu, "lt")
 		end
