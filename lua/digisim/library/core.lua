@@ -79,6 +79,14 @@ return function(simulation)
 				s:pulldown(control, "alu_sel", 1, 3)
 			end
 			------------------------------------------------------------------------------
+			local kickstarter = core .. ".kickstarter"
+			s:new_kickstarter(kickstarter, { trace = opts.trace })
+			s:c(control, "rst~", kickstarter, "rst~")
+			s:c(clk, "rising", kickstarter, "rising")
+			s:c(clk, "falling", kickstarter, "falling")
+			s:c(kickstarter, "branch", control, "branch")
+			s:c(kickstarter, "icomplete", control, "xu_trigin")
+			------------------------------------------------------------------------------
 			local buses = core .. ".buses"
 			s:add_component(buses, {
 				names = {
@@ -221,14 +229,6 @@ return function(simulation)
 			s:c(i_ui, "rd", control, "rd_oe")
 			s:c(i_ui, "imm_oe", control, "imm_oe")
 			s:c(i_ui, "pc_oe", control, "pc_oe")
-			------------------------------------------------------------------------------
-			local kickstarter = core .. ".kickstarter"
-			s:new_kickstarter(kickstarter, { trace = opts.trace })
-			s:c(control, "rst~", kickstarter, "rst~")
-			s:c(clk, "rising", kickstarter, "rising")
-			s:c(clk, "falling", kickstarter, "falling")
-			s:c(kickstarter, "branch", control, "branch")
-			s:c(kickstarter, "icomplete", control, "xu_trigin")
 		end
 	)
 end
