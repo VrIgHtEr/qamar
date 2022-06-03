@@ -1,10 +1,10 @@
 ---@class simulation
----@field new_instruction_lui fun(circuit:simulation,name:string,opts:table|nil):simulation
+---@field new_instruction_ui fun(circuit:simulation,name:string,opts:table|nil):simulation
 
 ---@param simulation simulation
 return function(simulation)
 	simulation:register_component(
-		"instruction_lui",
+		"instruction_ui",
 		---@param s simulation
 		---@param f string
 		---@param opts boolean
@@ -24,6 +24,7 @@ return function(simulation)
 					"alu_oe",
 					"rd",
 					"imm_oe",
+					"pc_oe",
 				},
 			}
 			s:add_component(f, opts)
@@ -31,11 +32,11 @@ return function(simulation)
 			local nopcode = f .. ".nopcode"
 			s:new_not(nopcode, { width = 5 }):cp(5, f, "opcode", 3, nopcode, "a", 1)
 			local legal = f .. ".legal"
-			s:new_and(legal, { width = 7 })
+			s:new_and(legal, { width = 6 })
 			s:cp(3, f, "opcode", 1, legal, "in", 1)
 			s:cp(1, nopcode, "q", 2, legal, "in", 4)
-			s:cp(2, f, "opcode", 5, legal, "in", 5)
-			s:cp(1, nopcode, "q", 5, legal, "in", 7)
+			s:cp(1, f, "opcode", 5, legal, "in", 5)
+			s:cp(1, nopcode, "q", 5, legal, "in", 6)
 
 			local legalbuf = f .. ".legalbuf"
 			s
@@ -65,8 +66,16 @@ return function(simulation)
 			s:c(icomplete, "q", f, "icomplete")
 
 			local buf = f .. ".buf"
-			s:new_tristate_buffer(buf, { width = 3 }):high(buf, "a", 1, 3):c(activated, "q", buf, "en")
-			s:cp(1, buf, "q", 1, f, "alu_oe", 1):cp(1, buf, "q", 2, f, "rd", 1):cp(1, buf, "q", 3, f, "imm_oe", 1)
+			s
+				:new_tristate_buffer(buf, { width = 4 })
+				:high(buf, "a", 1, 3)
+				:cp(1, nopcode, "q", 4, buf, "a", 4)
+				:c(activated, "q", buf, "en")
+			s
+				:cp(1, buf, "q", 1, f, "alu_oe", 1)
+				:cp(1, buf, "q", 2, f, "rd", 1)
+				:cp(1, buf, "q", 3, f, "imm_oe", 1)
+				:cp(1, buf, "q", 4, f, "pc_oe", 1)
 		end
 	)
 end
