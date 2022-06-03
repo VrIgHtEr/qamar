@@ -53,8 +53,8 @@ return function(simulation)
 			local eq = f .. ".eq"
 			s:new_and(eq):cp(1, nf3, "q", 3, eq, "in", 1):cp(1, nf3, "q", 2, eq, "in", 2)
 
-			local uunsigned = f .. ".u"
-			s:new_and(uunsigned):cp(1, f, "funct3", 3, uunsigned, "in", 1):cp(1, f, "funct3", 2, uunsigned, "in", 2)
+			local unsigned = f .. ".u"
+			s:new_and(unsigned):cp(1, f, "funct3", 3, unsigned, "in", 1):cp(1, f, "funct3", 2, unsigned, "in", 2)
 
 			local signed = f .. ".s"
 			s:new_and(signed):cp(1, f, "funct3", 3, signed, "in", 1):cp(1, f, "funct3", 2, signed, "in", 2)
@@ -103,7 +103,7 @@ return function(simulation)
 			s:cp(1, "VCC", "q", 1, test, "a", 2)
 			s:cp(1, "VCC", "q", 1, test, "a", 3)
 			s:cp(1, "VCC", "q", 1, test, "a", 4)
-			s:cp(1, uunsigned, "q", 1, test, "a", 5)
+			s:cp(1, unsigned, "q", 1, test, "a", 5)
 			s:cp(1, test, "q", 1, f, "rs1", 1)
 			s:cp(1, test, "q", 2, f, "rs2", 1)
 			s:cp(1, test, "q", 3, f, "alu_notb", 1)

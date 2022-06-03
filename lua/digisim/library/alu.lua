@@ -37,6 +37,7 @@ return function(simulation)
 			sim:add_component(alu, opts)
 			local n = alu .. "."
 			local zero = n .. "zero"
+			local xa = n .. "xa"
 			local xb = n .. "xb"
 			local lm = n .. "lm"
 			local out = n .. "out"
@@ -60,17 +61,19 @@ return function(simulation)
 			end
 			sim:c(zero, "q", alu, "zero")
 
+			--- conditional inverter for input A
+			sim:new_xor_bank(xa, { width = width })
+			sim:c(alu, "a", xa, "a")
+
 			--- conditional inverter for input B
 			sim:new_xor_bank(xb, { width = width })
 			sim:c(alu, "b", xb, "a")
-			for i = 1, width do
-				sim:cp(1, alu, "notb", 1, xb, "b", i)
-			end
+			sim:fanout(alu, "notb", 1, xb, "b", 1, width)
 
 			--arithmetic section
 			local f0 = alu .. ".adder"
 			sim:new_ripple_adder(f0, { width = width })
-			sim:c(alu, "a", f0, "a")
+			sim:c(xa, "q", f0, "a")
 			sim:c(xb, "q", f0, "b")
 			sim:cp(1, alu, "cin", 1, f0, "cin", 1)
 			sim:c(f0, "sum", lm, "d0")
@@ -81,39 +84,44 @@ return function(simulation)
 			sim:new_barrel_shifter(f15, { width = 5 })
 			sim:c(nsel2, "q", f15, "left")
 			sim:c(alu, "cin", f15, "arithmetic")
-			sim:c(alu, "a", f15, "a")
-			sim:cp(5, alu, "b", 1, f15, "b", 1)
+			sim:c(xa, "q", f15, "a")
+			sim:cp(5, xb, "q", 1, f15, "b", 1)
 			sim:c(f15, "q", lm, "d1")
 			sim:c(f15, "q", lm, "d5")
 
-			local f2 = alu .. ".slt"
-			sim:new_pulldown(f2, { width = width }):c(f2, "q", lm, "d2")
+			--slt
+			sim:cp(1, alu, "lt", 1, lm, "d2", 1)
+			sim:pulldown(lm, "d2", 2, width - 1)
+			--sltu
+			sim:cp(1, alu, "lt", 1, lm, "d3", 1)
+			sim:pulldown(lm, "d3", 2, width - 1)
 
-			local f3 = alu .. ".sltu"
-			sim:new_pulldown(f3, { width = width }):c(f3, "q", lm, "d3")
+			local inva = alu .. ".inva"
+			sim:new_and_bank(inva):c(nsel2, "q", inva, "a"):cp(1, alu, "sel", 2, inva, "b", 1)
+			sim:fanout(inva, "q", 1, xa, "b", 1, width)
 
 			local f4 = alu .. ".xor"
 			sim:new_xor_bank(f4, { width = width })
-			sim:c(alu, "a", f4, "a")
+			sim:c(xa, "q", f4, "a")
 			sim:c(xb, "q", f4, "b")
 			sim:c(f4, "q", lm, "d4")
 
 			local f6 = alu .. ".or"
 			sim:new_or_bank(f6, { width = width })
-			sim:c(alu, "a", f6, "a")
+			sim:c(xa, "q", f6, "a")
 			sim:c(xb, "q", f6, "b")
 			sim:c(f6, "q", lm, "d6")
 
 			local f7 = alu .. ".and"
 			sim:new_and_bank(f7, { width = width })
-			sim:c(alu, "a", f7, "a")
+			sim:c(xa, "q", f7, "a")
 			sim:c(xb, "q", f7, "b")
 			sim:c(f7, "q", lm, "d7")
 
 			local a_gt_b = alu .. ".a_gt_b"
 			sim:new_comparator(a_gt_b, { width = width })
-			sim:cp(width - 1, alu, "a", 1, a_gt_b, "a", 1)
-			sim:cp(width - 1, alu, "b", 1, a_gt_b, "b", 1)
+			sim:cp(width - 1, xa, "q", 1, a_gt_b, "a", 1)
+			sim:cp(width - 1, xb, "q", 1, a_gt_b, "b", 1)
 
 			local signed = alu .. ".signed"
 			sim:new_not(signed):c(alu, "u", signed, "a")
@@ -123,8 +131,8 @@ return function(simulation)
 				:new_xor_bank(cx, { width = 2 })
 				:cp(1, signed, "q", 1, cx, "a", 1)
 				:cp(1, signed, "q", 1, cx, "a", 2)
-				:cp(1, alu, "a", width, cx, "b", 1)
-				:cp(1, alu, "b", width, cx, "b", 2)
+				:cp(1, xa, "q", width, cx, "b", 1)
+				:cp(1, xb, "q", width, cx, "b", 2)
 				:cp(1, cx, "q", 1, a_gt_b, "a", width)
 				:cp(1, cx, "q", 2, a_gt_b, "b", width)
 
