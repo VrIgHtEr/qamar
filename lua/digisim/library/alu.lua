@@ -110,14 +110,11 @@ return function(simulation)
 			sim:c(xb, "q", f7, "b")
 			sim:c(f7, "q", lm, "d7")
 
-			--[[
 			local comparator = alu .. ".comparator"
 			sim:new_comparator(comparator, { width = width })
 			sim:cp(width - 1, alu, "a", 1, comparator, "a", 1)
 			sim:cp(width - 1, alu, "b", 1, comparator, "b", 1)
 
-			local nzero = alu .. ".nzero"
-			sim:new_not(nzero):c(alu, "zero", nzero, "a")
 			local s = alu .. ".signed"
 			sim:new_and_bank(s):c(alu, "u", s, "a")
 
@@ -131,9 +128,10 @@ return function(simulation)
 				:cp(1, cx, "q", 1, comparator, "a", width)
 				:cp(1, cx, "q", 2, comparator, "b", width)
 
+			local nzero = alu .. ".nzero"
+			sim:new_not(nzero):c(alu, "zero", nzero, "a")
 			local lt = alu .. ".lt"
 			sim:new_not(lt):c(comparator, "q", lt, "a"):c(lt, "q", alu, "lt")
-            ]]
 		end
 	)
 end
