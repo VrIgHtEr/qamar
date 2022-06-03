@@ -121,11 +121,11 @@ function component.new(name, handler, opts)
 				if type(parts[i]) == "table" then
 					for j, x in ipairs(parts[i]) do
 						if x == signal.unknown or x == signal.z then
-							parts[i][j] = math.random(0, 1)
+							parts[i][j] = 0 --math.random(0, 1)
 						end
 					end
 				elseif parts[i] == signal.unknown or parts[i] == signal.z then
-					parts[i] = math.random(0, 1)
+					parts[i] = 0 --math.random(0, 1)
 				end
 			end
 			local o = { handler(timestamp, unpack(parts)) }
