@@ -50,7 +50,7 @@ return function(simulation)
 			s:cp(1, nopcode, "q", 5, aluop, "in", 6)
 
 			local f7z = f .. ".f7z"
-			s:new_and(f7z, { width = 6 }):cp(5, f, "funct7", 1, f7z, "in", 1):cp(1, f, "funct7", 7, f7z, "in", 6)
+			s:new_and(f7z, { width = 6 }):cp(5, nf7, "q", 1, f7z, "in", 1):cp(1, nf7, "q", 7, f7z, "in", 6)
 
 			local shift = f .. ".shift"
 			s:new_and(shift):cp(1, f, "funct3", 1, shift, "in", 1):cp(1, nf3, "q", 2, shift, "in", 2)

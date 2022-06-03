@@ -1,22 +1,22 @@
 [*]
 [*] GTKWave Analyzer v3.3.111 (w)1999-2020 BSI
-[*] Fri Jun  3 09:24:39 2022
+[*] Fri Jun  3 13:27:17 2022
 [*]
 [dumpfile] "(null)"
 [savefile] "/home/cedric/code/c/qamar/display.gtkw"
 [timestart] 0
 [size] 1920 1006
-[pos] 0 0
-*-15.136151 -1 1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[pos] 444 -27
+*-12.246302 2305 1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] CPU.
-[treeopen] CPU.instructions.branch.
-[sst_width] 211
-[signals_width] 208
+[treeopen] CPU.instructions.
+[treeopen] CPU.instructions.op.
+[sst_width] 305
+[signals_width] 253
 [sst_expanded] 1
 [sst_vpaned_height] 567
 @28
 CPU.control.rst~
-@29
 +{clock} CPU.clock.q
 @200
 -
@@ -40,43 +40,20 @@ CPU.instructions.op.icomplete
 +{instruction} CPU.control.ireg[31:0]
 @200
 -
-@24
-+{rs1} CPU.registers.sela[4:0]
-+{rs2} CPU.registers.selb[4:0]
-@c00024
-+{rd} CPU.registers.selw[4:0]
-@28
-+{CPU.registers.selw[4]} (0)CPU.registers.selw[4:0]
-+{CPU.registers.selw[3]} (1)CPU.registers.selw[4:0]
-+{CPU.registers.selw[2]} (2)CPU.registers.selw[4:0]
-+{CPU.registers.selw[1]} (3)CPU.registers.selw[4:0]
-+{CPU.registers.selw[0]} (4)CPU.registers.selw[4:0]
-@1401200
--group_end
-@200
--
 @2028
 ^1 /home/cedric/code/c/qamar/alu_filter
 +{alu_op} CPU.alu.sel[2:0]
-@420
-+{A bus} CPU.buses.a[31:0]
-+{B bus} CPU.buses.b[31:0]
-+{D bus} CPU.buses.d[31:0]
 @28
-CPU.control.zero
-CPU.alu.lt
++{shift} CPU.instructions.op.shift.q
++{sr} CPU.instructions.op.sr.q
++{opcode} CPU.instructions.op.opcode[6:0]
++{f7z} CPU.instructions.op.f7z.q
++{asub} CPU.instructions.op.asub.q
 @200
 -
 @28
-CPU.control.alu_u
-+{alu_sub} CPU.control.alu_cin
-CPU.control.alu_cin
-CPU.control.alu_notb
-CPU.control.alu_oe
-CPU.control.imm_oe
-CPU.control.pc_oe
-CPU.control.rd_oe
-CPU.control.rs1_oe
-CPU.control.rs2_oe
++{vf7z} CPU.instructions.op.vf7z.q
++{vsub} CPU.instructions.op.vsub.q
++{aluop} CPU.instructions.op.aluop.q
 [pattern_trace] 1
 [pattern_trace] 0
