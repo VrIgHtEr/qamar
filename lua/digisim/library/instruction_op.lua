@@ -37,79 +37,68 @@ return function(simulation)
 
 			local nopcode = f .. ".nopcode"
 			s:new_not(nopcode, { width = 5 }):cp(5, f, "opcode", 3, nopcode, "a", 1)
-			local aluop = f .. ".aluop"
-			s:new_and(aluop, { width = 6 })
-			s:cp(1, nopcode, "q", 1, aluop, "in", 1)
-			s:cp(1, nopcode, "q", 2, aluop, "in", 2)
-			s:cp(1, f, "opcode", 5, aluop, "in", 3)
-			s:cp(1, nopcode, "q", 5, aluop, "in", 4)
-			s:cp(2, f, "opcode", 1, aluop, "in", 5)
-
-			local miscmemop = f .. ".miscmem"
-			s:new_and(miscmemop, { width = 7 })
-			s:cp(4, f, "opcode", 1, miscmemop, "in", 1)
-			s:cp(3, nopcode, "q", 3, miscmemop, "in", 5)
-
 			local nf3 = f .. ".nf3"
 			s:new_not(nf3, { width = 3 }):c(f, "funct3", nf3, "a")
-			local arithmetic = f .. ".arithmetic"
-			s:new_and(arithmetic):cp(2, nf3, "q", 1, arithmetic, "in", 1)
-			local bitwise = f .. ".bitwise"
-			s:new_and(bitwise):cp(2, f, "funct3", 2, bitwise, "in", 1)
-			local shift = f .. ".shift"
-			s:new_and(shift):cp(1, f, "funct3", 1, shift, "in", 1):cp(1, nf3, "q", 2, shift, "in", 2)
-			local sl = f .. ".setless"
-			s:new_and(sl):cp(1, nf3, "q", 3, sl, "in", 1):cp(1, f, "funct3", 2, sl, "in", 2)
-
-			local add = f .. ".add"
-			s:new_and(add):cp(1, nf3, "q", 3, add, "in", 1):cp(1, arithmetic, "q", 1, add, "in", 2)
-			local xor = f .. ".xor"
-			s:new_and(xor):cp(1, f, "funct3", 3, xor, "in", 1):cp(1, arithmetic, "q", 1, xor, "in", 2)
-			local _and = f .. ".and"
-			s:new_and(_and):cp(1, f, "funct3", 1, _and, "in", 1):cp(1, bitwise, "q", 1, _and, "in", 2)
-			local _or = f .. ".or"
-			s:new_and(_or):cp(1, nf3, "q", 1, _or, "in", 1):cp(1, bitwise, "q", 1, _or, "in", 2)
-			local sll = f .. ".sll"
-			s:new_and(sll):cp(1, nf3, "q", 3, sll, "in", 1):cp(1, shift, "q", 1, sll, "in", 2)
-			local srl = f .. ".srl"
-			s:new_and(srl):cp(1, f, "funct3", 3, srl, "in", 1):cp(1, shift, "q", 1, srl, "in", 2)
-
 			local nf7 = f .. ".nf7"
 			s:new_not(nf7, { width = 7 }):c(f, "funct7", nf7, "a")
-			local f7z = f .. ".f7z"
-			s:new_and(f7z, { width = 6 })
-			s:cp(5, nf7, "q", 1, f7z, "in", 1)
-			s:cp(1, nf7, "q", 7, f7z, "in", 6)
 
+			local aluop = f .. ".aluop"
+			s:new_and(aluop, { width = 6 })
+			s:cp(2, f, "opcode", 1, aluop, "in", 1)
+			s:cp(2, nopcode, "q", 1, aluop, "in", 3)
+			s:cp(1, f, "opcode", 5, aluop, "in", 5)
+			s:cp(1, nopcode, "q", 5, aluop, "in", 6)
+
+			local shift = f .. ".shift"
+			s:new_and(shift):cp(1, f, "funct3", 1, shift, "in", 1):cp(1, nf3, "q", 2, shift, "in", 2)
 			local nshift = f .. ".nshift"
 			s:new_not(nshift):c(shift, "q", nshift, "a")
-			local ins = f .. ".ins"
-			s:new_and_bank(ins):c(nshift, "q", ins, "a"):cp(1, nopcode, "q", 4, ins, "b", 1)
-			local nios = f .. ".nios"
-			s:new_or_bank(nios):c(shift, "q", nios, "a"):cp(1, f, "opcode", 6, nios, "b", 1)
-			local nios7 = f .. ".nios7"
-			s:new_and_bank(nios7):c(nios, "q", nios7, "a"):cp(1, f7z, "q", 1, nios7, "b", 1)
-			local vf7 = f .. ".vf7"
-			s:new_or_bank(vf7):c(ins, "q", vf7, "a"):c(nios7, "q", vf7, "b")
 
-			local vsubsel = f .. ".vsubsel"
-			s:new_or(vsubsel, { width = 4 })
-			s:cp(1, bitwise, "q", 1, vsubsel, "in", 1)
-			s:cp(1, sl, "q", 1, vsubsel, "in", 2)
-			s:cp(1, xor, "q", 1, vsubsel, "in", 3)
-			s:cp(1, sll, "q", 1, vsubsel, "in", 4)
+			local nsl = f .. ".nsl"
+			s:new_nand_bank(nsl):c(shift, "q", nsl, "a"):cp(1, nf3, "q", 3, nsl, "b", 1)
+			local srl = f .. ".sl"
+			s:new_not(srl):c(nsl, "q", srl, "a")
+			local sr = f .. ".sr"
+			s:new_and_bank(sr):c(shift, "q", sr, "a"):cp(1, f, "funct3", 3, sr, "b", 1)
+			local add = f .. ".add"
+			s:new_and(add, { width = 3 }):c(nf3, "q", add, "in")
+
+			local asuba = f .. ".asuba"
+			s:new_and_bank(asuba):cp(1, nopcode, "q", 4, asuba, "a", 1):c(nsl, "q", asuba, "b")
+			local asubbb = f .. ".asubbb"
+			s:new_or_bank(asubbb):c(sr, "q", asubbb, "a"):c(add, "q", asubbb, "b")
+			local asubb = f .. ".asubb"
+			s:new_and_bank(asubb):cp(1, f, "opcode", 6, asubb, "a", 1):c(asubbb, "q", asubb, "b")
+
+			local asub = f .. ".asub"
+			s:new_or_bank(asub):c(asuba, "q", asub, "a"):c(asubb, "q", asub, "b")
+			local nasub = f .. ".nasub"
+			s:new_not(nasub):c(asub, "q", nasub, "a")
+
+			local vsubb = f .. ".vsubb"
+			s:new_and_bank(vsubb):c(nasub, "q", vsubb, "a"):cp(1, nf7, "q", 6, vsubb, "b", 1)
 			local vsub = f .. ".vsub"
-			s:new_nand(vsub):cp(1, f, "funct7", 6, vsub, "in", 1):cp(1, vsubsel, "q", 1, vsub, "in", 2)
+			s:new_or_bank(vsub):c(asub, "q", vsub, "a"):c(vsubb, "q", vsub, "b")
 
-			local validop = f .. ".validop"
-			s:new_or(validop):cp(1, aluop, "q", 1, validop, "in", 1):cp(1, miscmemop, "q", 1, validop, "in", 2)
+			local f7z = f .. ".f7z"
+			s:new_and(f7z, { width = 6 }):cp(5, nf7, "q", 1, f7z, "in", 1):cp(1, nf7, "q", 7, f7z, "in", 6)
+			local vf7zb = f .. ".vf7zb"
+			s:new_and_bank(vf7zb):cp(1, nopcode, "q", 4, vf7zb, "a", 1):c(nshift, "q", vf7zb, "b")
+			local nvf7zb = f .. ".nvf7zb"
+			s:new_not(nvf7zb):c(vf7zb, "q", nvf7zb, "a")
+
+			local vf7zl = f .. ".vf7zl"
+			s:new_and_bank(vf7zl):c(vf7zb, "q", vf7zl, "a"):c(f7z, "q", vf7zl, "b")
+
+			local vf7z = f .. ".vf7z"
+			s:new_or_bank(vf7z):c(vf7zb, "q", vf7z, "a"):c(vf7zl, "q", vf7z, "b")
 
 			local legal = f .. ".legal"
 			s:new_and(legal, { width = 3 })
 			s
-				:cp(1, vsub, "q", 1, legal, "in", 1)
-				:cp(1, validop, "q", 1, legal, "in", 2)
-				:cp(1, vf7, "q", 1, legal, "in", 3)
+				:cp(1, vf7z, "q", 1, legal, "in", 1)
+				:cp(1, vsub, "q", 1, legal, "in", 2)
+				:cp(1, aluop, "q", 1, legal, "in", 3)
 
 			local legalbuf = f .. ".legalbuf"
 			s

@@ -20,7 +20,7 @@ return function(simulation)
 			s:add_component(core, opts)
 			------------------------------------------------------------------------------
 			local clk = core .. ".clock"
-			s:new_clock_module(clk, { period = PERIOD, chain_length = 3, trace = opts.trace })
+			s:new_clock_module(clk, { period = PERIOD, chain_length = 2, trace = opts.trace })
 			------------------------------------------------------------------------------
 			local control = core .. ".control"
 			s:add_component(control, {
