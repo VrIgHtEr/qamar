@@ -1,10 +1,34 @@
-.equ val, 7
-li x1, 10
-li x2, val
-slti x3, x1, val
+.equ val, 10
+li x1, val
+
+slti x3, x1, val-1
+sltiu x3, x1, val-1
+li x2, val - 1
 slt x3, x1, x2
-sltiu x3, x1, val
 sltu x3, x1, x2
+
+slti x3, x1, val
+sltiu x3, x1, val
+li x2, val
+slt x3, x1, x2
+sltu x3, x1, x2
+
+slti x3, x1, val + 1
+sltiu x3, x1, val + 1
+li x2, val + 1
+slt x3, x1, x2
+sltu x3, x1, x2
+
+slti x3, x1, -val
+sltiu x3, x1, -val
+li x2, -val
+slt x3, x1, x2
+sltu x3, x1, x2
+
+slti x3, x1, 0
+sltiu x3, x1, 0
+slt x3, x1, zero
+sltu x3, x1, zero
 
 #li x1, 1000000000
 #addi a0,zero, 9
