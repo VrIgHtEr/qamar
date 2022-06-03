@@ -49,49 +49,47 @@ return function(simulation)
 			s:cp(1, f, "opcode", 5, aluop, "in", 5)
 			s:cp(1, nopcode, "q", 5, aluop, "in", 6)
 
+			local f7z = f .. ".f7z"
+			s:new_and(f7z, { width = 6 }):cp(5, f, "funct7", 1, f7z, "in", 1):cp(1, f, "funct7", 7, f7z, "in", 6)
+
 			local shift = f .. ".shift"
 			s:new_and(shift):cp(1, f, "funct3", 1, shift, "in", 1):cp(1, nf3, "q", 2, shift, "in", 2)
 			local nshift = f .. ".nshift"
 			s:new_not(nshift):c(shift, "q", nshift, "a")
 
-			local nsl = f .. ".nsl"
-			s:new_nand_bank(nsl):c(shift, "q", nsl, "a"):cp(1, nf3, "q", 3, nsl, "b", 1)
-			local srl = f .. ".sl"
-			s:new_not(srl):c(nsl, "q", srl, "a")
-			local sr = f .. ".sr"
-			s:new_and_bank(sr):c(shift, "q", sr, "a"):cp(1, f, "funct3", 3, sr, "b", 1)
+			local immshift = f .. ".immshift"
+			s:new_and_bank(immshift):cp(1, nopcode, "q", 4, immshift, "a", 1):c(shift, "q", immshift, "b")
+			local immshiftnimm = f .. ".immshiftnimm"
+			s:new_or_bank(immshiftnimm):cp(1, f, "opcode", 6, immshiftnimm, "a", 1):c(immshift, "q", immshiftnimm, "b")
+			local immshiftnimmf7z = f .. ".immshiftnimmf7z"
+			s:new_and_bank(immshiftnimmf7z):c(f7z, "q", immshiftnimmf7z, "a"):c(immshiftnimm, "q", immshiftnimmf7z, "b")
+			local immnshift = f .. ".immnshift"
+			s:new_and_bank(immnshift):cp(1, nopcode, "q", 4, immnshift, "a", 1):c(nshift, "q", immnshift, "b")
+			local vf7z = f .. ".vf7z"
+			s:new_and_bank(vf7z):c(immnshift, "q", vf7z, "a"):c(immshiftnimmf7z, "q", vf7z, "b")
+
 			local add = f .. ".add"
 			s:new_and(add, { width = 3 }):c(nf3, "q", add, "in")
+			local sr = f .. ".sr"
+			s:new_and_bank(sr):c(shift, "q", sr, "a"):cp(1, f, "funct3", 3, sr, "b", 1)
 
-			local asuba = f .. ".asuba"
-			s:new_and_bank(asuba):cp(1, nopcode, "q", 4, asuba, "a", 1):c(nsl, "q", asuba, "b")
-			local asubbb = f .. ".asubbb"
-			s:new_or_bank(asubbb):c(sr, "q", asubbb, "a"):c(add, "q", asubbb, "b")
-			local asubb = f .. ".asubb"
-			s:new_and_bank(asubb):cp(1, f, "opcode", 6, asubb, "a", 1):c(asubbb, "q", asubb, "b")
-
+			local srnshift = f .. ".srnshift"
+			s:new_or_bank(srnshift):c(sr, "q", srnshift, "a"):c(nshift, "q", srnshift, "b")
+			local sradd = f .. ".sradd"
+			s:new_or_bank(sradd):c(sr, "q", sradd, "a"):c(add, "q", sradd, "b")
+			local immsrnshift = f .. ".immsrnshift"
+			s:new_and_bank(immsrnshift):cp(1, nopcode, "q", 4, immsrnshift, "a", 1):c(srnshift, "q", immsrnshift, "b")
+			local nimmsradd = f .. ".nimmsradd"
+			s:new_and_bank(nimmsradd):cp(1, f, "opcode", 6, nimmsradd, "a", 1):c(sradd, "q", nimmsradd, "b")
 			local asub = f .. ".asub"
-			s:new_or_bank(asub):c(asuba, "q", asub, "a"):c(asubb, "q", asub, "b")
+			s:new_or_bank(asub):c(immsrnshift, "q", asub, "a"):c(nimmsradd, "q", asub, "b")
 			local nasub = f .. ".nasub"
 			s:new_not(nasub):c(asub, "q", nasub, "a")
 
-			local vsubb = f .. ".vsubb"
-			s:new_and_bank(vsubb):c(nasub, "q", vsubb, "a"):cp(1, nf7, "q", 6, vsubb, "b", 1)
+			local subnasub = f .. ".subnasub"
+			s:new_and_bank(subnasub):c(nasub, "q", subnasub, "a"):cp(1, nf7, "q", 6, subnasub, "b", 1)
 			local vsub = f .. ".vsub"
-			s:new_or_bank(vsub):c(asub, "q", vsub, "a"):c(vsubb, "q", vsub, "b")
-
-			local f7z = f .. ".f7z"
-			s:new_and(f7z, { width = 6 }):cp(5, nf7, "q", 1, f7z, "in", 1):cp(1, nf7, "q", 7, f7z, "in", 6)
-			local vf7zb = f .. ".vf7zb"
-			s:new_and_bank(vf7zb):cp(1, nopcode, "q", 4, vf7zb, "a", 1):c(nshift, "q", vf7zb, "b")
-			local nvf7zb = f .. ".nvf7zb"
-			s:new_not(nvf7zb):c(vf7zb, "q", nvf7zb, "a")
-
-			local vf7zl = f .. ".vf7zl"
-			s:new_and_bank(vf7zl):c(vf7zb, "q", vf7zl, "a"):c(f7z, "q", vf7zl, "b")
-
-			local vf7z = f .. ".vf7z"
-			s:new_or_bank(vf7z):c(vf7zb, "q", vf7z, "a"):c(vf7zl, "q", vf7z, "b")
+			s:new_or_bank(vsub):c(asub, "q", vsub, "a"):c(subnasub, "q", vsub, "b")
 
 			local legal = f .. ".legal"
 			s:new_and(legal, { width = 3 })
@@ -127,6 +125,8 @@ return function(simulation)
 			s:new_tristate_buffer(icomplete):c(trignext, "q", icomplete, "en"):c("VCC", "q", icomplete, "a")
 			s:c(icomplete, "q", f, "icomplete")
 
+			local srl = f .. ".srl"
+			s:new_and_bank(srl):c(sr, "q", srl, "a"):cp(1, f, "funct7", 6, srl, "b", 1)
 			local cina = f .. ".cina"
 			s:new_and(cina)
 			s:cp(1, f, "funct7", 6, cina, "in", 1)
