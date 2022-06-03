@@ -110,28 +110,30 @@ return function(simulation)
 			sim:c(xb, "q", f7, "b")
 			sim:c(f7, "q", lm, "d7")
 
-			local comparator = alu .. ".comparator"
-			sim:new_comparator(comparator, { width = width })
-			sim:cp(width - 1, alu, "a", 1, comparator, "a", 1)
-			sim:cp(width - 1, alu, "b", 1, comparator, "b", 1)
+			local a_gt_b = alu .. ".a_gt_b"
+			sim:new_comparator(a_gt_b, { width = width })
+			sim:cp(width - 1, alu, "a", 1, a_gt_b, "a", 1)
+			sim:cp(width - 1, alu, "b", 1, a_gt_b, "b", 1)
 
-			local s = alu .. ".signed"
-			sim:new_and_bank(s):c(alu, "u", s, "a")
+			local signed = alu .. ".signed"
+			sim:new_not(signed):c(alu, "u", signed, "a")
 
 			local cx = alu .. ".cx"
 			sim
 				:new_xor_bank(cx, { width = 2 })
-				:cp(1, s, "q", 1, cx, "a", 1)
-				:cp(1, s, "q", 1, cx, "a", 2)
+				:cp(1, signed, "q", 1, cx, "a", 1)
+				:cp(1, signed, "q", 1, cx, "a", 2)
 				:cp(1, alu, "a", width, cx, "b", 1)
 				:cp(1, alu, "b", width, cx, "b", 2)
-				:cp(1, cx, "q", 1, comparator, "a", width)
-				:cp(1, cx, "q", 2, comparator, "b", width)
+				:cp(1, cx, "q", 1, a_gt_b, "a", width)
+				:cp(1, cx, "q", 2, a_gt_b, "b", width)
 
 			local nzero = alu .. ".nzero"
 			sim:new_not(nzero):c(alu, "zero", nzero, "a")
+			local a_le_b = alu .. ".a_le_b"
+			sim:new_not(a_le_b):c(a_gt_b, "q", a_le_b, "a")
 			local lt = alu .. ".lt"
-			sim:new_not(lt):c(comparator, "q", lt, "a"):c(lt, "q", alu, "lt")
+			sim:new_and_bank(lt):c(nzero, "q", lt, "a"):c(a_le_b, "q", lt, "b"):c(lt, "q", alu, "lt")
 		end
 	)
 end
