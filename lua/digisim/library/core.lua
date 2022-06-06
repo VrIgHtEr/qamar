@@ -280,6 +280,26 @@ return function(simulation)
 			s:c(i_jalr, "rs1", control, "rs1_oe")
 			s:c(i_jalr, "imm_oe", control, "imm_oe")
 			s:c(i_jalr, "branch", control, "branch")
+			------------------------------------------------------------------------------
+			local i_fence = core .. ".instructions.fence"
+			s:new_instruction_fence(i_fence, { trace = opts.trace })
+			s:c(control, "rst~", i_fence, "rst~")
+			s:c(clk, "rising", i_fence, "rising")
+			s:c(clk, "falling", i_fence, "falling")
+			s:c(control, "isched", i_fence, "isched")
+			s:c(idecode, "opcode", i_fence, "opcode")
+			s:c(i_fence, "icomplete", control, "xu_trigin")
+			s:c(i_fence, "legal", control, "legal")
+			------------------------------------------------------------------------------
+			local i_system = core .. ".instructions.system"
+			s:new_instruction_system(i_system, { trace = opts.trace })
+			s:c(control, "rst~", i_system, "rst~")
+			s:c(clk, "rising", i_system, "rising")
+			s:c(clk, "falling", i_system, "falling")
+			s:c(control, "isched", i_system, "isched")
+			s:c(idecode, "opcode", i_system, "opcode")
+			s:c(i_system, "icomplete", control, "xu_trigin")
+			s:c(i_system, "legal", control, "legal")
 		end
 	)
 end
