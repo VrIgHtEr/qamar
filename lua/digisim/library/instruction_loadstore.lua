@@ -50,7 +50,7 @@ return function(simulation)
 			s:cp(1, nf3, "q", 3, is_valid_signed_funct3, "a", 1)
 			s:c(is_not_invalid_funct3, "q", is_valid_signed_funct3, "b")
 
-			local is_valid_store = f .. "is_s"
+			local is_valid_store = f .. ".is_s"
 			s
 				:new_and_bank(is_valid_store)
 				:c(is_valid_signed_funct3, "q", is_valid_store, "a")
