@@ -171,7 +171,7 @@ return function(simulation)
 			s:new_tristate_buffer(trigsave, { width = 2 })
 			s:c(saveen, "q", trigsave, "en")
 			s:cp(1, "VCC", "q", 1, trigsave, "a", 1)
-			s:cp(1, f, "funct3", 3, trigloadbuf, "a", 2)
+			s:cp(1, f, "funct3", 3, trigsave, "a", 2)
 			s:cp(1, trigsave, "q", 1, f, "rd", 1)
 			s:cp(1, trigsave, "q", 2, f, "lsu_sext", 1)
 
