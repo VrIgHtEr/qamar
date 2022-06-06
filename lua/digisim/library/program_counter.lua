@@ -29,8 +29,10 @@ return function(simulation)
 			}
 			s:add_component(f, opts)
 
+			local latchor = f .. ".icomporbranch"
+			s:new_or_bank(latchor):c(f, "icomplete", latchor, "a"):c(f, "branch", latchor, "b")
 			local latch_trigger = f .. ".trigger"
-			s:new_and_bank(latch_trigger):c(f, "rising", latch_trigger, "a"):c(f, "icomplete", latch_trigger, "b")
+			s:new_and_bank(latch_trigger):c(f, "rising", latch_trigger, "a"):c(latchor, "q", latch_trigger, "b")
 			local pc = f .. ".register"
 			s
 				:new_ms_d_flipflop_bank(pc, { width = BITS })

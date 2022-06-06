@@ -56,6 +56,7 @@ return function(simulation)
 			local visched = f .. ".visched"
 			s:new_and(visched):cp(1, f, "isched", 1, visched, "in", 1):cp(1, legal, "q", 1, visched, "in", 2)
 
+			---------------------------------------------------------
 			local activated = f .. ".activated"
 			s:new_ms_d_flipflop(activated)
 			s:c(f, "rst~", activated, "rst~")
@@ -82,6 +83,8 @@ return function(simulation)
 			s:cp(1, tempsavebuf, "q", 2, f, "b4", 1)
 			s:cp(1, tempsavebuf, "q", 3, f, "alu_oe", 1)
 
+			---------------------------------------------------------
+
 			local upc = f .. ".upc"
 			s:new_ms_d_flipflop(upc)
 			s:c(f, "rst~", upc, "rst~")
@@ -90,16 +93,16 @@ return function(simulation)
 			s:c(activated, "q", upc, "d")
 
 			local upcbuf = f .. ".upcbuf"
-			s:new_tristate_buffer(upcbuf, { width = 4 })
+			s:new_tristate_buffer(upcbuf, { width = 3 })
 			s:c(upc, "q", upcbuf, "en")
 			s:cp(1, "VCC", "q", 1, upcbuf, "a", 1)
 			s:cp(1, "VCC", "q", 1, upcbuf, "a", 2)
 			s:cp(1, "VCC", "q", 1, upcbuf, "a", 3)
-			s:cp(1, "VCC", "q", 1, upcbuf, "a", 4)
-			s:cp(1, upcbuf, "q", 1, f, "pc_oe", 1)
-			s:cp(1, upcbuf, "q", 2, f, "rs1", 1)
-			s:cp(1, upcbuf, "q", 3, f, "branch", 1)
-			s:cp(1, upcbuf, "q", 4, f, "alu_oe", 1)
+			s:cp(1, upcbuf, "q", 1, f, "rs1", 1)
+			s:cp(1, upcbuf, "q", 2, f, "branch", 1)
+			s:cp(1, upcbuf, "q", 3, f, "alu_oe", 1)
+
+			---------------------------------------------------------
 
 			local save = f .. ".save"
 			s:new_ms_d_flipflop(save)
@@ -112,9 +115,11 @@ return function(simulation)
 			s:new_tristate_buffer(savebuf, { width = 33 })
 			s:c(save, "q", savebuf, "en")
 			s:cp(1, "VCC", "q", 1, savebuf, "a", 1)
-			s:cp(32, f, "d", 1, savebuf, "a", 2)
+			s:cp(32, tempreg, "q", 1, savebuf, "a", 2)
 			s:cp(1, savebuf, "q", 1, f, "rd", 1)
 			s:cp(32, savebuf, "q", 2, f, "d", 1)
+
+			---------------------------------------------------------
 
 			local complete = f .. ".complete"
 			s:new_ms_d_flipflop(complete)
