@@ -49,3 +49,12 @@ addi t1, t1, 1
 beqz zero, mul_loop
 mul_end:
 
+lb x1, 0(x0)
+lbu x1, 0(x0)
+lh x1, 0(x0)
+lhu x1, 0(x0)
+lw x1, 0(x0)
+
+sb x1, 0(x0)
+sh x1, 0(x0)
+sw x1, 0(x0)
