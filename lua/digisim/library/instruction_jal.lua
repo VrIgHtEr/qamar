@@ -32,8 +32,6 @@ return function(simulation)
 			}
 			s:add_component(f, opts)
 
-			local nf3 = f .. ".nf3"
-			s:new_nor(nf3, { width = 3 }):c(f, "funct3", nf3, "in")
 			local nopcode = f .. ".nopcode"
 			s:new_not(nopcode, { width = 5 }):cp(5, f, "opcode", 3, nopcode, "a", 1)
 
