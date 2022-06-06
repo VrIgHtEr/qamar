@@ -1,4 +1,8 @@
 .equ val, 10
+ecall
+ebreak
+fence.i
+
 start:
 li x1, val
 
