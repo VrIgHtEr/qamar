@@ -23,10 +23,14 @@ return function(simulation)
 				outputs = {
 					"icomplete",
 					"legal",
-					"alu_oe",
-					"rd",
 					"imm_oe",
-					"pc_oe",
+					"rs1",
+					"rs2",
+					"rd",
+					"alu_oe",
+					"lsu_trigin",
+					"lsu_sext",
+					{ "lsu_control", 2 },
 				},
 			}
 			s:add_component(f, opts)
@@ -99,6 +103,81 @@ return function(simulation)
 			s:c(f, "rising", activated, "rising")
 			s:c(f, "falling", activated, "falling")
 			s:c(visched, "q", activated, "d")
+
+			local trigloaden = f .. ".loaden"
+			s:new_and_bank(trigloaden):c(is_valid_load, "q", trigloaden, "a"):c(activated, "q", trigloaden, "b")
+
+			local trigload = f .. ".dload"
+			s:new_ms_d_flipflop(trigload)
+			s:c(f, "rst~", trigload, "rst~")
+			s:c(f, "rising", trigload, "rising")
+			s:c(f, "falling", trigload, "falling")
+			s:c(trigloaden, "q", trigload, "d")
+
+			local wait = f .. ".wait"
+			s:new_ms_d_flipflop(wait)
+			s:c(f, "rst~", wait, "rst~")
+			s:c(f, "rising", wait, "rising")
+			s:c(f, "falling", wait, "falling")
+
+			local ntrigout = f .. ".ntrigout"
+			s:new_not(ntrigout):c(f, "lsu_trigout", ntrigout, "a")
+			local cs12 = f .. ".cs12"
+			s:new_or_bank(cs12):c(trigload, "q", cs12, "a"):c(wait, "q", cs12, "b")
+			local waiten = f .. ".waiten"
+			s:new_and_bank(waiten):c(cs12, "q", waiten, "a"):c(ntrigout, "q", waiten, "b")
+			s:c(waiten, "q", wait, "d")
+
+			local saveen = f .. ".saveen"
+			s:new_and_bank(saveen):c(cs12, "q", saveen, "a"):c(f, "lsu_trigout", saveen, "b")
+
+			local save = f .. ".save"
+			s:new_ms_d_flipflop(save)
+			s:c(f, "rst~", save, "rst~")
+			s:c(f, "rising", save, "rising")
+			s:c(f, "falling", save, "falling")
+			s:c(saveen, "q", save, "d")
+
+			local complete = f .. ".complete"
+			s:new_ms_d_flipflop(complete)
+			s:c(f, "rst~", complete, "rst~")
+			s:c(f, "rising", complete, "rising")
+			s:c(f, "falling", complete, "falling")
+			s:c(save, "q", complete, "d")
+
+			local halfword = f .. ".halfword"
+			s:new_or(halfword):cp(2, f, "funct3", 1, halfword, "in", 1)
+
+			local trigloadbuf = f .. ".trigloadbuf"
+			s:new_tristate_buffer(trigloadbuf, { width = 7 })
+			s:c(activated, "q", trigloadbuf, "en")
+			s
+				:cp(1, "VCC", "q", 1, trigloadbuf, "a", 1)
+				:cp(1, "VCC", "q", 1, trigloadbuf, "a", 2)
+				:cp(1, "VCC", "q", 1, trigloadbuf, "a", 3)
+				:cp(1, "VCC", "q", 1, trigloadbuf, "a", 4)
+				:cp(1, f, "funct3", 3, trigloadbuf, "a", 5)
+				:cp(1, halfword, "q", 1, trigloadbuf, "a", 6)
+				:cp(1, f, "funct3", 2, trigloadbuf, "a", 7)
+			s
+				:cp(1, trigloadbuf, "q", 1, f, "rs1", 1)
+				:cp(1, trigloadbuf, "q", 2, f, "imm_oe", 1)
+				:cp(1, trigloadbuf, "q", 3, f, "alu_oe", 1)
+				:cp(1, trigloadbuf, "q", 4, f, "lsu_trigin", 1)
+				:cp(1, trigloadbuf, "q", 5, f, "lsu_sext", 1)
+				:cp(2, trigloadbuf, "q", 6, f, "lsu_control", 1)
+
+			local trigsave = f .. ".trigsave"
+			s:new_tristate_buffer(trigsave)
+			s:c(saveen, "q", trigsave, "en")
+			s:cp(1, "VCC", "q", 1, trigsave, "a", 1)
+			s:cp(1, trigsave, "q", 1, f, "rd", 1)
+
+			local trigcomplete = f .. ".trigcomplete"
+			s:new_tristate_buffer(trigcomplete)
+			s:c(save, "q", trigcomplete, "en")
+			s:cp(1, "VCC", "q", 1, trigcomplete, "a", 1)
+			s:cp(1, trigcomplete, "q", 1, f, "complete", 1)
 		end
 	)
 end
