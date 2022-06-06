@@ -1,0 +1,104 @@
+---@class simulation
+---@field new_instruction_loadstore fun(circuit:simulation,name:string,opts:table|nil):simulation
+
+---@param simulation simulation
+return function(simulation)
+	simulation:register_component(
+		"instruction_loadstore",
+		---@param s simulation
+		---@param f string
+		---@param opts boolean
+		function(s, f, opts)
+			opts = opts or {}
+			opts.names = {
+				inputs = {
+					"rst~",
+					"rising",
+					"falling",
+					"isched",
+					"lsu_trigout",
+					{ "opcode", 7 },
+					{ "funct3", 3 },
+				},
+				outputs = {
+					"icomplete",
+					"legal",
+					"alu_oe",
+					"rd",
+					"imm_oe",
+					"pc_oe",
+				},
+			}
+			s:add_component(f, opts)
+
+			local nopcode = f .. ".nopcode"
+			s:new_not(nopcode, { width = 5 }):cp(5, f, "opcode", 3, nopcode, "a", 1)
+
+			local nf3 = f .. ".nf3"
+			s:new_not(nf3, { width = 3 }):c(f, "funct3", nf3, "a")
+
+			local is_load_store = f .. ".is_ls"
+			s:new_and(is_load_store, { width = 6 })
+			s:cp(2, f, "opcode", 1, is_load_store, "in", 1)
+			s:cp(3, nopcode, "q", 1, is_load_store, "in", 3)
+			s:cp(1, nopcode, "q", 5, is_load_store, "in", 6)
+
+			local is_not_invalid_funct3 = f .. ".is_not_inv_f3"
+			s:new_nand(is_not_invalid_funct3):cp(2, f, "funct3", 1, is_not_invalid_funct3, "in", 1)
+			local is_valid_signed_funct3 = f .. ".is_valid_signed_f3"
+			s:new_and_bank(is_valid_signed_funct3)
+			s:cp(1, nf3, "q", 3, is_valid_signed_funct3, "a", 1)
+			s:c(is_not_invalid_funct3, "q", is_valid_signed_funct3, "b")
+
+			local is_valid_store = f .. "is_s"
+			s
+				:new_and_bank(is_valid_store)
+				:c(is_valid_signed_funct3, "q", is_valid_store, "a")
+				:cp(1, f, "opcode", 6, is_valid_store, "b", 1)
+
+			local is_valid_load_s = f .. ".is_val_load_s"
+			s
+				:new_and_bank(is_valid_load_s)
+				:c(is_valid_signed_funct3, "q", is_valid_load_s, "a")
+				:cp(1, nopcode, "q", 4, is_valid_load_s, "b", 1)
+
+			local is_valid_load_u = f .. ".is_val_load_u"
+			s
+				:new_and(is_valid_load_u, { width = 3 })
+				:cp(1, nopcode, "q", 4, is_valid_load_u, "in", 1)
+				:cp(1, f, "funct3", 3, is_valid_load_u, "in", 2)
+				:cp(1, nf3, "q", 2, is_valid_load_u, "in", 3)
+
+			local is_valid_load = f .. ".is_val_load"
+			s
+				:new_or_bank(is_valid_load)
+				:c(is_valid_load_s, "q", is_valid_load, "a")
+				:c(is_valid_load_u, "q", is_valid_load, "b")
+
+			local is_valid = f .. ".valid"
+			s:new_or_bank(is_valid):c(is_valid_store, "q", is_valid, "a"):c(is_valid_load, "q", is_valid, "b")
+
+			local legal = f .. ".legal"
+			s:new_and_bank(legal)
+			s:c(is_load_store, "q", legal, "a")
+			s:c(is_valid, "q", legal, "b")
+
+			local legalbuf = f .. ".legalbuf"
+			s
+				:new_tristate_buffer(legalbuf)
+				:c(legal, "q", legalbuf, "en")
+				:c("VCC", "q", legalbuf, "a")
+				:c(legalbuf, "q", f, "legal")
+
+			local visched = f .. ".visched"
+			s:new_and(visched):cp(1, f, "isched", 1, visched, "in", 1):cp(1, legal, "q", 1, visched, "in", 2)
+
+			local activated = f .. ".activated"
+			s:new_ms_d_flipflop(activated)
+			s:c(f, "rst~", activated, "rst~")
+			s:c(f, "rising", activated, "rising")
+			s:c(f, "falling", activated, "falling")
+			s:c(visched, "q", activated, "d")
+		end
+	)
+end

@@ -218,7 +218,7 @@ function simulation:c(a, porta, b, portb)
 		error("port not found " .. b .. "." .. portb)
 	end
 	if pa.bits ~= pb.bits then
-		error("cannot automatically connect vectors of different sizes")
+		error("cannot automatically connect vectors of different sizes: " .. pa.name .. " - " .. pb.name)
 	end
 	return self:cp(pa.bits, a, porta, 1, b, portb, 1)
 end
@@ -253,10 +253,10 @@ function simulation:cp(len, a, porta, starta, b, portb, startb)
 		error("invalid length")
 	end
 	if starta < 1 or pa.bits - starta + 1 < len then
-		error("out of range port access")
+		error("out of range port access: " .. a .. ":" .. porta .. ":" .. starta .. ":" .. len)
 	end
 	if startb < 1 or pb.bits - startb + 1 < len then
-		error("out of range port access")
+		error("out of range port access: " .. b .. ":" .. portb .. ":" .. startb .. ":" .. len)
 	end
 	if pb.name < pa.name or (pa.name == pb.name and startb < starta) then
 		pa, pb = pb, pa

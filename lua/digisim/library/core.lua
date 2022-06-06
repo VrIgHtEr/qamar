@@ -225,6 +225,18 @@ return function(simulation)
 			s:c(i_ui, "rd", control, "rd_oe")
 			s:c(i_ui, "imm_oe", control, "imm_oe")
 			s:c(i_ui, "pc_oe", control, "pc_oe")
+			------------------------------------------------------------------------------
+			local i_loadstore = core .. ".instructions.loadstore"
+			s:new_instruction_loadstore(i_loadstore, { trace = opts.trace })
+			s:c(control, "rst~", i_loadstore, "rst~")
+			s:c(clk, "rising", i_loadstore, "rising")
+			s:c(clk, "falling", i_loadstore, "falling")
+			s:c(control, "isched", i_loadstore, "isched")
+			s:c(lsu, "trigout", i_loadstore, "lsu_trigout")
+			s:c(idecode, "opcode", i_loadstore, "opcode")
+			s:c(idecode, "funct3", i_loadstore, "funct3")
+			s:c(i_loadstore, "icomplete", control, "xu_trigin")
+			s:c(i_loadstore, "legal", control, "legal")
 		end
 	)
 end
