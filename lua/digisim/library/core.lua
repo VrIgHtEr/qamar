@@ -31,8 +31,8 @@ return function(simulation)
 						"alu_notb",
 						"alu_cin",
 						"alu_u",
-						"lsu_sext",
-						"lsu_trigin",
+						"lu_sext",
+						"lu_trigin",
 						"alu_oe",
 						"alu_lt",
 						"xu_trigin",
@@ -46,7 +46,7 @@ return function(simulation)
 						"legal",
 						"zero",
 						{ "alu_sel", 3 },
-						{ "lsu_control", 2 },
+						{ "lu_control", 2 },
 						{ "ireg", BUS_WIDTH },
 						{ "pc", BUS_WIDTH },
 					},
@@ -59,10 +59,10 @@ return function(simulation)
 			s:pulldown(control, "alu_notb")
 			s:pulldown(control, "alu_cin")
 			s:pulldown(control, "alu_oe")
-			s:pulldown(control, "lsu_sext")
+			s:pulldown(control, "lu_sext")
 			s:pulldown(control, "isched")
 			s:pulldown(control, "branch")
-			s:pulldown(control, "lsu_trigin")
+			s:pulldown(control, "lu_trigin")
 			s:pulldown(control, "imm_oe")
 			s:pulldown(control, "pc_oe")
 			s:pulldown(control, "rs1_oe")
@@ -70,7 +70,7 @@ return function(simulation)
 			s:pulldown(control, "rd_oe")
 			s:pulldown(control, "xu_trigin")
 			s:pulldown(control, "zero")
-			s:pulldown(control, "lsu_control", 1, 2)
+			s:pulldown(control, "lu_control", 1, 2)
 			s:pulldown(control, "ireg", 1, BUS_WIDTH)
 			s:pulldown(control, "pc", 1, BUS_WIDTH)
 			s:pulldown(control, "alu_sel", 1, 3)
@@ -99,17 +99,17 @@ return function(simulation)
 			s:pulldown(buses, "b", 1, BUS_WIDTH)
 			s:pulldown(buses, "d", 1, BUS_WIDTH)
 			------------------------------------------------------------------------------
-			local lsu = core .. ".lsu"
-			s:new_load_store_unit(lsu, { file = opts.file, trace = opts.trace })
+			local lu = core .. ".lu"
+			s:new_load_unit(lu, { file = opts.file, trace = opts.trace })
 			s
-				:c(clk, "rising", lsu, "rising")
-				:c(clk, "falling", lsu, "falling")
-				:c(buses, "d", lsu, "address")
-				:c(control, "lsu_control", lsu, "control")
-				:c(control, "lsu_trigin", lsu, "trigin")
-				:c(control, "rst~", lsu, "rst~")
-				:c(control, "lsu_sext", lsu, "sext")
-				:c(lsu, "out", buses, "d")
+				:c(clk, "rising", lu, "rising")
+				:c(clk, "falling", lu, "falling")
+				:c(buses, "d", lu, "address")
+				:c(control, "lu_control", lu, "control")
+				:c(control, "lu_trigin", lu, "trigin")
+				:c(control, "rst~", lu, "rst~")
+				:c(control, "lu_sext", lu, "sext")
+				:c(lu, "out", buses, "d")
 			------------------------------------------------------------------------------
 			local pc = core .. ".pc"
 			s:new_program_counter(pc, { trace = opts.trace })
@@ -130,11 +130,11 @@ return function(simulation)
 			s:c(clk, "falling", xu, "falling")
 			s:c(control, "rst~", xu, "rst~")
 			s:c(control, "xu_trigin", xu, "trigin")
-			s:c(lsu, "trigout", xu, "lsu_trigout")
+			s:c(lu, "trigout", xu, "lu_trigout")
 			s:c(xu, "ireg", control, "ireg")
 			s:c(xu, "isched", control, "isched")
-			s:c(xu, "lsu_control", control, "lsu_control")
-			s:c(xu, "lsu_trigin", control, "lsu_trigin")
+			s:c(xu, "lu_control", control, "lu_control")
+			s:c(xu, "lu_trigin", control, "lu_trigin")
 			------------------------------------------------------------------------------
 			local idecode = core .. ".idecode"
 			s:new_instruction_decoder(idecode, { trace = opts.trace })
@@ -226,25 +226,25 @@ return function(simulation)
 			s:c(i_ui, "imm_oe", control, "imm_oe")
 			s:c(i_ui, "pc_oe", control, "pc_oe")
 			------------------------------------------------------------------------------
-			local i_loadstore = core .. ".instructions.loadstore"
-			s:new_instruction_loadstore(i_loadstore, { trace = opts.trace })
-			s:c(control, "rst~", i_loadstore, "rst~")
-			s:c(clk, "rising", i_loadstore, "rising")
-			s:c(clk, "falling", i_loadstore, "falling")
-			s:c(control, "isched", i_loadstore, "isched")
-			s:c(lsu, "trigout", i_loadstore, "lsu_trigout")
-			s:c(idecode, "opcode", i_loadstore, "opcode")
-			s:c(idecode, "funct3", i_loadstore, "funct3")
-			s:c(i_loadstore, "icomplete", control, "xu_trigin")
-			s:c(i_loadstore, "legal", control, "legal")
-			s:c(i_loadstore, "imm_oe", control, "imm_oe")
-			s:c(i_loadstore, "rs1", control, "rs1_oe")
-			s:c(i_loadstore, "rs2", control, "rs2_oe")
-			s:c(i_loadstore, "rd", control, "rd_oe")
-			s:c(i_loadstore, "alu_oe", control, "alu_oe")
-			s:c(i_loadstore, "lsu_trigin", control, "lsu_trigin")
-			s:c(i_loadstore, "lsu_sext", control, "lsu_sext")
-			s:c(i_loadstore, "lsu_control", control, "lsu_control")
+			local i_load = core .. ".instructions.load"
+			s:new_instruction_load(i_load, { trace = opts.trace })
+			s:c(control, "rst~", i_load, "rst~")
+			s:c(clk, "rising", i_load, "rising")
+			s:c(clk, "falling", i_load, "falling")
+			s:c(control, "isched", i_load, "isched")
+			s:c(lu, "trigout", i_load, "lu_trigout")
+			s:c(idecode, "opcode", i_load, "opcode")
+			s:c(idecode, "funct3", i_load, "funct3")
+			s:c(i_load, "icomplete", control, "xu_trigin")
+			s:c(i_load, "legal", control, "legal")
+			s:c(i_load, "imm_oe", control, "imm_oe")
+			s:c(i_load, "rs1", control, "rs1_oe")
+			s:c(i_load, "rs2", control, "rs2_oe")
+			s:c(i_load, "rd", control, "rd_oe")
+			s:c(i_load, "alu_oe", control, "alu_oe")
+			s:c(i_load, "lu_trigin", control, "lu_trigin")
+			s:c(i_load, "lu_sext", control, "lu_sext")
+			s:c(i_load, "lu_control", control, "lu_control")
 			------------------------------------------------------------------------------
 			local i_jal = core .. ".instructions.jal"
 			s:new_instruction_jal(i_jal, { trace = opts.trace })

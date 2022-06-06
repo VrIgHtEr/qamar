@@ -1,5 +1,5 @@
 ---@class simulation
----@field new_load_store_unit fun(circuit:simulation,name:string,opts:table|nil):simulation
+---@field new_load_unit fun(circuit:simulation,name:string,opts:table|nil):simulation
 
 local bits = 32
 local byte_bits = 8
@@ -8,7 +8,7 @@ local control_bits = 2
 ---@param simulation simulation
 return function(simulation)
 	simulation:register_component(
-		"load_store_unit",
+		"load_unit",
 		---@param s simulation
 		---@param f string
 		---@param opts boolean

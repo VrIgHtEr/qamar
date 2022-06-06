@@ -22,9 +22,9 @@ CPU.control.rst~
 @200
 -
 @28
-CPU.control.lsu_trigin
-CPU.control.lsu_sext
-CPU.control.lsu_control[1:0]
+CPU.control.lu_trigin
+CPU.control.lu_sext
+CPU.control.lu_control[1:0]
 @200
 -
 @24

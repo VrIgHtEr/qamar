@@ -1,10 +1,10 @@
 ---@class simulation
----@field new_instruction_loadstore fun(circuit:simulation,name:string,opts:table|nil):simulation
+---@field new_instruction_load fun(circuit:simulation,name:string,opts:table|nil):simulation
 
 ---@param simulation simulation
 return function(simulation)
 	simulation:register_component(
-		"instruction_loadstore",
+		"instruction_load",
 		---@param s simulation
 		---@param f string
 		---@param opts boolean
@@ -16,7 +16,7 @@ return function(simulation)
 					"rising",
 					"falling",
 					"isched",
-					"lsu_trigout",
+					"lu_trigout",
 					{ "opcode", 7 },
 					{ "funct3", 3 },
 				},
@@ -28,9 +28,9 @@ return function(simulation)
 					"rs2",
 					"rd",
 					"alu_oe",
-					"lsu_trigin",
-					"lsu_sext",
-					{ "lsu_control", 2 },
+					"lu_trigin",
+					"lu_sext",
+					{ "lu_control", 2 },
 				},
 			}
 			s:add_component(f, opts)
@@ -121,7 +121,7 @@ return function(simulation)
 			s:c(f, "falling", wait, "falling")
 
 			local ntrigout = f .. ".ntrigout"
-			s:new_not(ntrigout):c(f, "lsu_trigout", ntrigout, "a")
+			s:new_not(ntrigout):c(f, "lu_trigout", ntrigout, "a")
 			local cs12 = f .. ".cs12"
 			s:new_or_bank(cs12):c(trigload, "q", cs12, "a"):c(wait, "q", cs12, "b")
 			local waiten = f .. ".waiten"
@@ -129,7 +129,7 @@ return function(simulation)
 			s:c(waiten, "q", wait, "d")
 
 			local saveen = f .. ".saveen"
-			s:new_and_bank(saveen):c(cs12, "q", saveen, "a"):c(f, "lsu_trigout", saveen, "b")
+			s:new_and_bank(saveen):c(cs12, "q", saveen, "a"):c(f, "lu_trigout", saveen, "b")
 
 			local save = f .. ".save"
 			s:new_ms_d_flipflop(save)
@@ -162,8 +162,8 @@ return function(simulation)
 				:cp(1, trigloadbuf, "q", 1, f, "rs1", 1)
 				:cp(1, trigloadbuf, "q", 2, f, "imm_oe", 1)
 				:cp(1, trigloadbuf, "q", 3, f, "alu_oe", 1)
-				:cp(1, trigloadbuf, "q", 4, f, "lsu_trigin", 1)
-				:cp(2, trigloadbuf, "q", 5, f, "lsu_control", 1)
+				:cp(1, trigloadbuf, "q", 4, f, "lu_trigin", 1)
+				:cp(2, trigloadbuf, "q", 5, f, "lu_control", 1)
 
 			local trigsave = f .. ".trigsave"
 			s:new_tristate_buffer(trigsave, { width = 2 })
@@ -171,7 +171,7 @@ return function(simulation)
 			s:cp(1, "VCC", "q", 1, trigsave, "a", 1)
 			s:cp(1, nf3, "q", 3, trigsave, "a", 2)
 			s:cp(1, trigsave, "q", 1, f, "rd", 1)
-			s:cp(1, trigsave, "q", 2, f, "lsu_sext", 1)
+			s:cp(1, trigsave, "q", 2, f, "lu_sext", 1)
 
 			local trigcomplete = f .. ".trigcomplete"
 			s:new_tristate_buffer(trigcomplete)

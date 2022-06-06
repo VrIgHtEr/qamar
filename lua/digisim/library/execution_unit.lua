@@ -19,12 +19,12 @@ return function(simulation)
 					"rising",
 					"falling",
 					"rst~",
-					"lsu_trigout",
+					"lu_trigout",
 				},
 				outputs = {
 					"isched",
-					"lsu_trigin",
-					{ "lsu_control", 2 },
+					"lu_trigin",
+					{ "lu_control", 2 },
 					{ "ireg", BITS },
 				},
 			}
@@ -35,7 +35,7 @@ return function(simulation)
 			s:new_ms_d_flipflop(s1):c(f, "rst~", s1, "rst~"):c(f, "rising", s1, "rising"):c(f, "falling", s1, "falling")
 
 			local ntrigout = f .. ".ntrigout"
-			s:new_not(ntrigout):c(f, "lsu_trigout", ntrigout, "a")
+			s:new_not(ntrigout):c(f, "lu_trigout", ntrigout, "a")
 
 			local c00 = f .. ".c00"
 			s:new_and_bank(c00):c(s0, "q", c00, "a"):c(ntrigout, "q", c00, "b")
@@ -46,18 +46,18 @@ return function(simulation)
 			s
 				:new_and_bank(isched)
 				:c(s0, "q", isched, "a")
-				:c(f, "lsu_trigout", isched, "b")
+				:c(f, "lu_trigout", isched, "b")
 				:c(isched, "q", s1, "d")
 				:c(isched, "q", f, "isched")
 
-			local lsubuf = f .. ".lsubuf"
-			s:new_tristate_buffer(lsubuf, { width = 3 })
-			s:c(c0, "q", lsubuf, "en")
-			s:cp(1, "VCC", "q", 1, lsubuf, "a", 1)
-			s:cp(1, "VCC", "q", 1, lsubuf, "a", 2)
-			s:cp(1, "VCC", "q", 1, lsubuf, "a", 3)
-			s:cp(1, lsubuf, "q", 1, f, "lsu_trigin", 1)
-			s:cp(2, lsubuf, "q", 2, f, "lsu_control", 1)
+			local lubuf = f .. ".lubuf"
+			s:new_tristate_buffer(lubuf, { width = 3 })
+			s:c(c0, "q", lubuf, "en")
+			s:cp(1, "VCC", "q", 1, lubuf, "a", 1)
+			s:cp(1, "VCC", "q", 1, lubuf, "a", 2)
+			s:cp(1, "VCC", "q", 1, lubuf, "a", 3)
+			s:cp(1, lubuf, "q", 1, f, "lu_trigin", 1)
+			s:cp(2, lubuf, "q", 2, f, "lu_control", 1)
 
 			local cc0 = f .. ".cc0"
 			s:new_and_bank(cc0):c(s0, "q", cc0, "a"):c(f, "rising", cc0, "b")
