@@ -149,23 +149,21 @@ return function(simulation)
 			s:new_or(halfword):cp(2, f, "funct3", 1, halfword, "in", 1)
 
 			local trigloadbuf = f .. ".trigloadbuf"
-			s:new_tristate_buffer(trigloadbuf, { width = 7 })
+			s:new_tristate_buffer(trigloadbuf, { width = 6 })
 			s:c(activated, "q", trigloadbuf, "en")
 			s
 				:cp(1, "VCC", "q", 1, trigloadbuf, "a", 1)
 				:cp(1, "VCC", "q", 1, trigloadbuf, "a", 2)
 				:cp(1, "VCC", "q", 1, trigloadbuf, "a", 3)
 				:cp(1, "VCC", "q", 1, trigloadbuf, "a", 4)
-				:cp(1, nf3, "q", 3, trigloadbuf, "a", 5)
-				:cp(1, halfword, "q", 1, trigloadbuf, "a", 6)
-				:cp(1, f, "funct3", 2, trigloadbuf, "a", 7)
+				:cp(1, halfword, "q", 1, trigloadbuf, "a", 5)
+				:cp(1, f, "funct3", 2, trigloadbuf, "a", 6)
 			s
 				:cp(1, trigloadbuf, "q", 1, f, "rs1", 1)
 				:cp(1, trigloadbuf, "q", 2, f, "imm_oe", 1)
 				:cp(1, trigloadbuf, "q", 3, f, "alu_oe", 1)
 				:cp(1, trigloadbuf, "q", 4, f, "lsu_trigin", 1)
-				:cp(1, trigloadbuf, "q", 5, f, "lsu_sext", 1)
-				:cp(2, trigloadbuf, "q", 6, f, "lsu_control", 1)
+				:cp(2, trigloadbuf, "q", 5, f, "lsu_control", 1)
 
 			local trigsave = f .. ".trigsave"
 			s:new_tristate_buffer(trigsave, { width = 2 })
