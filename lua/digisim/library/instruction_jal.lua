@@ -37,22 +37,11 @@ return function(simulation)
 			local nopcode = f .. ".nopcode"
 			s:new_not(nopcode, { width = 5 }):cp(5, f, "opcode", 3, nopcode, "a", 1)
 
-			local is_ja = f .. ".is_ja"
-			s:new_and(is_ja, { width = 6 })
-			s:cp(3, f, "opcode", 1, is_ja, "in", 1)
-			s:cp(1, nopcode, "q", 3, is_ja, "in", 4)
-			s:cp(2, f, "opcode", 6, is_ja, "in", 5)
-
-			local is_valid_jalr = f .. ".valid_jalr"
-			s:new_and_bank(is_valid_jalr):c(nf3, "q", is_valid_jalr, "a"):cp(1, nopcode, "q", 2, is_valid_jalr, "b", 1)
-
-			local is_valid = f .. ".valid"
-			s:new_or_bank(is_valid):c(is_valid_jalr, "q", is_valid, "a"):cp(1, f, "opcode", 4, is_valid, "b", 1)
-
 			local legal = f .. ".legal"
-			s:new_and_bank(legal)
-			s:c(is_ja, "q", legal, "a")
-			s:c(is_valid, "q", legal, "b")
+			s:new_and(legal, { width = 7 })
+			s:cp(4, f, "opcode", 1, legal, "in", 1)
+			s:cp(1, nopcode, "q", 3, legal, "in", 5)
+			s:cp(2, f, "opcode", 6, legal, "in", 6)
 
 			local legalbuf = f .. ".legalbuf"
 			s
@@ -83,7 +72,7 @@ return function(simulation)
 			s:cp(1, "VCC", "q", 1, bufsave, "a", 1)
 			s:cp(1, "VCC", "q", 1, bufsave, "a", 2)
 			s:cp(1, "VCC", "q", 1, bufsave, "a", 3)
-			s:cp(1, f, "opcode", 4, bufsave, "a", 4)
+			s:cp(1, "VCC", "q", 1, bufsave, "a", 4)
 			s:cp(1, bufsave, "q", 1, f, "pc_oe", 1)
 			s:cp(1, bufsave, "q", 2, f, "b4", 1)
 			s:cp(1, bufsave, "q", 3, f, "alu_oe", 1)
@@ -95,7 +84,7 @@ return function(simulation)
 			s:cp(1, "VCC", "q", 1, bufcomplete, "a", 1)
 			s:cp(1, "VCC", "q", 1, bufcomplete, "a", 2)
 			s:cp(1, "VCC", "q", 1, bufcomplete, "a", 3)
-			s:cp(1, f, "opcode", 4, bufcomplete, "a", 4)
+			s:cp(1, "VCC", "q", 1, bufcomplete, "a", 4)
 			s:cp(1, "VCC", "q", 1, bufcomplete, "a", 5)
 			s:cp(1, bufcomplete, "q", 1, f, "pc_oe", 1)
 			s:cp(1, bufcomplete, "q", 2, f, "imm_oe", 1)
