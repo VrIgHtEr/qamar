@@ -177,7 +177,7 @@ return function(simulation)
 			s:new_tristate_buffer(trigcomplete)
 			s:c(save, "q", trigcomplete, "en")
 			s:cp(1, "VCC", "q", 1, trigcomplete, "a", 1)
-			s:cp(1, trigcomplete, "q", 1, f, "complete", 1)
+			s:cp(1, trigcomplete, "q", 1, f, "icomplete", 1)
 		end
 	)
 end
