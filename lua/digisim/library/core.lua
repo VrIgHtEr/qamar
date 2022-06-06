@@ -2,6 +2,7 @@
 ---@field new_core fun(circuit:simulation,name:string,opts:table|nil):simulation
 
 local BUS_WIDTH = 32
+local BYTE_BITS = 8
 local REGISTER_SELECT_WIDTH = 5
 local PERIOD = 512
 
@@ -37,6 +38,8 @@ return function(simulation)
 						"alu_lt",
 						"xu_trigin",
 						"isched",
+						"sram_write",
+						"sram_oe",
 						"branch",
 						"imm_oe",
 						"rd_oe",
@@ -53,6 +56,7 @@ return function(simulation)
 				},
 			})
 			s:c(core, "rst~", control, "rst~")
+			s:pullup(control, "sram_oe")
 			s:pulldown(control, "alu_u")
 			s:pulldown(control, "legal")
 			s:pulldown(control, "alu_lt")
@@ -70,6 +74,7 @@ return function(simulation)
 			s:pulldown(control, "rd_oe")
 			s:pulldown(control, "xu_trigin")
 			s:pulldown(control, "zero")
+			s:pulldown(control, "sram_write")
 			s:pulldown(control, "lu_control", 1, 2)
 			s:pulldown(control, "ireg", 1, BUS_WIDTH)
 			s:pulldown(control, "pc", 1, BUS_WIDTH)
@@ -91,6 +96,9 @@ return function(simulation)
 						{ "a", BUS_WIDTH },
 						{ "b", BUS_WIDTH },
 						{ "d", BUS_WIDTH },
+						{ "sram_address", BUS_WIDTH },
+						{ "sram_in", BYTE_BITS },
+						{ "sram_out", BYTE_BITS },
 					},
 				},
 				trace = opts.trace,
@@ -98,9 +106,20 @@ return function(simulation)
 			s:pulldown(buses, "a", 1, BUS_WIDTH)
 			s:pulldown(buses, "b", 1, BUS_WIDTH)
 			s:pulldown(buses, "d", 1, BUS_WIDTH)
+			s:pulldown(buses, "sram_address", 1, BUS_WIDTH)
+			s:pulldown(buses, "sram_in", 1, BYTE_BITS)
+			s:pulldown(buses, "sram_out", 1, BYTE_BITS)
+			------------------------------------------------------------------------------
+			local sram = core .. ".sram"
+			s:new_sram(sram, { file = opts.file, width = BUS_WIDTH, data_width = BYTE_BITS })
+			s:c(control, "sram_oe", sram, "oe")
+			s:c(control, "sram_write", sram, "write")
+			s:c(buses, "sram_address", sram, "address")
+			s:c(buses, "sram_in", sram, "in")
+			s:c(sram, "out", buses, "sram_out")
 			------------------------------------------------------------------------------
 			local lu = core .. ".lu"
-			s:new_load_unit(lu, { file = opts.file, trace = opts.trace })
+			s:new_load_unit(lu, { trace = opts.trace })
 			s
 				:c(clk, "rising", lu, "rising")
 				:c(clk, "falling", lu, "falling")
@@ -109,6 +128,8 @@ return function(simulation)
 				:c(control, "lu_trigin", lu, "trigin")
 				:c(control, "rst~", lu, "rst~")
 				:c(control, "lu_sext", lu, "sext")
+				:c(buses, "sram_out", lu, "sram_out")
+				:c(buses, "sram_address", lu, "sram_address")
 				:c(lu, "out", buses, "d")
 			------------------------------------------------------------------------------
 			local pc = core .. ".pc"

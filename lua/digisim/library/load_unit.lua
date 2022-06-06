@@ -13,7 +13,7 @@ return function(simulation)
 		---@param f string
 		---@param opts boolean
 		function(s, f, opts)
-			opts = opts or { file = nil }
+			opts = opts or {}
 			opts.names = {
 				inputs = {
 					{ "address", bits },
@@ -23,23 +23,16 @@ return function(simulation)
 					"trigin",
 					"rst~",
 					"sext",
+					{ "sram_out", byte_bits },
 				},
-				outputs = { "trigout", { "out", bits } },
+				outputs = { "trigout", { "out", bits }, { "sram_address", bits } },
 			}
 			s:add_component(f, opts)
-
-			local sram = f .. ".sram"
-			s:new_sram(sram, { file = opts.file, width = bits, data_width = byte_bits })
-			s:c("VCC", "q", sram, "oe")
-			s:c("GND", "q", sram, "write")
-
-			local sram_pd = f .. ".sram_pd"
-			s:new_pulldown(sram_pd, { width = byte_bits }):c(sram_pd, "q", sram, "in")
 
 			local addrmux = f .. ".addrmux"
 			s:new_mux_bank(addrmux, { width = 1, bits = bits })
 			s:c(f, "address", addrmux, "d0")
-			s:c(addrmux, "out", sram, "address")
+			s:c(addrmux, "out", f, "sram_address")
 
 			local addr = f .. ".addr"
 			s:new_ms_d_flipflop_bank(addr, { width = bits })
@@ -153,26 +146,26 @@ return function(simulation)
 			s:c(f, "rst~", b0, "rst~")
 			s:c(f, "falling", b0, "falling")
 			s:c(lb0, "q", b0, "rising")
-			s:c(sram, "out", b0, "d")
+			s:c(f, "sram_out", b0, "d")
 			s:cp(byte_bits, b0, "q", 1, output, "a", 1)
 			local b1 = f .. ".b1"
 			s:new_ms_d_flipflop_bank(b1, { width = byte_bits })
 			s:c(f, "rst~", b1, "rst~")
 			s:c(f, "falling", b1, "falling")
 			s:c(lb1, "q", b1, "rising")
-			s:c(sram, "out", b1, "d")
+			s:c(f, "sram_out", b1, "d")
 			local b2 = f .. ".b2"
 			s:new_ms_d_flipflop_bank(b2, { width = byte_bits })
 			s:c(f, "rst~", b2, "rst~")
 			s:c(f, "falling", b2, "falling")
 			s:c(lb2, "q", b2, "rising")
-			s:c(sram, "out", b2, "d")
+			s:c(f, "sram_out", b2, "d")
 			local b3 = f .. ".b3"
 			s:new_ms_d_flipflop_bank(b3, { width = byte_bits })
 			s:c(f, "rst~", b3, "rst~")
 			s:c(f, "falling", b3, "falling")
 			s:c(lb3, "q", b3, "rising")
-			s:c(sram, "out", b3, "d")
+			s:c(f, "sram_out", b3, "d")
 
 			local m16 = f .. ".m16"
 			s:new_mux_bank(m16, { bits = byte_bits, width = 1 })
