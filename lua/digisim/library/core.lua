@@ -245,6 +245,23 @@ return function(simulation)
 			s:c(i_loadstore, "lsu_trigin", control, "lsu_trigin")
 			s:c(i_loadstore, "lsu_sext", control, "lsu_sext")
 			s:c(i_loadstore, "lsu_control", control, "lsu_control")
+			------------------------------------------------------------------------------
+			local i_jal = core .. ".instructions.jal"
+			s:new_instruction_jal(i_jal, { trace = opts.trace })
+			s:c(control, "rst~", i_jal, "rst~")
+			s:c(clk, "rising", i_jal, "rising")
+			s:c(clk, "falling", i_jal, "falling")
+			s:c(control, "isched", i_jal, "isched")
+			s:c(idecode, "opcode", i_jal, "opcode")
+			s:c(idecode, "funct3", i_jal, "funct3")
+			s:c(i_jal, "icomplete", control, "xu_trigin")
+			s:c(i_jal, "legal", control, "legal")
+			s:c(i_jal, "pc_oe", control, "pc_oe")
+			s:cp(1, i_jal, "b4", 1, buses, "b", 3)
+			s:c(i_jal, "alu_oe", control, "alu_oe")
+			s:c(i_jal, "rd", control, "rd_oe")
+			s:c(i_jal, "imm_oe", control, "imm_oe")
+			s:c(i_jal, "branch", control, "branch")
 		end
 	)
 end

@@ -1,5 +1,7 @@
 .equ val, 10
+start:
 li x1, val
+jal x31, start
 
 li x2, val - 1
 slt x3, x1, x2
