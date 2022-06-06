@@ -17,7 +17,6 @@ return function(simulation)
 					"falling",
 					"isched",
 					{ "opcode", 7 },
-					{ "funct3", 3 },
 				},
 				outputs = {
 					"icomplete",
