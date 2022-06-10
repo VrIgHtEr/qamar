@@ -51,8 +51,11 @@ lh x1, 0(x0)
 lhu x1, 0(x0)
 lw x1, 0(x0)
 
+
 sb x1, 0(x0)
+li x1, -1
 sh x1, 0(x0)
+addi x1, x1, 1
 sw x1, 0(x0)
 
 j start
