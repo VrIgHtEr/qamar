@@ -6,7 +6,7 @@ io.stderr:write("building circuit...\n")
 local sim = simulation.new()
 
 local rst = "RESET"
-sim:new_reset(rst, { period = 32 })
+sim:new_reset(rst, { period = 192 })
 
 local core = "CPU"
 sim:new_core(core, { trace = true, file = "./lua/sram.dat" })
