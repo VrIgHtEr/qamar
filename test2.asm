@@ -3,6 +3,11 @@ ecall
 ebreak
 fence.i
 
+li x1, 0xDEADBEEF
+sb x1, 0(t0)
+sh x1, 0(t0)
+sw x1, 0(t0)
+
 start:
 li x1, val
 
@@ -38,6 +43,24 @@ sltiu x3, x1, -val
 li x1, 1000000000
 addi a0,zero, 9
 addi a1,zero, 42
+jal ra, mul
+
+
+lb x1, 0(x0)
+lbu x1, 0(x0)
+lh x1, 0(x0)
+lhu x1, 0(x0)
+lw x1, 0(x0)
+
+
+sb x1, 0(x0)
+li x1, -1
+sh x1, 0(x0)
+addi x1, x1, 1
+sw x1, 0(x0)
+
+j start
+
 mul:
 mv t0, a0
 li a0,0
@@ -53,15 +76,5 @@ srli a1, a1, 1
 addi t1, t1, 1
 beqz zero, mul_loop
 mul_end:
+jalr x0, 0(ra)
 
-lb x1, 0(x0)
-lbu x1, 0(x0)
-lh x1, 0(x0)
-lhu x1, 0(x0)
-lw x1, 0(x0)
-
-#sb x1, 0(x0)
-#sh x1, 0(x0)
-#sw x1, 0(x0)
-
-jal x0, start

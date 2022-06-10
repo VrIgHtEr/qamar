@@ -85,7 +85,7 @@ return function(simulation)
 			s:cp(1, blt, "q", 1, branch, "in", 2)
 
 			local decision = f .. ".decision"
-			s:new_xor(decision):cp(1, f, "funct3", 2, decision, "in", 1):cp(1, branch, "q", 1, decision, "in", 2)
+			s:new_xor(decision):cp(1, f, "funct3", 1, decision, "in", 1):cp(1, branch, "q", 1, decision, "in", 2)
 
 			local brlatchclk = f .. ".brlatchclk"
 			s:new_and_bank(brlatchclk):c(visched, "q", brlatchclk, "a"):c(f, "rising", brlatchclk, "b")

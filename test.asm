@@ -1,80 +1,23 @@
-.equ val, 10
-ecall
-ebreak
-fence.i
+.equ LED, 32768
+.equ DELAY_COUNT, 10
+.equ LED_STATE_INITIAL, 0b00
+.equ LED_STATE_TOGGLE_MASK, 0b01
 
-li x1, 0xDEADBEEF
-sb x1, 0(t0)
-sh x1, 0(t0)
-sw x1, 0(t0)
-
-start:
-li x1, val
-
-li x2, val - 1
-slt x3, x1, x2
-sltu x3, x1, x2
-slti x3, x1, val-1
-sltiu x3, x1, val-1
-
-li x2, val
-slt x3, x1, x2
-sltu x3, x1, x2
-slti x3, x1, val
-sltiu x3, x1, val
-
-li x2, val + 1
-slt x3, x1, x2
-sltu x3, x1, x2
-slti x3, x1, val + 1
-sltiu x3, x1, val + 1
-
-slt x3, x1, zero
-sltu x3, x1, zero
-slti x3, x1, 0
-sltiu x3, x1, 0
-
-li x2, -val
-slt x3, x1, x2
-sltu x3, x1, x2
-slti x3, x1, -val
-sltiu x3, x1, -val
-
-li x1, 1000000000
-addi a0,zero, 9
-addi a1,zero, 42
-jal ra, mul
-
-
-lb x1, 0(x0)
-lbu x1, 0(x0)
-lh x1, 0(x0)
-lhu x1, 0(x0)
-lw x1, 0(x0)
-
-
-sb x1, 0(x0)
-li x1, -1
-sh x1, 0(x0)
-addi x1, x1, 1
-sw x1, 0(x0)
-
-j start
-
-mul:
-mv t0, a0
-li a0,0
-li t1,0
-mul_loop:
-beqz a1, mul_end
-andi t2, a1, 1
-beqz t2, mul_continue
-sll t2, t0, t1
-add a0, a0, t2
-mul_continue:
-srli a1, a1, 1
-addi t1, t1, 1
-beqz zero, mul_loop
-mul_end:
-jalr x0, 0(ra)
-
+.section .text
+.global _start
+_start:
+        li x1, LED
+        li x2, LED_STATE_TOGGLE_MASK
+        li x3, LED_STATE_INITIAL
+        j begin_loop
+loop:
+        li x4, DELAY_COUNT      # reset counter
+delay_loop:
+        addi x4, x4, -1         # count down
+        bnez x4, delay_loop
+toggle_led:
+        lw x3, 0x0(x1)          # read in old led state
+        xor x3, x3, x2          # toggle led state word
+begin_loop:
+        sw x3, 0x0(x1)          # write new state
+        j loop

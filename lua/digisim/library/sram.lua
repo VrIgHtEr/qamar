@@ -59,6 +59,10 @@ return function(simulation)
 				end
 			end
 
+			local paddress = nil
+			local pval = nil
+			local poe = nil
+
 			sim:add_component(sram, opts, function(_, a, oe, write, input)
 				local address = 0
 				for i, x in ipairs(a) do
@@ -79,10 +83,16 @@ return function(simulation)
 					for i = 0, data_width - 1 do
 						ret[i + 1] = bit.band(1, bit.rshift(val, i))
 					end
+					if address ~= paddress or val ~= pval or poe ~= oe then
+						paddress = address
+						pval = val
+						--						io.stderr:write("READ : " .. address .. " : " .. val .. "\n")
+					end
 					return ret
 				else
 					return z
 				end
+				poe = oe
 			end)
 			return sim
 		end
