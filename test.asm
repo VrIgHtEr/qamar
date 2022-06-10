@@ -3,9 +3,9 @@ ecall
 ebreak
 fence.i
 
-sb t0, 0(t0)
-sh t0, 0(t0)
-sw t0, 0(t0)
+sb zero, 0(t0)
+sh zero, 0(t0)
+sw zero, 0(t0)
 
 start:
 li x1, val
@@ -51,10 +51,11 @@ lh x1, 0(x0)
 lhu x1, 0(x0)
 lw x1, 0(x0)
 
-#sb x1, 0(x0)
-#sh x1, 0(x0)
-#sw x1, 0(x0)
-.word 00000000
+sb x1, 0(x0)
+sh x1, 0(x0)
+sw x1, 0(x0)
+
+j start
 
 mul:
 mv t0, a0
