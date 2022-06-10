@@ -70,6 +70,7 @@ return function(simulation)
 				end
 				if prevWrite == signal.low and write == signal.high then
 					memory[address] = data
+					io.stderr:write("WRITE : " .. data .. " : " .. address .. "\n")
 				end
 				prevWrite = write
 				if oe == signal.high then
