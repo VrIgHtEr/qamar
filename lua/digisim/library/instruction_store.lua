@@ -1,6 +1,8 @@
 ---@class simulation
 ---@field new_instruction_store fun(circuit:simulation,name:string,opts:table|nil):simulation
 
+local WIDTH = 32
+
 ---@param simulation simulation
 return function(simulation)
 	simulation:register_component(
@@ -18,7 +20,7 @@ return function(simulation)
 					"isched",
 					{ "opcode", 7 },
 					{ "funct3", 3 },
-					{ "d", 32 },
+					{ "d", WIDTH },
 				},
 				outputs = {
 					"icomplete",
@@ -28,7 +30,7 @@ return function(simulation)
 					"imm",
 					"sram_oe",
 					"sram_write",
-					{ "sram_address", 32 },
+					{ "sram_address", WIDTH },
 					{ "sram_in", 8 },
 				},
 			}
@@ -58,13 +60,15 @@ return function(simulation)
 
 			local visched = f .. ".visched"
 			s:new_and(visched):cp(1, f, "isched", 1, visched, "in", 1):cp(1, legal, "q", 1, visched, "in", 2)
+			local nvisched = f .. ".visched~"
+			s:new_not(nvisched):c(visched, "q", nvisched, "a")
 
-			local width_latch_clk = f .. "width_clk"
-			s:new_and_bank(width_latch_clk):c(f, "rising", width_latch_clk, "a"):c(visched, "q", width_latch_clk, "b")
+			local activate_clk = f .. "activate_clk"
+			s:new_and_bank(activate_clk):c(f, "rising", activate_clk, "a"):c(visched, "q", activate_clk, "b")
 			local width_latch = f .. ".width"
 			s:new_ms_d_flipflop_bank(width_latch, { width = 2 })
 			s:c(f, "rst~", width_latch, "rst~")
-			s:c(width_latch_clk, "q", width_latch, "rising")
+			s:c(activate_clk, "q", width_latch, "rising")
 			s:c(f, "falling", width_latch, "falling")
 			s:cp(2, f, "funct3", 1, width_latch, "d", 1)
 
@@ -74,13 +78,48 @@ return function(simulation)
 			local is_single_byte = f .. ".sb"
 			s:new_not(is_single_byte):c(enable_h, "q", is_single_byte, "a")
 
+			local address = f .. ".address"
+			s:new_ms_d_flipflop_bank(address, { width = WIDTH })
+			s:c(f, "rst~", address, "rst~")
+			s:c(f, "rising", address, "rising")
+			s:c(f, "falling", address, "falling")
+
+			local addr_d_buf = f .. ".addrdbuf"
+			s
+				:new_tristate_buffer(addr_d_buf, { width = WIDTH })
+				:c(f, "d", addr_d_buf, "a")
+				:c(visched, "q", addr_d_buf, "en")
+				:c(addr_d_buf, "q", address, "d")
+
+			local inc = f .. ".addrinc"
+			s
+				:new_ripple_adder(inc, { width = WIDTH })
+				:c(address, "q", inc, "a")
+				:pulldown(inc, "b", 1)
+				:pullup(inc, "cin")
+
+			local addr_inc_buf = f .. ".addrincbuf"
+			s
+				:new_tristate_buffer(addr_inc_buf, { width = WIDTH })
+				:c(inc, "sum", addr_inc_buf, "a")
+				:c(nvisched, "q", addr_inc_buf, "en")
+				:c(addr_inc_buf, "q", address, "d")
+
+			-- STAGE 0
+			local stage0 = f .. ".stage0"
+			s:new_ms_d_flipflop(stage0)
+			s:c(f, "rst~", stage0, "rst~")
+			s:c(f, "rising", stage0, "rising")
+			s:c(f, "falling", stage0, "falling")
+			s:c(visched, "q", stage0, "d")
+
 			-- STAGE 1
 			local stage1 = f .. ".stage1"
 			s:new_ms_d_flipflop(stage1)
 			s:c(f, "rst~", stage1, "rst~")
 			s:c(f, "rising", stage1, "rising")
 			s:c(f, "falling", stage1, "falling")
-			s:c(visched, "q", stage1, "d")
+			s:c(stage0, "q", stage1, "d")
 
 			-- STAGE 2
 			local stage2en = f .. ".stage2_en"
