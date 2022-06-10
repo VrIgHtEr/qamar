@@ -267,6 +267,17 @@ return function(simulation)
 			s:c(i_load, "lu_sext", control, "lu_sext")
 			s:c(i_load, "lu_control", control, "lu_control")
 			------------------------------------------------------------------------------
+			local i_store = core .. ".instructions.store"
+			s:new_instruction_store(i_store, { trace = opts.trace })
+			s:c(control, "rst~", i_store, "rst~")
+			s:c(clk, "rising", i_store, "rising")
+			s:c(clk, "falling", i_store, "falling")
+			s:c(control, "isched", i_store, "isched")
+			s:c(idecode, "opcode", i_store, "opcode")
+			s:c(idecode, "funct3", i_store, "funct3")
+			s:c(i_store, "icomplete", control, "xu_trigin")
+			s:c(i_store, "legal", control, "legal")
+			------------------------------------------------------------------------------
 			local i_jal = core .. ".instructions.jal"
 			s:new_instruction_jal(i_jal, { trace = opts.trace })
 			s:c(control, "rst~", i_jal, "rst~")

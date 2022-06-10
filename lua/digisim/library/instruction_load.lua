@@ -41,11 +41,10 @@ return function(simulation)
 			local nf3 = f .. ".nf3"
 			s:new_not(nf3, { width = 3 }):c(f, "funct3", nf3, "a")
 
-			local is_load_store = f .. ".is_ls"
-			s:new_and(is_load_store, { width = 6 })
-			s:cp(2, f, "opcode", 1, is_load_store, "in", 1)
-			s:cp(3, nopcode, "q", 1, is_load_store, "in", 3)
-			s:cp(1, nopcode, "q", 5, is_load_store, "in", 6)
+			local is_load = f .. ".is_l"
+			s:new_and(is_load, { width = 7 })
+			s:cp(2, f, "opcode", 1, is_load, "in", 1)
+			s:cp(5, nopcode, "q", 1, is_load, "in", 3)
 
 			local is_not_invalid_funct3 = f .. ".is_not_inv_f3"
 			s:new_nand(is_not_invalid_funct3):cp(2, f, "funct3", 1, is_not_invalid_funct3, "in", 1)
@@ -54,37 +53,18 @@ return function(simulation)
 			s:cp(1, nf3, "q", 3, is_valid_signed_funct3, "a", 1)
 			s:c(is_not_invalid_funct3, "q", is_valid_signed_funct3, "b")
 
-			local is_valid_store = f .. ".is_s"
-			s
-				:new_and_bank(is_valid_store)
-				:c(is_valid_signed_funct3, "q", is_valid_store, "a")
-				:cp(1, f, "opcode", 6, is_valid_store, "b", 1)
-
-			local is_valid_load_s = f .. ".is_val_load_s"
-			s
-				:new_and_bank(is_valid_load_s)
-				:c(is_valid_signed_funct3, "q", is_valid_load_s, "a")
-				:cp(1, nopcode, "q", 4, is_valid_load_s, "b", 1)
-
 			local is_valid_load_u = f .. ".is_val_load_u"
 			s
-				:new_and(is_valid_load_u, { width = 3 })
-				:cp(1, nopcode, "q", 4, is_valid_load_u, "in", 1)
-				:cp(1, f, "funct3", 3, is_valid_load_u, "in", 2)
-				:cp(1, nf3, "q", 2, is_valid_load_u, "in", 3)
-
-			local is_valid_load = f .. ".is_val_load"
-			s
-				:new_or_bank(is_valid_load)
-				:c(is_valid_load_s, "q", is_valid_load, "a")
-				:c(is_valid_load_u, "q", is_valid_load, "b")
+				:new_and(is_valid_load_u)
+				:cp(1, f, "funct3", 3, is_valid_load_u, "in", 1)
+				:cp(1, nf3, "q", 2, is_valid_load_u, "in", 2)
 
 			local is_valid = f .. ".valid"
-			s:new_or_bank(is_valid):c(is_valid_store, "q", is_valid, "a"):c(is_valid_load, "q", is_valid, "b")
+			s:new_or_bank(is_valid):c(is_valid_signed_funct3, "q", is_valid, "a"):c(is_valid_load_u, "q", is_valid, "b")
 
 			local legal = f .. ".legal"
 			s:new_and_bank(legal)
-			s:c(is_load_store, "q", legal, "a")
+			s:c(is_load, "q", legal, "a")
 			s:c(is_valid, "q", legal, "b")
 
 			local legalbuf = f .. ".legalbuf"
@@ -105,7 +85,7 @@ return function(simulation)
 			s:c(visched, "q", activated, "d")
 
 			local trigloaden = f .. ".loaden"
-			s:new_and_bank(trigloaden):c(is_valid_load, "q", trigloaden, "a"):c(activated, "q", trigloaden, "b")
+			s:new_and_bank(trigloaden):c(is_valid, "q", trigloaden, "a"):c(activated, "q", trigloaden, "b")
 
 			local trigload = f .. ".dload"
 			s:new_ms_d_flipflop(trigload)

@@ -3,6 +3,10 @@ ecall
 ebreak
 fence.i
 
+sb t0, 0(t0)
+sh t0, 0(t0)
+sw t0, 0(t0)
+
 start:
 li x1, val
 
