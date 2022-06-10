@@ -32,7 +32,13 @@ return function(simulation)
 			local addrmux = f .. ".addrmux"
 			s:new_mux_bank(addrmux, { width = 1, bits = bits })
 			s:c(f, "address", addrmux, "d0")
-			s:c(addrmux, "out", f, "sram_address")
+
+			local addrmuxbuf = f .. ".addrmuxbuf"
+			s
+				:new_tristate_buffer(addrmuxbuf, { width = bits })
+				:c(addrmux, "out", addrmuxbuf, "a")
+				:c(f, "trigin", addrmuxbuf, "en")
+				:c(addrmuxbuf, "q", f, "sram_address")
 
 			local addr = f .. ".addr"
 			s:new_ms_d_flipflop_bank(addr, { width = bits })

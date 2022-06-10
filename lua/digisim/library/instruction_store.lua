@@ -60,11 +60,17 @@ return function(simulation)
 
 			local visched = f .. ".visched"
 			s:new_and(visched):cp(1, f, "isched", 1, visched, "in", 1):cp(1, legal, "q", 1, visched, "in", 2)
-			local nvisched = f .. ".visched~"
-			s:new_not(nvisched):c(visched, "q", nvisched, "a")
 
-			local activate_clk = f .. "activate_clk"
-			s:new_and_bank(activate_clk):c(f, "rising", activate_clk, "a"):c(visched, "q", activate_clk, "b")
+			-- STAGE 0
+			local stage0 = f .. ".stage0"
+			s:new_ms_d_flipflop(stage0)
+			s:c(f, "rst~", stage0, "rst~")
+			s:c(f, "rising", stage0, "rising")
+			s:c(f, "falling", stage0, "falling")
+			s:c(visched, "q", stage0, "d")
+
+			local activate_clk = f .. ".activate_clk"
+			s:new_and_bank(activate_clk):c(f, "rising", activate_clk, "a"):c(stage0, "q", activate_clk, "b")
 			local width_latch = f .. ".width"
 			s:new_ms_d_flipflop_bank(width_latch, { width = 2 })
 			s:c(f, "rst~", width_latch, "rst~")
@@ -84,11 +90,17 @@ return function(simulation)
 			s:c(f, "rising", address, "rising")
 			s:c(f, "falling", address, "falling")
 
+			local addr_buf = f .. ".address_buf"
+			s
+				:new_tristate_buffer(addr_buf, { width = WIDTH })
+				:c(address, "q", addr_buf, "a")
+				:c(addr_buf, "q", f, "sram_address")
+
 			local addr_d_buf = f .. ".addrdbuf"
 			s
 				:new_tristate_buffer(addr_d_buf, { width = WIDTH })
 				:c(f, "d", addr_d_buf, "a")
-				:c(visched, "q", addr_d_buf, "en")
+				:c(stage0, "q", addr_d_buf, "en")
 				:c(addr_d_buf, "q", address, "d")
 
 			local inc = f .. ".addrinc"
@@ -102,16 +114,8 @@ return function(simulation)
 			s
 				:new_tristate_buffer(addr_inc_buf, { width = WIDTH })
 				:c(inc, "sum", addr_inc_buf, "a")
-				:c(nvisched, "q", addr_inc_buf, "en")
+				:c(stage0, "q~", addr_inc_buf, "en")
 				:c(addr_inc_buf, "q", address, "d")
-
-			-- STAGE 0
-			local stage0 = f .. ".stage0"
-			s:new_ms_d_flipflop(stage0)
-			s:c(f, "rst~", stage0, "rst~")
-			s:c(f, "rising", stage0, "rising")
-			s:c(f, "falling", stage0, "falling")
-			s:c(visched, "q", stage0, "d")
 
 			-- STAGE 1
 			local stage1 = f .. ".stage1"
@@ -153,6 +157,15 @@ return function(simulation)
 			s:c(f, "falling", stage4, "falling")
 			s:c(stage3, "q", stage4, "d")
 
+			local addr_buf_en = f .. ".addrbufen"
+			s
+				:new_or(addr_buf_en, { width = 4 })
+				:cp(1, stage1, "q", 1, addr_buf_en, "in", 1)
+				:cp(1, stage2, "q", 1, addr_buf_en, "in", 2)
+				:cp(1, stage3, "q", 1, addr_buf_en, "in", 3)
+				:cp(1, stage4, "q", 1, addr_buf_en, "in", 4)
+				:c(addr_buf_en, "q", addr_buf, "en")
+
 			local comp1 = f .. ".c1"
 			s:new_and_bank(comp1):c(stage1, "q", comp1, "a"):c(nstage2en, "q", comp1, "b")
 			local comp2 = f .. ".c2"
@@ -164,8 +177,15 @@ return function(simulation)
 				:cp(1, comp2, "q", 1, comp, "in", 2)
 				:cp(1, stage4, "q", 1, comp, "in", 3)
 
+			local stagec = f .. ".stagec"
+			s:new_ms_d_flipflop(stagec)
+			s:c(f, "rst~", stagec, "rst~")
+			s:c(f, "rising", stagec, "rising")
+			s:c(f, "falling", stagec, "falling")
+			s:c(comp, "q", stagec, "d")
+
 			local icomplete = f .. ".icomplete"
-			s:new_tristate_buffer(icomplete):c(comp, "q", icomplete, "en"):high(icomplete, "a")
+			s:new_tristate_buffer(icomplete):c(stagec, "q", icomplete, "en"):high(icomplete, "a")
 			s:c(icomplete, "q", f, "icomplete")
 		end
 	)
