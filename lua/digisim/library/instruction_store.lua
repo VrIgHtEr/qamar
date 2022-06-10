@@ -118,6 +118,15 @@ return function(simulation)
 				:c(stage0, "q~", addr_inc_buf, "en")
 				:c(addr_inc_buf, "q", address, "d")
 
+			local load_addr = f .. ".loadaddr"
+			s
+				:new_tristate_buffer(load_addr, { width = 3 })
+				:c(stage0, "q", load_addr, "en")
+				:high(load_addr, "a")
+				:cp(1, load_addr, "q", 1, f, "rs1", 1)
+				:cp(1, load_addr, "q", 2, f, "imm", 1)
+				:cp(1, load_addr, "q", 3, f, "alu_oe", 1)
+
 			-- STAGE 1
 			local stage1 = f .. ".stage1"
 			s:new_ms_d_flipflop(stage1)
