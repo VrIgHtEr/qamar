@@ -3,9 +3,10 @@ ecall
 ebreak
 fence.i
 
-sb zero, 0(t0)
-sh zero, 0(t0)
-sw zero, 0(t0)
+li x1, 0xDEADBEEF
+sb x1, 0(t0)
+sh x1, 0(t0)
+sw x1, 0(t0)
 
 start:
 li x1, val

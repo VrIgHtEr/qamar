@@ -25,6 +25,7 @@ return function(simulation)
 				outputs = {
 					"icomplete",
 					"legal",
+					"alu_oe",
 					"rs1",
 					"rs2",
 					"imm",
@@ -157,14 +158,14 @@ return function(simulation)
 			s:c(f, "falling", stage4, "falling")
 			s:c(stage3, "q", stage4, "d")
 
-			local addr_buf_en = f .. ".addrbufen"
+			local writing = f .. ".writing"
 			s
-				:new_or(addr_buf_en, { width = 4 })
-				:cp(1, stage1, "q", 1, addr_buf_en, "in", 1)
-				:cp(1, stage2, "q", 1, addr_buf_en, "in", 2)
-				:cp(1, stage3, "q", 1, addr_buf_en, "in", 3)
-				:cp(1, stage4, "q", 1, addr_buf_en, "in", 4)
-				:c(addr_buf_en, "q", addr_buf, "en")
+				:new_or(writing, { width = 4 })
+				:cp(1, stage1, "q", 1, writing, "in", 1)
+				:cp(1, stage2, "q", 1, writing, "in", 2)
+				:cp(1, stage3, "q", 1, writing, "in", 3)
+				:cp(1, stage4, "q", 1, writing, "in", 4)
+				:c(writing, "q", addr_buf, "en")
 
 			local comp1 = f .. ".c1"
 			s:new_and_bank(comp1):c(stage1, "q", comp1, "a"):c(nstage2en, "q", comp1, "b")
@@ -187,6 +188,40 @@ return function(simulation)
 			local icomplete = f .. ".icomplete"
 			s:new_tristate_buffer(icomplete):c(stagec, "q", icomplete, "en"):high(icomplete, "a")
 			s:c(icomplete, "q", f, "icomplete")
+
+			local write = f .. ".write"
+			s
+				:new_tristate_buffer(write, { width = 3 })
+				:c(writing, "q", write, "en")
+				:high(write, "a", 1, 3)
+				:cp(1, write, "q", 1, f, "sram_write", 1)
+				:cp(1, write, "q", 2, f, "rs2", 1)
+				:cp(1, write, "q", 3, f, "alu_oe", 1)
+
+			local b0 = f .. ".b0"
+			s
+				:new_tristate_buffer(b0, { width = 8 })
+				:c(stage1, "q", b0, "en")
+				:cp(8, f, "d", 1, b0, "a", 1)
+				:cp(8, b0, "q", 1, f, "sram_in", 1)
+			local b1 = f .. ".b1"
+			s
+				:new_tristate_buffer(b1, { width = 8 })
+				:c(stage2, "q", b1, "en")
+				:cp(8, f, "d", 9, b1, "a", 1)
+				:cp(8, b1, "q", 1, f, "sram_in", 1)
+			local b2 = f .. ".b2"
+			s
+				:new_tristate_buffer(b2, { width = 8 })
+				:c(stage3, "q", b2, "en")
+				:cp(8, f, "d", 17, b2, "a", 1)
+				:cp(8, b2, "q", 1, f, "sram_in", 1)
+			local b3 = f .. ".b3"
+			s
+				:new_tristate_buffer(b3, { width = 8 })
+				:c(stage4, "q", b3, "en")
+				:cp(8, f, "d", 25, b3, "a", 1)
+				:cp(8, b3, "q", 1, f, "sram_in", 1)
 		end
 	)
 end
