@@ -9,7 +9,8 @@ li t0, SIZE
 li t1, 0
 li t2, ADDR
 init_loop:
-add t3, t2, t1
+slli t3, t1, 2
+add t3, t3, t2
 sw t1, 0(t3)
 addi t1, t1, 1
 addi t0, t0, -1
@@ -18,15 +19,27 @@ bnez t0, init_loop
 li s0, SIZE-1
 search_loop:
 
+fence.i
+fence.i
+fence.i
+fence.i
+fence.i
+
 li a0, ADDR
 mv a1, s0
 li a2, SIZE
 jal ra, binsearch
 
+fence.i
+fence.i
+fence.i
+fence.i
+fence.i
+
 addi s0, s0, -1
-bgez s0, search_loop
+bge s0, zero, search_loop
 li s0, SIZE-1
-j search_loop
+jal zero, search_loop
 
 .global binsearch
 binsearch:
@@ -47,7 +60,7 @@ binsearch:
     # Get the element at the midpoint
     slli    t4, t0, 2    # Scale the midpoint by 4
     add     t4, a0, t4   # Get the memory address of arr[mid]
-    lw      t4, 0(t4)    # Dereference arr[mid]
+    lb      t4, 0(t4)    # Dereference arr[mid]
 
     # See if the needle (a1) > arr[mid] (t3)
     ble     a1, t4, 2f   # if needle <= t3, we need to check the next condition

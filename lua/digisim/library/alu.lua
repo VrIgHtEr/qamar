@@ -126,7 +126,7 @@ return function(simulation)
 				:cp(1, signed, "q", 1, cx, "a", 1)
 				:cp(1, signed, "q", 1, cx, "a", 2)
 				:cp(1, alu, "a", width, cx, "b", 1)
-				:cp(1, xb, "q", width, cx, "b", 2)
+				:cp(1, alu, "b", width, cx, "b", 2)
 				:cp(1, cx, "q", 1, comp, "a", width)
 				:cp(1, cx, "q", 2, comp, "b", width)
 		end
