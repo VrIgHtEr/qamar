@@ -272,6 +272,36 @@ function simulation:cp(len, a, porta, starta, b, portb, startb)
 	return self
 end
 
+---@param self simulation
+---@param c string
+---@param p string
+---@return port
+local function find_port(self, c, p)
+	local ca = self.components[c]
+	if not ca then
+		error("component not found: " .. tostring(c))
+	end
+	local pa = ca.ports[p]
+	if not pa then
+		error("port not found " .. tostring(c) .. "." .. tostring(p))
+	end
+	return pa
+end
+
+local function default_pin_len(self, a, porta, pina, len)
+	local p = find_port(self, a, porta)
+	pina = pina == nil and 1 or pina
+	if type(pina) ~= "number" or pina < 1 or pina > p.bits then
+		error("invalid pin number")
+	end
+	if len == nil then
+		len = p.bits - pina + 1
+	elseif type(len) ~= "number" or len < 1 or len > (p.bits - pina + 1) then
+		error("invalid length")
+	end
+	return pina, len
+end
+
 ---@param a string
 ---@param porta string
 ---@param pina number
@@ -297,11 +327,7 @@ end
 ---@param len number|nil
 ---@return simulation
 function simulation:high(a, porta, pina, len)
-	pina = pina == nil and 1 or pina
-	len = len == nil and 1 or len
-	if len < 1 then
-		error("invalid length")
-	end
+	pina, len = default_pin_len(self, a, porta, pina, len)
 	for i = 1, len do
 		self:cp(1, "VCC", "q", 1, a, porta, pina + i - 1)
 	end
@@ -314,11 +340,7 @@ end
 ---@param len number|nil
 ---@return simulation
 function simulation:low(a, porta, pina, len)
-	pina = pina == nil and 1 or pina
-	len = len == nil and 1 or len
-	if len < 1 then
-		error("invalid length")
-	end
+	pina, len = default_pin_len(self, a, porta, pina, len)
 	for i = 1, len do
 		self:cp(1, "GND", "q", 1, a, porta, pina + i - 1)
 	end
@@ -331,8 +353,7 @@ end
 ---@param len number|nil
 ---@return simulation
 function simulation:pullup(a, porta, pina, len)
-	pina = pina == nil and 1 or pina
-	len = len == nil and 1 or len
+	pina, len = default_pin_len(self, a, porta, pina, len)
 	local pull = a .. "." .. porta .. "#up" .. (pina - 1) .. "#" .. len
 	return self:new_pullup(pull, { width = len }):cp(len, pull, "q", 1, a, porta, pina)
 end
@@ -343,8 +364,7 @@ end
 ---@param len number|nil
 ---@return simulation
 function simulation:pulldown(a, porta, pina, len)
-	pina = pina == nil and 1 or pina
-	len = len == nil and 1 or len
+	pina, len = default_pin_len(self, a, porta, pina, len)
 	local pull = a .. "." .. porta .. "#down" .. (pina - 1) .. "#" .. len
 	return self:new_pulldown(pull, { width = len }):cp(len, pull, "q", 1, a, porta, pina)
 end

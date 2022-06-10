@@ -53,9 +53,7 @@ return function(simulation)
 			local lubuf = f .. ".lubuf"
 			s:new_tristate_buffer(lubuf, { width = 3 })
 			s:c(c0, "q", lubuf, "en")
-			s:cp(1, "VCC", "q", 1, lubuf, "a", 1)
-			s:cp(1, "VCC", "q", 1, lubuf, "a", 2)
-			s:cp(1, "VCC", "q", 1, lubuf, "a", 3)
+			s:high(lubuf, "a", 1, 3)
 			s:cp(1, lubuf, "q", 1, f, "lu_trigin", 1)
 			s:cp(2, lubuf, "q", 2, f, "lu_control", 1)
 

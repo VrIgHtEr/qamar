@@ -81,7 +81,7 @@ return function(simulation)
 			if loop then
 				sim:c(n .. "stage" .. (width - 1) .. ".L", "q", n .. "stage0.dn", "a")
 			else
-				sim:c("GND", "q", n .. "stage0.dn", "a")
+				sim:low(n .. "stage0.dn", "a")
 			end
 			return sim
 		end

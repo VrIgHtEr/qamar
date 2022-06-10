@@ -48,7 +48,7 @@ return function(simulation)
 					s:new_half_adder(ti)
 					s:cp(1, addr, "q", i, ti, "a", 1)
 					if i == 1 then
-						s:c("VCC", "q", ti, "b")
+						s:high(ti, "b")
 					else
 						s:c(pti, "carry", ti, "b")
 					end

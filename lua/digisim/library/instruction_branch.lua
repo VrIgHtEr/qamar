@@ -67,7 +67,7 @@ return function(simulation)
 			s
 				:new_tristate_buffer(legalbuf)
 				:c(legal, "q", legalbuf, "en")
-				:c("VCC", "q", legalbuf, "a")
+				:high(legalbuf, "a")
 				:c(legalbuf, "q", f, "legal")
 
 			local visched = f .. ".visched"
@@ -99,10 +99,7 @@ return function(simulation)
 			local test = f .. ".test"
 			s:new_tristate_buffer(test, { width = 5 })
 			s:c(visched, "q", test, "en")
-			s:cp(1, "VCC", "q", 1, test, "a", 1)
-			s:cp(1, "VCC", "q", 1, test, "a", 2)
-			s:cp(1, "VCC", "q", 1, test, "a", 3)
-			s:cp(1, "VCC", "q", 1, test, "a", 4)
+			s:high(test, "a", 1, 4)
 			s:cp(1, unsigned, "q", 1, test, "a", 5)
 			s:cp(1, test, "q", 1, f, "rs1", 1)
 			s:cp(1, test, "q", 2, f, "rs2", 1)
@@ -132,17 +129,14 @@ return function(simulation)
 			local action = f .. ".action"
 			s:new_tristate_buffer(action, { width = 4 })
 			s:c(actionen, "q", action, "en")
-			s:cp(1, "VCC", "q", 1, action, "a", 1)
-			s:cp(1, "VCC", "q", 1, action, "a", 2)
-			s:cp(1, "VCC", "q", 1, action, "a", 3)
-			s:cp(1, "VCC", "q", 1, action, "a", 4)
+			s:high(action, "a", 1, 4)
 			s:cp(1, action, "q", 1, f, "alu_oe", 1)
 			s:cp(1, action, "q", 2, f, "imm_oe", 1)
 			s:cp(1, action, "q", 3, f, "pc_oe", 1)
 			s:cp(1, action, "q", 4, f, "branch", 1)
 
 			local icompletebuf = f .. ".icompletebuf"
-			s:new_tristate_buffer(icompletebuf):c(trignext, "q", icompletebuf, "en"):c("VCC", "q", icompletebuf, "a")
+			s:new_tristate_buffer(icompletebuf):c(trignext, "q", icompletebuf, "en"):high(icompletebuf, "a")
 			s:c(icompletebuf, "q", f, "icomplete")
 		end
 	)

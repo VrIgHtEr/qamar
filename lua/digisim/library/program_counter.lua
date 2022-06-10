@@ -53,7 +53,7 @@ return function(simulation)
 					s:cp(1, pc, "q", i, adder, "a", 1)
 					s:cp(1, adder, "sum", 1, mux, "d0", i)
 					if i == 3 then
-						s:c("VCC", "q", adder, "b")
+						s:high(adder, "b")
 					else
 						s:c(padder, "carry", adder, "b")
 					end

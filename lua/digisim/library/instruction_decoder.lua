@@ -94,7 +94,7 @@ return function(simulation)
 			local immb = dec .. ".immb"
 			self:new_tristate_buffer(immb, { width = 32 })
 			self:c(cimmb, "q", immb, "en")
-			self:cp(1, "GND", "q", 1, immb, "a", 1)
+			self:low(immb, "a", 1, 1)
 			self:cp(4, dec, "in", 9, immb, "a", 2)
 			self:cp(6, dec, "in", 26, immb, "a", 6)
 			self:cp(1, dec, "in", 8, immb, "a", 12)
@@ -113,9 +113,7 @@ return function(simulation)
 			self:new_tristate_buffer(immu, { width = 32 })
 			self:c(cimmu, "q", immu, "en")
 			self:cp(20, dec, "in", 13, immu, "a", 13)
-			for i = 1, 12 do
-				self:cp(1, "GND", "q", 1, immu, "a", i)
-			end
+			self:low(immu, "a", 1, 12)
 			self:c(immu, "q", dec, "imm")
 
 			-- decode J immediate
@@ -126,7 +124,7 @@ return function(simulation)
 			local immj = dec .. ".immj"
 			self:new_tristate_buffer(immj, { width = 32 })
 			self:c(cimmj, "q", immj, "en")
-			self:cp(1, "GND", "q", 1, immj, "a", 1)
+			self:low(immj, "a", 1, 1)
 			self:cp(10, dec, "in", 22, immj, "a", 2)
 			self:cp(1, dec, "in", 21, immj, "a", 12)
 			self:cp(8, dec, "in", 13, immj, "a", 13)

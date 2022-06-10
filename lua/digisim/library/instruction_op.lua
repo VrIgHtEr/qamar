@@ -102,7 +102,7 @@ return function(simulation)
 			s
 				:new_tristate_buffer(legalbuf)
 				:c(legal, "q", legalbuf, "en")
-				:c("VCC", "q", legalbuf, "a")
+				:high(legalbuf, "a")
 				:c(legalbuf, "q", f, "legal")
 
 			local visched = f .. ".visched"
@@ -122,7 +122,7 @@ return function(simulation)
 			s:c(activated, "q", trignext, "d")
 
 			local icomplete = f .. ".icomplete"
-			s:new_tristate_buffer(icomplete):c(trignext, "q", icomplete, "en"):c("VCC", "q", icomplete, "a")
+			s:new_tristate_buffer(icomplete):c(trignext, "q", icomplete, "en"):high(icomplete, "a")
 			s:c(icomplete, "q", f, "icomplete")
 
 			local srl = f .. ".srl"
@@ -148,9 +148,7 @@ return function(simulation)
 			s:new_tristate_buffer(buf, { width = 10 })
 			s:c(activated, "q", buf, "en")
 			s
-				:cp(1, "VCC", "q", 1, buf, "a", 1)
-				:cp(1, "VCC", "q", 1, buf, "a", 2)
-				:cp(1, "VCC", "q", 1, buf, "a", 3)
+				:high(buf, "a", 1, 3)
 				:cp(1, f, "opcode", 6, buf, "a", 4)
 				:cp(1, nopcode, "q", 4, buf, "a", 5)
 				:cp(1, cin, "q", 1, buf, "a", 6)

@@ -36,7 +36,7 @@ return function(simulation)
 			s
 				:new_tristate_buffer(legalbuf)
 				:c(legal, "q", legalbuf, "en")
-				:c("VCC", "q", legalbuf, "a")
+				:high(legalbuf, "a")
 				:c(legalbuf, "q", f, "legal")
 
 			local visched = f .. ".visched"
@@ -50,7 +50,7 @@ return function(simulation)
 			s:c(visched, "q", activated, "d")
 
 			local icomplete = f .. ".icomplete"
-			s:new_tristate_buffer(icomplete):c(activated, "q", icomplete, "en"):c("VCC", "q", icomplete, "a")
+			s:new_tristate_buffer(icomplete):c(activated, "q", icomplete, "en"):high(icomplete, "a")
 			s:c(icomplete, "q", f, "icomplete")
 		end
 	)

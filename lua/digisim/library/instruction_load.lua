@@ -91,7 +91,7 @@ return function(simulation)
 			s
 				:new_tristate_buffer(legalbuf)
 				:c(legal, "q", legalbuf, "en")
-				:c("VCC", "q", legalbuf, "a")
+				:high(legalbuf, "a")
 				:c(legalbuf, "q", f, "legal")
 
 			local visched = f .. ".visched"
@@ -152,10 +152,7 @@ return function(simulation)
 			s:new_tristate_buffer(trigloadbuf, { width = 6 })
 			s:c(activated, "q", trigloadbuf, "en")
 			s
-				:cp(1, "VCC", "q", 1, trigloadbuf, "a", 1)
-				:cp(1, "VCC", "q", 1, trigloadbuf, "a", 2)
-				:cp(1, "VCC", "q", 1, trigloadbuf, "a", 3)
-				:cp(1, "VCC", "q", 1, trigloadbuf, "a", 4)
+				:high(trigloadbuf, "a", 1, 4)
 				:cp(1, halfword, "q", 1, trigloadbuf, "a", 5)
 				:cp(1, f, "funct3", 2, trigloadbuf, "a", 6)
 			s
@@ -168,7 +165,7 @@ return function(simulation)
 			local trigsave = f .. ".trigsave"
 			s:new_tristate_buffer(trigsave, { width = 2 })
 			s:c(saveen, "q", trigsave, "en")
-			s:cp(1, "VCC", "q", 1, trigsave, "a", 1)
+			s:high(trigsave, "a", 1, 1)
 			s:cp(1, nf3, "q", 3, trigsave, "a", 2)
 			s:cp(1, trigsave, "q", 1, f, "rd", 1)
 			s:cp(1, trigsave, "q", 2, f, "lu_sext", 1)
@@ -176,7 +173,7 @@ return function(simulation)
 			local trigcomplete = f .. ".trigcomplete"
 			s:new_tristate_buffer(trigcomplete)
 			s:c(save, "q", trigcomplete, "en")
-			s:cp(1, "VCC", "q", 1, trigcomplete, "a", 1)
+			s:high(trigcomplete, "a", 1, 1)
 			s:cp(1, trigcomplete, "q", 1, f, "icomplete", 1)
 		end
 	)
