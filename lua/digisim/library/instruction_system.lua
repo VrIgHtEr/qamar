@@ -17,6 +17,7 @@ return function(simulation)
 					"falling",
 					"isched",
 					{ "opcode", 7 },
+					{ "funct3", 3 },
 				},
 				outputs = {
 					"icomplete",
@@ -28,7 +29,7 @@ return function(simulation)
 			local nopcode = f .. ".nopcode"
 			s:new_not(nopcode, { width = 5 }):cp(5, f, "opcode", 3, nopcode, "a", 1)
 			local nf3 = f .. ".nf3"
-			s:new_not(nf3, { width = 5 }):c(f, "funct3", nf3, "a")
+			s:new_not(nf3, { width = 3 }):c(f, "funct3", nf3, "a")
 			local legal = f .. ".legal"
 			s:new_and(legal, { width = 10 })
 			s:cp(2, f, "opcode", 1, legal, "in", 1)

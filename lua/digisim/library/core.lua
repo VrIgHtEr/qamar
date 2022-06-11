@@ -339,6 +339,7 @@ return function(simulation)
 			s:c(clk, "falling", i_system, "falling")
 			s:c(control, "isched", i_system, "isched")
 			s:c(idecode, "opcode", i_system, "opcode")
+			s:c(idecode, "funct3", i_system, "funct3")
 			s:c(i_system, "icomplete", control, "xu_trigin")
 			s:c(i_system, "legal", control, "legal")
 		end
