@@ -27,11 +27,14 @@ return function(simulation)
 
 			local nopcode = f .. ".nopcode"
 			s:new_not(nopcode, { width = 5 }):cp(5, f, "opcode", 3, nopcode, "a", 1)
+			local nf3 = f .. ".nf3"
+			s:new_not(nf3, { width = 5 }):c(f, "funct3", nf3, "a")
 			local legal = f .. ".legal"
-			s:new_and(legal, { width = 7 })
+			s:new_and(legal, { width = 10 })
 			s:cp(2, f, "opcode", 1, legal, "in", 1)
 			s:cp(2, nopcode, "q", 1, legal, "in", 3)
 			s:cp(3, f, "opcode", 5, legal, "in", 5)
+			s:cp(3, nf3, "q", 1, legal, "in", 8)
 
 			local legalbuf = f .. ".legalbuf"
 			s

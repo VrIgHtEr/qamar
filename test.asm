@@ -39,6 +39,7 @@ fence.i
 addi s0, s0, -1
 bge s0, zero, search_loop
 li s0, SIZE-1
+UNIMP
 j search_loop
 
 .global binsearch
