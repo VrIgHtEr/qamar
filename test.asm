@@ -2,7 +2,7 @@
 .global _start
 _start:
 
-.equ SIZE, 16
+.equ SIZE, 32
 .equ ADDR, 1000000
 
 li t0, SIZE
@@ -24,6 +24,11 @@ fence.i
 fence.i
 fence.i
 fence.i
+fence.i
+fence.i
+fence.i
+fence.i
+fence.i
 
 li a0, ADDR
 mv a1, s0
@@ -35,11 +40,15 @@ fence.i
 fence.i
 fence.i
 fence.i
+fence.i
+fence.i
+fence.i
+fence.i
+fence.i
 
 addi s0, s0, -1
 bge s0, zero, search_loop
 li s0, SIZE-1
-UNIMP
 j search_loop
 
 .global binsearch

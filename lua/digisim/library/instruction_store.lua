@@ -43,14 +43,47 @@ return function(simulation)
 			s:new_not(nf3, { width = 3 }):c(f, "funct3", nf3, "a")
 			local vnf3 = f .. ".vnf3"
 			s:new_nand(vnf3):cp(2, f, "funct3", 1, vnf3, "in", 1)
+
+			local a = f .. ".aliases"
+			s
+				:add_component(a, { names = { inputs = {
+					"store",
+					"load",
+				} } })
+				:cp(1, f, "opcode", 6, a, "store", 1)
+				:cp(1, nopcode, "q", 4, a, "load", 1)
+
+			local valid_load1 = f .. ".vload1"
+			s:new_and(valid_load1):cp(1, nf3, "q", 2, valid_load1, "in", 1):cp(1, f, "funct3", 3, valid_load1, "in", 2)
+			local valid_load2 = f .. ".vload2"
+			s
+				:new_and(valid_load2)
+				:cp(1, nf3, "q", 3, valid_load2, "in", 1)
+				:cp(1, valid_load1, "q", 1, valid_load2, "in", 2)
+
+			local valid_load = f .. ".vload"
+			s:new_and(valid_load)
+			s:cp(1, a, "load", 1, valid_load, "in", 1)
+			s:cp(1, valid_load2, "q", 1, valid_load, "in", 2)
+
+			local valid_store = f .. ".vstore"
+			s:new_and(valid_store)
+			s:cp(1, a, "store", 1, valid_store, "in", 1)
+			s:cp(1, nf3, "q", 3, valid_store, "in", 2)
+
+			local valid = f .. ".vloadstore"
+			s:new_or_bank(valid):c(valid_load, "q", valid, "a"):c(valid_store, "q", valid, "b")
+
 			local legal = f .. ".legal"
 			s:new_and(legal, { width = 9 })
 			s:cp(2, f, "opcode", 1, legal, "in", 1)
 			s:cp(3, nopcode, "q", 1, legal, "in", 3)
-			s:cp(1, f, "opcode", 6, legal, "in", 6)
-			s:cp(1, nopcode, "q", 5, legal, "in", 7)
-			s:cp(1, nf3, "q", 3, legal, "in", 8)
-			s:cp(1, vnf3, "q", 1, legal, "in", 9)
+			s:cp(1, nopcode, "q", 5, legal, "in", 6)
+			s:cp(1, valid, "q", 1, legal, "in", 7)
+			s:cp(1, vnf3, "q", 1, legal, "in", 8)
+
+			-- only allow writes for now
+			s:cp(1, a, "store", 1, legal, "in", 9)
 
 			local legalbuf = f .. ".legalbuf"
 			s
@@ -167,13 +200,18 @@ return function(simulation)
 			s:c(f, "falling", stage4, "falling")
 			s:c(stage3, "q", stage4, "d")
 
+			local writing1 = f .. ".writing1"
+			s
+				:new_or(writing1, { width = 4 })
+				:cp(1, stage1, "q", 1, writing1, "in", 1)
+				:cp(1, stage2, "q", 1, writing1, "in", 2)
+				:cp(1, stage3, "q", 1, writing1, "in", 3)
+				:cp(1, stage4, "q", 1, writing1, "in", 4)
 			local writing = f .. ".writing"
 			s
-				:new_or(writing, { width = 4 })
-				:cp(1, stage1, "q", 1, writing, "in", 1)
-				:cp(1, stage2, "q", 1, writing, "in", 2)
-				:cp(1, stage3, "q", 1, writing, "in", 3)
-				:cp(1, stage4, "q", 1, writing, "in", 4)
+				:new_and(writing)
+				:cp(1, writing1, "q", 1, writing, "in", 1)
+				:cp(1, a, "store", 1, writing, "in", 2)
 				:c(writing, "q", addr_buf, "en")
 
 			local comp1 = f .. ".c1"

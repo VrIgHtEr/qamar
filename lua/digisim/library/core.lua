@@ -4,7 +4,7 @@
 local BUS_WIDTH = 32
 local BYTE_BITS = 8
 local REGISTER_SELECT_WIDTH = 5
-local PERIOD = 512
+local PERIOD = 200
 
 ---@param simulation simulation
 return function(simulation)
