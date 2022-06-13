@@ -2,7 +2,7 @@
 .global _start
 _start:
 
-.equ SIZE, 8
+.equ SIZE, 32
 .equ ADDR, 1000000
 
 li t0, SIZE

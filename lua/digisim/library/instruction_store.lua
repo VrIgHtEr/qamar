@@ -11,7 +11,7 @@ return function(simulation)
 		---@param f string
 		---@param opts boolean
 		function(s, f, opts)
-			opts = opts or {}
+			opts = opts or { trace = false }
 			opts.names = {
 				inputs = {
 					"rst~",
@@ -49,6 +49,7 @@ return function(simulation)
 			local a = f .. ".aliases"
 			s
 				:add_component(a, {
+					trace = opts.trace,
 					names = { inputs = {
 						"store",
 						"load",
@@ -88,9 +89,6 @@ return function(simulation)
 			s:cp(1, nopcode, "q", 5, legal, "in", 6)
 			s:cp(1, valid, "q", 1, legal, "in", 7)
 			s:cp(1, vnf3, "q", 1, legal, "in", 8)
-
-			-- only allow writes
-			--s:cp(1, a, "store", 1, legal, "in", 9)
 
 			local legalbuf = f .. ".legalbuf"
 			s
