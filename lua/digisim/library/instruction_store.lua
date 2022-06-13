@@ -369,7 +369,7 @@ return function(simulation)
 			s:cp(1, wb, "q", 1, f, "rd", 1)
 
 			local dbuf = f .. ".dbuf"
-			s:new_tristate_buffer(dbuf, { width = WIDTH }):c(a, "out", dbuf, "a"):c(wb, "q", dbuf, "en")
+			s:new_tristate_buffer(dbuf, { width = WIDTH }):c(a, "out", dbuf, "a"):c(stagewb, "q", dbuf, "en")
 
 			local stagecwen = f .. ".stagecwen"
 			s:new_and_bank(stagecwen):c(comp, "q", stagecwen, "a"):c(writing, "q", stagecwen, "b")
