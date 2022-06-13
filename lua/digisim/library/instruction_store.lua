@@ -29,12 +29,12 @@ return function(simulation)
 					"alu_oe",
 					"rs1",
 					"rs2",
+					"rd",
 					"imm",
 					"sram_oe",
 					"sram_write",
 					{ "sram_address", WIDTH },
 					{ "sram_in", 8 },
-					{ "TEST_D", 32 },
 				},
 			}
 			s:add_component(f, opts)
@@ -59,7 +59,6 @@ return function(simulation)
 				:cp(1, f, "opcode", 6, a, "store", 1)
 				:cp(1, nopcode, "q", 4, a, "load", 1)
 				:cp(1, nf3, "q", 3, a, "signed", 1)
-				:c(a, "out", f, "TEST_D")
 
 			local valid_load1 = f .. ".vload1"
 			s:new_and(valid_load1):cp(1, nf3, "q", 2, valid_load1, "in", 1):cp(1, f, "funct3", 3, valid_load1, "in", 2)
@@ -219,17 +218,6 @@ return function(simulation)
 				:cp(1, comp2, "q", 1, comp, "in", 2)
 				:cp(1, stage4, "q", 1, comp, "in", 3)
 
-			local stagec = f .. ".stagec"
-			s:new_ms_d_flipflop(stagec)
-			s:c(f, "rst~", stagec, "rst~")
-			s:c(f, "rising", stagec, "rising")
-			s:c(f, "falling", stagec, "falling")
-			s:c(comp, "q", stagec, "d")
-
-			local icomplete = f .. ".icomplete"
-			s:new_tristate_buffer(icomplete):c(stagec, "q", icomplete, "en"):high(icomplete, "a")
-			s:c(icomplete, "q", f, "icomplete")
-
 			local active = f .. ".active"
 			s
 				:new_or(active, { width = 4 })
@@ -364,6 +352,39 @@ return function(simulation)
 			s:cp(8, in0, "q", 1, a, "out", 1)
 			s:cp(8, out1, "out", 1, a, "out", 9)
 			s:cp(16, out23, "out", 1, a, "out", 17)
+
+			local stagewben = f .. ".stagewben"
+			s:new_and_bank(stagewben):c(comp, "q", stagewben, "a"):c(reading, "q", stagewben, "b")
+			local stagewb = f .. ".stagewb"
+			s:new_ms_d_flipflop(stagewb)
+			s:c(f, "rst~", stagewb, "rst~")
+			s:c(f, "rising", stagewb, "rising")
+			s:c(f, "falling", stagewb, "falling")
+			s:c(stagewben, "q", stagewb, "d")
+
+			local wb = f .. ".writeback"
+			s:new_tristate_buffer(wb, { width = 2 })
+			s:c(stagewb, "q", wb, "en")
+			s:pullup(wb, "a")
+			s:cp(1, wb, "q", 1, f, "rd", 1)
+
+			local dbuf = f .. ".dbuf"
+			s:new_tristate_buffer(dbuf, { width = WIDTH }):c(a, "out", dbuf, "a"):c(wb, "q", dbuf, "en")
+
+			local stagecwen = f .. ".stagecwen"
+			s:new_and_bank(stagecwen):c(comp, "q", stagecwen, "a"):c(writing, "q", stagecwen, "b")
+			local stagecwen2 = f .. ".stagecwen2"
+			s:new_or_bank(stagecwen2):c(stagecwen, "q", stagecwen2, "a"):c(stagewb, "q", stagecwen2, "b")
+			local stagecw = f .. ".stagecw"
+			s:new_ms_d_flipflop(stagecw)
+			s:c(f, "rst~", stagecw, "rst~")
+			s:c(f, "rising", stagecw, "rising")
+			s:c(f, "falling", stagecw, "falling")
+			s:c(stagecwen2, "q", stagecw, "d")
+
+			local icomplete = f .. ".icomplete"
+			s:new_tristate_buffer(icomplete):c(stagecw, "q", icomplete, "en"):high(icomplete, "a")
+			s:c(icomplete, "q", f, "icomplete")
 		end
 	)
 end
