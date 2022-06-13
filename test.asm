@@ -70,7 +70,7 @@ binsearch:
     # Get the element at the midpoint
     slli    t3, t0, 2    # Scale the midpoint by 4
     add     t3, a0, t3   # Get the memory address of arr[mid]
-    lbu      t3, 0(t3)   # Dereference arr[mid]
+    lw      t3, 0(t3)    # Dereference arr[mid]
 
     # See if the needle (a1) > arr[mid] (t3)
     ble     a1, t3, 2f   # if needle <= t3, we need to check the next condition

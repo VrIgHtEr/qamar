@@ -65,7 +65,7 @@ return function(simulation)
 			s:new_and(valid_load1):cp(1, nf3, "q", 2, valid_load1, "in", 1):cp(1, f, "funct3", 3, valid_load1, "in", 2)
 			local valid_load2 = f .. ".vload2"
 			s
-				:new_and(valid_load2)
+				:new_or(valid_load2)
 				:cp(1, nf3, "q", 3, valid_load2, "in", 1)
 				:cp(1, valid_load1, "q", 1, valid_load2, "in", 2)
 
@@ -251,7 +251,7 @@ return function(simulation)
 				:cp(1, write, "q", 2, f, "rs2", 1)
 				:cp(1, write, "q", 3, f, "alu_oe", 1)
 
-			local stage1w = f .. "stage1w"
+			local stage1w = f .. ".stage1w"
 			s:new_and_bank(stage1w):c(stage1, "q", stage1w, "a"):c(writing, "q", stage1w, "b")
 			local b0 = f .. ".b0"
 			s
@@ -259,7 +259,7 @@ return function(simulation)
 				:c(stage1w, "q", b0, "en")
 				:cp(8, f, "d", 1, b0, "a", 1)
 				:cp(8, b0, "q", 1, f, "sram_in", 1)
-			local stage2w = f .. "stage2w"
+			local stage2w = f .. ".stage2w"
 			s:new_and_bank(stage2w):c(stage2, "q", stage2w, "a"):c(writing, "q", stage2w, "b")
 			local b1 = f .. ".b1"
 			s
@@ -267,7 +267,7 @@ return function(simulation)
 				:c(stage2w, "q", b1, "en")
 				:cp(8, f, "d", 9, b1, "a", 1)
 				:cp(8, b1, "q", 1, f, "sram_in", 1)
-			local stage3w = f .. "stage3w"
+			local stage3w = f .. ".stage3w"
 			s:new_and_bank(stage3w):c(stage3, "q", stage3w, "a"):c(writing, "q", stage3w, "b")
 			local b2 = f .. ".b2"
 			s
@@ -275,7 +275,7 @@ return function(simulation)
 				:c(stage3w, "q", b2, "en")
 				:cp(8, f, "d", 17, b2, "a", 1)
 				:cp(8, b2, "q", 1, f, "sram_in", 1)
-			local stage4w = f .. "stage4w"
+			local stage4w = f .. ".stage4w"
 			s:new_and_bank(stage4w):c(stage4, "q", stage4w, "a"):c(writing, "q", stage4w, "b")
 			local b3 = f .. ".b3"
 			s
@@ -287,7 +287,7 @@ return function(simulation)
 			local reading = f .. ".reading"
 			s:new_and(reading):cp(1, active, "q", 1, reading, "in", 1):cp(1, a, "load", 1, reading, "in", 2)
 
-			local stage1r = f .. "stage1r"
+			local stage1r = f .. ".stage1r"
 			s
 				:new_and(stage1r, { width = 3 })
 				:cp(1, stage1, "q", 1, stage1r, "in", 1)
@@ -301,7 +301,7 @@ return function(simulation)
 				:c(stage1r, "q", in0, "rising")
 				:c(f, "sram_out", in0, "d")
 
-			local stage2r = f .. "stage2r"
+			local stage2r = f .. ".stage2r"
 			s
 				:new_and(stage2r, { width = 3 })
 				:cp(1, stage2, "q", 1, stage2r, "in", 1)
@@ -315,7 +315,7 @@ return function(simulation)
 				:c(stage2r, "q", in1, "rising")
 				:c(f, "sram_out", in1, "d")
 
-			local stage3r = f .. "stage3r"
+			local stage3r = f .. ".stage3r"
 			s
 				:new_and(stage3r, { width = 3 })
 				:cp(1, stage3, "q", 1, stage3r, "in", 1)
@@ -329,7 +329,7 @@ return function(simulation)
 				:c(stage3r, "q", in2, "rising")
 				:c(f, "sram_out", in2, "d")
 
-			local stage4r = f .. "stage4r"
+			local stage4r = f .. ".stage4r"
 			s
 				:new_and(stage4r, { width = 3 })
 				:cp(1, stage4, "q", 1, stage4r, "in", 1)
@@ -348,7 +348,7 @@ return function(simulation)
 
 			local out1 = f .. ".out1"
 			s:new_mux_bank(out1, { bits = 8 })
-			s:c(in0, "q", out1, "d0")
+			s:c(in1, "q", out1, "d0")
 			s:fanout(sext1, "q", 1, out1, "d1", 1, 8)
 			s:c(is_single_byte, "q", out1, "sel")
 
