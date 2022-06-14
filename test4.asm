@@ -2,48 +2,6 @@
 .global _start
 _start:
 
-jal initialize
-
-.global IdleLoop
-
-li s0, 1
-li s1, -267
-IdleLoop:
-
-mv a0, s1
-mv a1, s0
-jal mul
-
-#mv s1, s0
-mv s0, a0
-
-sw a0, 1024(zero)
-lw a0, 1024(zero)
-
-fence.i
-fence.i
-fence.i
-fence.i
-fence.i
-fence.i
-fence.i
-fence.i
-fence.i
-fence.i
-fence.i
-fence.i
-fence.i
-fence.i
-fence.i
-fence.i
-fence.i
-fence.i
-fence.i
-fence.i
-
-
-J IdleLoop
-
 .equ SIZE, 32
 .equ ADDR, 1000000
 
@@ -93,7 +51,6 @@ bge s0, zero, search_loop
 li s0, SIZE-1
 j search_loop
 
-#------------------------------------------------------------------------------------
 .global binsearch
 binsearch:
     # a0 = int arr[]
@@ -130,63 +87,3 @@ binsearch:
     addi    a0, t0, 0
 1:
     ret
-#-------------------------------------------------------------------------------------
-
-.global mul
-mul:
-    #a0 = a
-    #a1 = b
-    bleu a1, a0, mul_start
-    xor a0, a0, a1
-    xor a1, a0, a1
-    xor a0, a0, a1
-mul_start:
-    mv t0, a0 #t0 = a0
-    li a0, 0  #a0 = retval = 0
-mul_loop:
-    beqz a1, mul_finish
-    andi t1, a1, 1
-    beqz t1, mul_continue
-    add a0, a0, t0
-mul_continue:
-    slli t0, t0, 1
-    srli a1, a1, 1
-    j mul_loop
-mul_finish:
-    ret
-
-#-------------------------------------------------------------------------------------
-initialize:
-li x2, 0
-li x3, 0
-li x4, 0
-li x5, 0
-li x6, 0
-li x7, 0
-li x8, 0
-li x9, 0
-li x10, 0
-li x11, 0
-li x12, 0
-li x13, 0
-li x14, 0
-li x15, 0
-li x16, 0
-li x17, 0
-li x18, 0
-li x19, 0
-li x20, 0
-li x21, 0
-li x22, 0
-li x23, 0
-li x24, 0
-li x25, 0
-li x26, 0
-li x27, 0
-li x28, 0
-li x29, 0
-li x30, 0
-li x31, 0
-li sp, 0x800000
-ret
-
