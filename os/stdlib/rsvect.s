@@ -8,9 +8,6 @@ jal main
 .text
 .global memset
 memset:
-#a0 void* str
-#a1 int c
-#a2 size_t n
     mv t0, a0
 1:
     beqz a2, 2f
@@ -23,9 +20,6 @@ memset:
 
 .global memcpy
 memcpy:
-#a0 destination
-#a1 source
-#a2 size
     mv t0, a0
 1:
     beqz a2, 2f
@@ -39,9 +33,6 @@ memcpy:
 
 .global memcmp 
 memcmp:
-#a0 ptr1
-#a1 ptr2
-#a2 num
     mv t0, a0
 1:
     beqz a2, 1f
@@ -62,6 +53,3 @@ memcmp:
     li a0, 0
     ret
 
-.global memmove 
-memmove:
-    ret
