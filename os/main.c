@@ -32,13 +32,13 @@ static bool solve(int8_t *grid) {
     subindex = -1;
     subcount = 10;
     for (int8_t i = 0; i < BSIZE; ++i) {
-      int8_t row = i / 9;
-      int8_t col = i % 9;
-      int8_t mark[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
       if (g[i]) {
         --unsolved;
         continue;
       }
+      int8_t row = i / 9;
+      int8_t col = i % 9;
+      int8_t mark[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
 
       int8_t rc = row * 9;
       int8_t cc = col;
