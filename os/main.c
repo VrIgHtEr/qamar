@@ -1,15 +1,16 @@
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 typedef struct grid_t_ {
-  unsigned int grid[81];
+  int8_t grid[81];
 } grid_t;
 
 typedef struct sub_t_ {
   int row;
   int col;
-  int v[10];
+  int8_t v[10];
 } sub_t;
 
 static volatile grid_t outgrid;
