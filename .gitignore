@@ -1,4 +1,4 @@
-c/
+toolchain-rv32i/
 deps/
 .cache/
 build/

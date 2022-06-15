@@ -1,0 +1,21 @@
+#!/bin/env sh
+TOOLCHAIN_PATH="$HOME/code/repos/rv32i"
+
+export PATH="$TOOLCHAIN_PATH/bin:$PATH"
+
+TOOL_PREFIX=$TOOLCHAIN_PATH/bin/riscv32-unknown-elf-
+
+rm -rf *.o
+rm -rf prog
+AS="${TOOL_PREFIX}as"
+GCC="${TOOL_PREFIX}gcc"
+LD="${TOOL_PREFIX}ld"
+OBJCOPY="${TOOL_PREFIX}objcopy"
+
+cd c
+$GCC -O2 -ffreestanding -nostdlib -march=rv32i -c main.c -o main.o
+$GCC -O2 -ffreestanding -nostdlib -march=rv32i -c rsvect.s -o rsvect.o
+$LD -nostdlib -T link.ld main.o rsvect.o -o prog
+
+$OBJCOPY -O binary prog test.bin
+mv test.bin ../lua/sram.dat
