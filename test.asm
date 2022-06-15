@@ -12,12 +12,13 @@ IdleLoop:
 
 mv a0, s1
 mv a1, s0
-jal mul
+jal mul3264
 
 #mv s1, s0
 mv s0, a0
 
 sw a0, 1024(zero)
+sw a1, 1028(zero)
 lw a0, 1024(zero)
 
 fence.i
@@ -154,39 +155,41 @@ mul_continue:
     j mul_loop
 mul_finish:
     ret
+#-------------------------------------------------------------------------------------
+
+.global mul3264
+mul3264:
+    bleu a1, a0, 1f
+    xor a0, a0, a1
+    xor a1, a1, a0
+    xor a0, a0, a1
+1:
+    mv t0, a0
+    li t1, 0
+    mv t2, a1
+    li a0, 0
+    li a1, 0
+1:
+    bnez t2, 2f
+    ret
+2:
+    andi t3, t2, 1
+    beqz t3, 2f
+
+    add a0, a0, t0
+    add a1, a1, t1
+    bgeu a0, t0, 2f
+    addi a1, a1, 1
+2:
+    srli t2, t2, 1
+    srli t3, t0, 31
+    slli t1, t1, 1
+    or t1, t1, t3
+    slli t0, t0, 1
+    j 1b
 
 #-------------------------------------------------------------------------------------
 initialize:
-li x2, 0
-li x3, 0
-li x4, 0
-li x5, 0
-li x6, 0
-li x7, 0
-li x8, 0
-li x9, 0
-li x10, 0
-li x11, 0
-li x12, 0
-li x13, 0
-li x14, 0
-li x15, 0
-li x16, 0
-li x17, 0
-li x18, 0
-li x19, 0
-li x20, 0
-li x21, 0
-li x22, 0
-li x23, 0
-li x24, 0
-li x25, 0
-li x26, 0
-li x27, 0
-li x28, 0
-li x29, 0
-li x30, 0
-li x31, 0
 li sp, 0x800000
 ret
 
