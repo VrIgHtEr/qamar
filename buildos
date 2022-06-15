@@ -7,7 +7,7 @@ OS_SOURCE_DIR="$SCRIPT_PATH/os"
 OS_FILES="rsvect.s main.c"
 LINK_SCRIPT="$OS_SOURCE_DIR/link.lds"
 GCC_OPTS="-O2 -ffreestanding -march=rv32i"
-LD_OPTS="-nostdlib -T '$LINK_SCRIPT'"
+LD_OPTS="-nostdlib -T $LINK_SCRIPT"
 OUTPUT_NAME="os"
 
 #set up toolchain environment
@@ -28,27 +28,17 @@ for fname in $OS_FILES
 do
     oname="${fname%.*}.o"
     fname="${OS_SOURCE_DIR}/${fname}"
-    oname="${OS_SOURCE_DIR}/${oname}"
-    echo "Building: $fname"
+    oname="${OS_BUILD_DIR}/${oname}"
+    echo "compile: $fname"
     $GCC $GCC_OPTS -c ${fname} -o ${oname}
     OBJECT_FILES="${OBJECT_FILES} ${oname}"
 done
 
-echo $OBJECT_FILES
+OUTPUT_ELF_PATH="${OS_BUILD_DIR}/${OUTPUT_NAME}"
+echo "link:    ${OUTPUT_ELF_PATH}"
+$LD $LD_OPTS $OBJECT_FILES -o $OUTPUT_ELF_PATH
 
-OUTPUT_BIN_PATH="${OS_BUILD_DIR}/${OUTPUT_NAME}"
+OUTPUT_BIN_PATH=${OUTPUT_ELF_PATH}.bin
 
-$LD $LD_OPTS $OBJECT_FILES -o $OUTPUT_BIN_PATH
-
-#compile startup code
-#$GCC -O2 -ffreestanding -nostdlib -march=rv32i -c rsvect.s -o rsvect.o
-
-#compile main program
-#$GCC -O2 -ffreestanding -nostdlib -march=rv32i -c main.c -o main.o
-
-#link binary
-#$LD -nostdlib -T link.ld main.o rsvect.o -o prog
-
-#export binary file
-#$OBJCOPY -O binary prog test.bin
-#mv test.bin ../lua/sram.dat
+echo "export:  ${OUTPUT_BIN_PATH}"
+$OBJCOPY -O binary "${OUTPUT_ELF_PATH}" ${OUTPUT_BIN_PATH}

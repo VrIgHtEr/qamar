@@ -2,6 +2,7 @@ toolchain-rv32i/
 deps/
 .cache/
 build/
+lua/sram.dat
 .ccls-cache/
 compile_commands.json
 neovim.json
@@ -9,3 +10,4 @@ vcd.vcd
 vcd.fst
 vcd.fst.hier
 asm
+display.gtkw
