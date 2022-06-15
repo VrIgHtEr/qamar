@@ -29,52 +29,51 @@ static bool solve(int8_t *grid) {
   int8_t subindex;
   int8_t subcount;
   int8_t submarks[10];
-
   for (;;) {
     int8_t subs = 0;
     subindex = -1;
     subcount = 10;
-    for (int8_t i = 0; i < BSIZE; ++i) {
-      if (g[i])
-        continue;
-      int8_t row = i / 9;
-      int8_t col = i % 9;
-      int8_t mark[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+    for (int8_t row = 0, i = 0, src = 0; row < 9; ++row, src += 9) {
+      int8_t topleft = row / 3 * 3 * 9;
+      for (int8_t col = 0; col < 9; ++col, ++i) {
+        if (g[i])
+          continue;
+        int8_t mark[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
 
-      int8_t rc = row * 9;
-      int8_t cc = col;
-      for (int8_t j = 0; j < 9; ++j, ++rc, cc += 9) {
-        mark[g[rc]] = 0;
-        mark[g[cc]] = 0;
-      }
-
-      int8_t c = (row / 3 * 3) * 9 + (col / 3 * 3);
-      for (int8_t j = 0; j < 3; ++j, c += 6)
-        for (int8_t k = 0; k < 3; ++k, ++c) {
-          mark[g[c]] = 0;
+        int8_t rc = src;
+        int8_t cc = col;
+        for (int8_t j = 0; j < 9; ++j, ++rc, cc += 9) {
+          mark[g[rc]] = 0;
+          mark[g[cc]] = 0;
         }
 
-      int8_t count = 0;
-      int8_t val;
-      for (int8_t j = 1; j < 10; ++j)
-        if (mark[j] != 0) {
-          val = mark[j];
-          ++count;
-        }
+        int8_t c = topleft + (col / 3 * 3);
+        for (int8_t j = 0; j < 3; ++j, c += 6)
+          for (int8_t k = 0; k < 3; ++k, ++c) {
+            mark[g[c]] = 0;
+          }
 
-      if (count == 0)
-        return false;
-      if (count == 1) {
-        ++subs;
-        g[i] = val;
-      } else if (count < subcount) {
-        subcount = count;
-        subindex = i;
-        memcpy(submarks, mark, sizeof(mark));
+        int8_t count = 0, val;
+        for (int8_t j = 1; j < 10; ++j)
+          if (mark[j] != 0) {
+            val = mark[j];
+            ++count;
+          }
+
+        if (count == 0)
+          return false;
+        if (count == 1) {
+          ++subs;
+          g[i] = val;
+        } else if (count < subcount) {
+          subcount = count;
+          subindex = i;
+          memcpy(submarks, mark, sizeof(mark));
+        }
       }
+      if (subs == 0 || subindex < 0)
+        break;
     }
-    if (subs == 0 || subindex < 0)
-      break;
   }
 
   if (subindex < 0) {
