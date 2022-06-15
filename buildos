@@ -1,21 +1,54 @@
-#!/bin/env sh
-TOOLCHAIN_PATH="$HOME/code/repos/rv32i"
+#!/bin/sh
 
-export PATH="$TOOLCHAIN_PATH/bin:$PATH"
+SCRIPT_PATH=$(temp="$(realpath $0)" && dirname "$temp")
 
+OS_BUILD_DIR="$SCRIPT_PATH/build/os-rv32i"
+OS_SOURCE_DIR="$SCRIPT_PATH/os"
+OS_FILES="rsvect.s main.c"
+LINK_SCRIPT="$OS_SOURCE_DIR/link.lds"
+GCC_OPTS="-O2 -ffreestanding -march=rv32i"
+LD_OPTS="-nostdlib -T '$LINK_SCRIPT'"
+OUTPUT_NAME="os"
+
+#set up toolchain environment
+TOOLCHAIN_PATH="$SCRIPT_PATH/toolchain-rv32i"
+TOOLCHAIN_PATH_BIN="$TOOLCHAIN_PATH/bin"
+export PATH="$TOOLCHAIN_PATH_BIN:$PATH"
 TOOL_PREFIX=$TOOLCHAIN_PATH/bin/riscv32-unknown-elf-
-
-rm -rf *.o
-rm -rf prog
-AS="${TOOL_PREFIX}as"
 GCC="${TOOL_PREFIX}gcc"
 LD="${TOOL_PREFIX}ld"
 OBJCOPY="${TOOL_PREFIX}objcopy"
 
-cd c
-$GCC -O2 -ffreestanding -nostdlib -march=rv32i -c main.c -o main.o
-$GCC -O2 -ffreestanding -nostdlib -march=rv32i -c rsvect.s -o rsvect.o
-$LD -nostdlib -T link.ld main.o rsvect.o -o prog
+rm -rf "$OS_BUILD_DIR"
+mkdir -p "$OS_BUILD_DIR"
 
-$OBJCOPY -O binary prog test.bin
-mv test.bin ../lua/sram.dat
+OBJECT_FILES=""
+
+for fname in $OS_FILES
+do
+    oname="${fname%.*}.o"
+    fname="${OS_SOURCE_DIR}/${fname}"
+    oname="${OS_SOURCE_DIR}/${oname}"
+    echo "Building: $fname"
+    $GCC $GCC_OPTS -c ${fname} -o ${oname}
+    OBJECT_FILES="${OBJECT_FILES} ${oname}"
+done
+
+echo $OBJECT_FILES
+
+OUTPUT_BIN_PATH="${OS_BUILD_DIR}/${OUTPUT_NAME}"
+
+$LD $LD_OPTS $OBJECT_FILES -o $OUTPUT_BIN_PATH
+
+#compile startup code
+#$GCC -O2 -ffreestanding -nostdlib -march=rv32i -c rsvect.s -o rsvect.o
+
+#compile main program
+#$GCC -O2 -ffreestanding -nostdlib -march=rv32i -c main.c -o main.o
+
+#link binary
+#$LD -nostdlib -T link.ld main.o rsvect.o -o prog
+
+#export binary file
+#$OBJCOPY -O binary prog test.bin
+#mv test.bin ../lua/sram.dat
