@@ -11,10 +11,24 @@ static void printgrid(const int8_t *grid) {
     TEST[i] = grid[i];
 }
 
-static void memcpy(int8_t *dst, int8_t *src, size_t amt) {
-  for (; amt; --amt) {
-    *(dst++) = *(src++);
+void *memcpy(void *dest, const void *src, size_t size) {
+  uint8_t *pdest = (uint8_t *)dest;
+  uint8_t *psrc = (uint8_t *)src;
+
+  size_t loops = (size / sizeof(uint32_t));
+  for (int index = 0; index < loops; ++index) {
+    *((uint32_t *)pdest) = *((uint32_t *)psrc);
+    pdest += sizeof(uint32_t);
+    psrc += sizeof(uint32_t);
   }
+
+  loops = (size % sizeof(uint32_t));
+  for (int index = 0; index < loops; ++index) {
+    *pdest = *psrc;
+    ++pdest;
+    ++psrc;
+  }
+  return dest;
 }
 
 static bool solve(int8_t *grid) {
