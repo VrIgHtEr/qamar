@@ -10,6 +10,8 @@ GCC_OPTS="-O2 -ffreestanding -march=rv32i"
 LD_OPTS="-nostdlib -T $LINK_SCRIPT"
 OUTPUT_NAME="os"
 
+SRAM_PATH="${SCRIPT_PATH}/lua/sram.dat"
+
 #set up toolchain environment
 TOOLCHAIN_PATH="$SCRIPT_PATH/toolchain-rv32i"
 TOOLCHAIN_PATH_BIN="$TOOLCHAIN_PATH/bin"
@@ -42,3 +44,7 @@ OUTPUT_BIN_PATH=${OUTPUT_ELF_PATH}.bin
 
 echo "export:  ${OUTPUT_BIN_PATH}"
 $OBJCOPY -O binary "${OUTPUT_ELF_PATH}" ${OUTPUT_BIN_PATH}
+
+echo "replace: ${SRAM_PATH}"
+rm -rf $SRAM_PATH
+cp "$OUTPUT_BIN_PATH" "$SRAM_PATH"
