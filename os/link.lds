@@ -15,6 +15,7 @@ SECTIONS
 
     /* Output the data sections */
     .data : {
+        __data_start = .;
         *(.data*);
     }
 

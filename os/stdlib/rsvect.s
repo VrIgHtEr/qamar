@@ -2,7 +2,8 @@
 .section .text.prologue
 _start:
 li sp, 0xFFFF
-la gp, __bss_start
+mv fp, sp
+la gp, __data_start
 jal main
 1:
     j 1b

@@ -6,11 +6,11 @@ OS_BUILD_DIR="$SCRIPT_PATH/build/os-rv32i"
 OS_SOURCE_DIR="$SCRIPT_PATH/os"
 OS_FILES="main.c"
 LINK_SCRIPT="$OS_SOURCE_DIR/link.lds"
-GCC_OPTS="-O2 -ffreestanding -march=rv32i"
-LD_OPTS="-nostdlib -T $LINK_SCRIPT"
 OUTPUT_NAME="os"
 STDLIB_IN_PATH=$OS_SOURCE_DIR/stdlib
 STDLIB_OUT_PATH=$OS_BUILD_DIR/stdlib
+GCC_OPTS="-O2 -fverbose-asm -ffreestanding -march=rv32i -fomit-frame-pointer"
+LD_OPTS="-nostdlib -T $LINK_SCRIPT"
 
 SRAM_PATH="${SCRIPT_PATH}/lua/sram.dat"
 
@@ -43,11 +43,12 @@ done
 
 for fname in $OS_FILES
 do
+    dname=${OS_BUILD_DIR}/${fname%.*}
     oname="${fname%.*}.o"
     fname="${OS_SOURCE_DIR}/${fname}"
     oname="${OS_BUILD_DIR}/${oname}"
     echo "compile: $fname"
-    $GCC $GCC_OPTS -c ${fname} -o ${oname}
+    $GCC $GCC_OPTS  -save-temps -dumpbase ${dname} -c ${fname} -o ${oname}
     OBJECT_FILES="${OBJECT_FILES} ${oname}"
 done
 
