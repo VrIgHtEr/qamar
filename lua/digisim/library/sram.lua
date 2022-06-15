@@ -63,6 +63,8 @@ return function(simulation)
 			local pval = nil
 			local poe = nil
 
+			local file = io.open(opts.file, "r+")
+
 			sim:add_component(sram, opts, function(_, a, oe, write, input)
 				local address = 0
 				for i, x in ipairs(a) do
@@ -74,6 +76,11 @@ return function(simulation)
 				end
 				if prevWrite == signal.low and write == signal.high then
 					memory[address] = data
+					if file ~= nil then
+						file:seek("set", address)
+						file:write(string.char(data))
+						file:flush()
+					end
 					io.stderr:write("WRITE : " .. data .. " : " .. address .. "\n")
 				end
 				prevWrite = write
