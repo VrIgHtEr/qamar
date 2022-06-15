@@ -29,18 +29,14 @@ static bool solve(int8_t *grid) {
   int8_t subindex;
   int8_t subcount;
   int8_t submarks[10];
-  int8_t unsolved;
 
   for (;;) {
     int8_t subs = 0;
-    unsolved = BSIZE;
     subindex = -1;
     subcount = 10;
     for (int8_t i = 0; i < BSIZE; ++i) {
-      if (g[i]) {
-        --unsolved;
+      if (g[i])
         continue;
-      }
       int8_t row = i / 9;
       int8_t col = i % 9;
       int8_t mark[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
@@ -69,7 +65,6 @@ static bool solve(int8_t *grid) {
       if (count == 0)
         return false;
       if (count == 1) {
-        --unsolved;
         ++subs;
         g[i] = val;
       } else if (count < subcount) {
@@ -78,11 +73,11 @@ static bool solve(int8_t *grid) {
         memcpy(submarks, mark, sizeof(mark));
       }
     }
-    if (subs == 0 || unsolved == 0)
+    if (subs == 0 || subindex < 0)
       break;
   }
 
-  if (unsolved == 0) {
+  if (subindex < 0) {
     memcpy(grid, g, sizeof(g));
     return true;
   }
