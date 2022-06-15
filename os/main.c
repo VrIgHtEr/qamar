@@ -30,7 +30,7 @@ int solve_grid(grid_t *grid, int level) {
 
   // copy the passed grid to avoid propagating incorrect
   // solutions upwards
-  memcpy(&g, grid, sizeof(grid_t));
+  g = *grid;
 
   // make all simple substitutions
   for (;;) {
