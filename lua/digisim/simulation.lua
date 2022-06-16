@@ -307,11 +307,11 @@ end
 ---@param pina number
 ---@param b string
 ---@param portb string
----@param startb number
----@param len number
+---@param startb number|nil
+---@param len number|nil
 ---@return simulation
 function simulation:fanout(a, porta, pina, b, portb, startb, len)
-	len = len == nil and 1 or len
+	startb, len = default_pin_len(self, b, portb, startb, len)
 	if len < 1 then
 		error("invalid length")
 	end

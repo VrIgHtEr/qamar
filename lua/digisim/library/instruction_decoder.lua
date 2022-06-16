@@ -61,7 +61,7 @@ return function(simulation)
 			self:new_tristate_buffer(immi, { width = 32 })
 			self:c(dec, "oe_i", immi, "en")
 			self:cp(12, dec, "in", 21, immi, "a", 1)
-			self:fanout(dec, "in", 32, immi, "a", 13, 20)
+			self:fanout(dec, "in", 32, immi, "a", 13)
 			self:c(immi, "q", dec, "imm")
 
 			-- decode S immediate
@@ -70,7 +70,7 @@ return function(simulation)
 			self:c(dec, "oe_s", imms, "en")
 			self:cp(5, dec, "in", 8, imms, "a", 1)
 			self:cp(7, dec, "in", 26, imms, "a", 6)
-			self:fanout(dec, "in", 32, imms, "a", 13, 20)
+			self:fanout(dec, "in", 32, imms, "a", 13)
 			self:c(imms, "q", dec, "imm")
 
 			-- decode B immediate
@@ -82,7 +82,7 @@ return function(simulation)
 			self:cp(6, dec, "in", 26, immb, "a", 6)
 			self:cp(1, dec, "in", 8, immb, "a", 12)
 			self:cp(1, dec, "in", 32, immb, "a", 13)
-			self:fanout(dec, "in", 32, immb, "a", 14, 19)
+			self:fanout(dec, "in", 32, immb, "a", 14)
 			self:c(immb, "q", dec, "imm")
 
 			-- decode U immediate
@@ -102,7 +102,7 @@ return function(simulation)
 			self:cp(1, dec, "in", 21, immj, "a", 12)
 			self:cp(8, dec, "in", 13, immj, "a", 13)
 			self:cp(1, dec, "in", 32, immj, "a", 21)
-			self:fanout(dec, "in", 32, immj, "a", 22, 11)
+			self:fanout(dec, "in", 32, immj, "a", 22)
 			self:c(immj, "q", dec, "imm")
 			return self
 		end
