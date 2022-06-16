@@ -7,26 +7,3 @@ la gp, __data_start
 jal main
 1:
     j 1b
-.text
-.global memcmp 
-memcmp:
-    mv t0, a0
-1:
-    beqz a2, 1f
-    lbu t1, 0(t0)
-    lbu t2, 0(a1)
-    beq t1, t2, 2f
-    blt t1, t2, 3f
-    li a0, 1
-    ret
-3:
-    li a0, -1
-    ret
-2:
-    addi t0, t0, 1
-    addi a1, a1, 1
-    j 1b
-1:
-    li a0, 0
-    ret
-

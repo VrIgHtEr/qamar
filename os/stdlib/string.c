@@ -26,3 +26,13 @@ void *memset(void *dest, int val, size_t size) {
     *(pdest++) = (uint8_t)val;
   return dest;
 }
+
+int memcmp(const void *ptr1, const void *ptr2, size_t size) {
+  uint8_t *p1 = (uint8_t *)ptr1, *p2 = (uint8_t *)ptr2;
+  for (; size; --size, ++p1, ++p2)
+    if (*p1 < *p2)
+      return -1;
+    else if (*p1 > *p2)
+      return 1;
+  return 0;
+}
