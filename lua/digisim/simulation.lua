@@ -568,7 +568,7 @@ function simulation:step()
 					if output.bits == 1 then
 						handle_output_value(value, output.pins[1])
 					else
-						if #value ~= output.bits then
+						if DEBUG_MODE and #value ~= output.bits then
 							error(c.name .. ": " .. output.bits .. " " .. #value)
 						end
 						for j, x in ipairs(output.pins) do
