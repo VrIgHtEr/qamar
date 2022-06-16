@@ -26,8 +26,7 @@ static bool solve(int8_t *grid) {
       int8_t topleft = row / SWIDTH * SWIDTH * BWIDTH;
       int8_t rowmark[BWIDTH + 1], mark[BWIDTH + 1];
       rowmark[0] = 0;
-      for (int8_t i = 1; i <= BWIDTH; ++i)
-        rowmark[i] = 1;
+      memset(rowmark + 1, 1, BWIDTH);
       for (int8_t j = 0, rc = src; j < BWIDTH; ++j, ++rc)
         rowmark[g[rc]] = 0;
       for (int8_t col = 0; col < BWIDTH; ++col, ++i) {
