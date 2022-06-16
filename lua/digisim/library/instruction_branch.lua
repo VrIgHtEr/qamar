@@ -28,7 +28,7 @@ return function(simulation)
 					"alu_u",
 					"rs1",
 					"rs2",
-					"imm_oe",
+					"oe_b",
 					"alu_notb",
 					"alu_cin",
 					"pc_oe",
@@ -131,7 +131,7 @@ return function(simulation)
 			s:c(actionen, "q", action, "en")
 			s:high(action, "a", 1, 4)
 			s:cp(1, action, "q", 1, f, "alu_oe", 1)
-			s:cp(1, action, "q", 2, f, "imm_oe", 1)
+			s:cp(1, action, "q", 2, f, "oe_b", 1)
 			s:cp(1, action, "q", 3, f, "pc_oe", 1)
 			s:cp(1, action, "q", 4, f, "branch", 1)
 

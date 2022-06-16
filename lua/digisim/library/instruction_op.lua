@@ -27,7 +27,7 @@ return function(simulation)
 					"rd",
 					"rs1",
 					"rs2",
-					"imm_oe",
+					"oe_i",
 					"alu_notb",
 					"alu_cin",
 					{ "alu_sel", 3 },
@@ -159,7 +159,7 @@ return function(simulation)
 				:cp(1, buf, "q", 2, f, "rd", 1)
 				:cp(1, buf, "q", 3, f, "rs1", 1)
 				:cp(1, buf, "q", 4, f, "rs2", 1)
-				:cp(1, buf, "q", 5, f, "imm_oe", 1)
+				:cp(1, buf, "q", 5, f, "oe_i", 1)
 				:cp(1, buf, "q", 6, f, "alu_cin", 1)
 				:cp(1, buf, "q", 7, f, "alu_notb", 1)
 				:cp(3, buf, "q", 8, f, "alu_sel", 1)

@@ -23,7 +23,7 @@ return function(simulation)
 					"legal",
 					"alu_oe",
 					"rd",
-					"imm_oe",
+					"oe_u",
 					"pc_oe",
 				},
 			}
@@ -74,7 +74,7 @@ return function(simulation)
 			s
 				:cp(1, buf, "q", 1, f, "alu_oe", 1)
 				:cp(1, buf, "q", 2, f, "rd", 1)
-				:cp(1, buf, "q", 3, f, "imm_oe", 1)
+				:cp(1, buf, "q", 3, f, "oe_u", 1)
 				:cp(1, buf, "q", 4, f, "pc_oe", 1)
 		end
 	)

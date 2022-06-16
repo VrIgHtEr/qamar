@@ -25,7 +25,7 @@ return function(simulation)
 					"b4",
 					"alu_oe",
 					"rd",
-					"imm_oe",
+					"oe_j",
 					"branch",
 				},
 			}
@@ -77,7 +77,7 @@ return function(simulation)
 			s:c(trignext, "q", bufcomplete, "en")
 			s:high(bufcomplete, "a", 1, 5)
 			s:cp(1, bufcomplete, "q", 1, f, "pc_oe", 1)
-			s:cp(1, bufcomplete, "q", 2, f, "imm_oe", 1)
+			s:cp(1, bufcomplete, "q", 2, f, "oe_j", 1)
 			s:cp(1, bufcomplete, "q", 3, f, "branch", 1)
 			s:cp(1, bufcomplete, "q", 4, f, "icomplete", 1)
 			s:cp(1, bufcomplete, "q", 5, f, "alu_oe", 1)

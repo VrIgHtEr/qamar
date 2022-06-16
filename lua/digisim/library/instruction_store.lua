@@ -30,7 +30,8 @@ return function(simulation)
 					"rs1",
 					"rs2",
 					"rd",
-					"imm",
+					"oe_i",
+					"oe_s",
 					"sram_oe",
 					"sram_write",
 					{ "sram_address", WIDTH },
@@ -158,12 +159,15 @@ return function(simulation)
 
 			local load_addr = f .. ".loadaddr"
 			s
-				:new_tristate_buffer(load_addr, { width = 3 })
+				:new_tristate_buffer(load_addr, { width = 4 })
 				:c(stage0, "q", load_addr, "en")
-				:high(load_addr, "a")
+				:high(load_addr, "a", 1, 2)
+				:cp(1, valid_load, "q", 1, load_addr, "a", 3)
+				:cp(1, valid_store, "q", 1, load_addr, "a", 4)
 				:cp(1, load_addr, "q", 1, f, "rs1", 1)
-				:cp(1, load_addr, "q", 2, f, "imm", 1)
-				:cp(1, load_addr, "q", 3, f, "alu_oe", 1)
+				:cp(1, load_addr, "q", 2, f, "alu_oe", 1)
+				:cp(1, load_addr, "q", 3, f, "oe_i", 1)
+				:cp(1, load_addr, "q", 4, f, "oe_s", 1)
 
 			-- STAGE 1
 			local stage1 = f .. ".stage1"

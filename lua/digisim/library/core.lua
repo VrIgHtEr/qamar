@@ -41,13 +41,17 @@ return function(simulation)
 						"sram_write",
 						"sram_oe",
 						"branch",
-						"imm_oe",
 						"rd_oe",
 						"rs1_oe",
 						"rs2_oe",
 						"pc_oe",
 						"legal",
 						"zero",
+						"oe_i",
+						"oe_s",
+						"oe_b",
+						"oe_u",
+						"oe_j",
 						{ "alu_sel", 3 },
 						{ "lu_control", 2 },
 						{ "ireg", BUS_WIDTH },
@@ -67,11 +71,15 @@ return function(simulation)
 			s:pulldown(control, "isched")
 			s:pulldown(control, "branch")
 			s:pulldown(control, "lu_trigin")
-			s:pulldown(control, "imm_oe")
 			s:pulldown(control, "pc_oe")
 			s:pulldown(control, "rs1_oe")
 			s:pulldown(control, "rs2_oe")
 			s:pulldown(control, "rd_oe")
+			s:pulldown(control, "oe_i")
+			s:pulldown(control, "oe_s")
+			s:pulldown(control, "oe_b")
+			s:pulldown(control, "oe_u")
+			s:pulldown(control, "oe_j")
 			s:pulldown(control, "xu_trigin")
 			s:pulldown(control, "zero")
 			s:pulldown(control, "sram_write")
@@ -162,8 +170,12 @@ return function(simulation)
 			s:c(control, "rs1_oe", idecode, "rs1_oe")
 			s:c(control, "rs2_oe", idecode, "rs2_oe")
 			s:c(control, "rd_oe", idecode, "rd_oe")
-			s:c(control, "imm_oe", idecode, "oe")
 			s:c(control, "ireg", idecode, "in")
+			s:c(control, "oe_i", idecode, "oe_i")
+			s:c(control, "oe_s", idecode, "oe_s")
+			s:c(control, "oe_b", idecode, "oe_b")
+			s:c(control, "oe_u", idecode, "oe_u")
+			s:c(control, "oe_j", idecode, "oe_j")
 			s:c(idecode, "imm", buses, "b")
 			------------------------------------------------------------------------------
 			local alu = core .. ".alu"
@@ -206,7 +218,7 @@ return function(simulation)
 			s:c(i_op, "rd", control, "rd_oe")
 			s:c(i_op, "rs1", control, "rs1_oe")
 			s:c(i_op, "rs2", control, "rs2_oe")
-			s:c(i_op, "imm_oe", control, "imm_oe")
+			s:c(i_op, "oe_i", control, "oe_i")
 			s:c(i_op, "alu_notb", control, "alu_notb")
 			s:c(i_op, "alu_cin", control, "alu_cin")
 			s:c(i_op, "legal", control, "legal")
@@ -226,7 +238,7 @@ return function(simulation)
 			s:c(i_branch, "alu_oe", control, "alu_oe")
 			s:c(i_branch, "rs1", control, "rs1_oe")
 			s:c(i_branch, "rs2", control, "rs2_oe")
-			s:c(i_branch, "imm_oe", control, "imm_oe")
+			s:c(i_branch, "oe_b", control, "oe_b")
 			s:c(i_branch, "alu_notb", control, "alu_notb")
 			s:c(i_branch, "alu_cin", control, "alu_cin")
 			s:c(i_branch, "alu_u", control, "alu_u")
@@ -244,28 +256,8 @@ return function(simulation)
 			s:c(i_ui, "legal", control, "legal")
 			s:c(i_ui, "alu_oe", control, "alu_oe")
 			s:c(i_ui, "rd", control, "rd_oe")
-			s:c(i_ui, "imm_oe", control, "imm_oe")
+			s:c(i_ui, "oe_u", control, "oe_u")
 			s:c(i_ui, "pc_oe", control, "pc_oe")
-			------------------------------------------------------------------------------
-			--local i_load = core .. ".instructions.load"
-			--s:new_instruction_load(i_load, { trace = opts.trace })
-			--s:c(control, "rst~", i_load, "rst~")
-			--s:c(clk, "rising", i_load, "rising")
-			--s:c(clk, "falling", i_load, "falling")
-			--s:c(control, "isched", i_load, "isched")
-			--s:c(lu, "trigout", i_load, "lu_trigout")
-			--s:c(idecode, "opcode", i_load, "opcode")
-			--s:c(idecode, "funct3", i_load, "funct3")
-			--s:c(i_load, "icomplete", control, "xu_trigin")
-			--s:c(i_load, "legal", control, "legal")
-			--s:c(i_load, "imm_oe", control, "imm_oe")
-			--s:c(i_load, "rs1", control, "rs1_oe")
-			--s:c(i_load, "rs2", control, "rs2_oe")
-			--s:c(i_load, "rd", control, "rd_oe")
-			--s:c(i_load, "alu_oe", control, "alu_oe")
-			--s:c(i_load, "lu_trigin", control, "lu_trigin")
-			--s:c(i_load, "lu_sext", control, "lu_sext")
-			--s:c(i_load, "lu_control", control, "lu_control")
 			------------------------------------------------------------------------------
 			local i_store = core .. ".instructions.store"
 			s:new_instruction_store(i_store, { trace = opts.trace })
@@ -282,12 +274,13 @@ return function(simulation)
 			s:c(i_store, "rs1", control, "rs1_oe")
 			s:c(i_store, "rs2", control, "rs2_oe")
 			s:c(i_store, "rd", control, "rd_oe")
-			s:c(i_store, "imm", control, "imm_oe")
 			s:c(i_store, "sram_oe", control, "sram_oe")
 			s:c(i_store, "alu_oe", control, "alu_oe")
 			s:c(i_store, "sram_write", control, "sram_write")
 			s:c(i_store, "sram_address", buses, "sram_address")
 			s:c(i_store, "sram_in", buses, "sram_in")
+			s:c(i_store, "oe_s", control, "oe_s")
+			s:c(i_store, "oe_i", control, "oe_i")
 			------------------------------------------------------------------------------
 			local i_jal = core .. ".instructions.jal"
 			s:new_instruction_jal(i_jal, { trace = opts.trace })
@@ -302,7 +295,7 @@ return function(simulation)
 			s:cp(1, i_jal, "b4", 1, buses, "b", 3)
 			s:c(i_jal, "alu_oe", control, "alu_oe")
 			s:c(i_jal, "rd", control, "rd_oe")
-			s:c(i_jal, "imm_oe", control, "imm_oe")
+			s:c(i_jal, "oe_j", control, "oe_j")
 			s:c(i_jal, "branch", control, "branch")
 			------------------------------------------------------------------------------
 			local i_jalr = core .. ".instructions.jalr"
@@ -321,7 +314,7 @@ return function(simulation)
 			s:c(i_jalr, "alu_oe", control, "alu_oe")
 			s:c(i_jalr, "rd", control, "rd_oe")
 			s:c(i_jalr, "rs1", control, "rs1_oe")
-			s:c(i_jalr, "imm_oe", control, "imm_oe")
+			s:c(i_jalr, "oe_i", control, "oe_i")
 			s:c(i_jalr, "branch", control, "branch")
 			------------------------------------------------------------------------------
 			local i_fence = core .. ".instructions.fence"

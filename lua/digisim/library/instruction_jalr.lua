@@ -28,7 +28,7 @@ return function(simulation)
 					"alu_oe",
 					"rd",
 					"rs1",
-					"imm_oe",
+					"oe_i",
 					"branch",
 				},
 			}
@@ -129,7 +129,7 @@ return function(simulation)
 			s:c(complete, "q", completebuf, "en")
 			s:high(completebuf, "a", 1, 5)
 			s:cp(1, completebuf, "q", 1, f, "pc_oe", 1)
-			s:cp(1, completebuf, "q", 2, f, "imm_oe", 1)
+			s:cp(1, completebuf, "q", 2, f, "oe_i", 1)
 			s:cp(1, completebuf, "q", 3, f, "alu_oe", 1)
 			s:cp(1, completebuf, "q", 4, f, "branch", 1)
 			s:cp(1, completebuf, "q", 5, f, "icomplete", 1)
