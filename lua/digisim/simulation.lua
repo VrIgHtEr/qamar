@@ -588,12 +588,12 @@ function simulation:step()
 			add_trace(self, p.name, self.time, val)
 		end
 
-		dirty = nextdirty
 		maxstep = maxstep - 1
-		ticks = ticks + 1
 		if maxstep == 0 then
 			error("circuit failed to stabilize")
 		end
+		ticks = ticks + 1
+		dirty = nextdirty
 	until next(dirty) == nil
 	return self, ticks
 end
