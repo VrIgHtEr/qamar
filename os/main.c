@@ -49,6 +49,7 @@ static bool solve(int8_t *grid) {
         if (count == 1) {
           ++subs;
           g[i] = val;
+          rowmark[val] = 0;
         } else if (count < subcount) {
           subcount = count;
           subindex = i;
