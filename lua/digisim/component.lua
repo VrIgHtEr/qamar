@@ -1,6 +1,7 @@
 ---@diagnostic disable: need-check-nil
 local signal = require("digisim.signal")
 local port = require("digisim.port")
+local DEBUG_MODE = require("digisim.constants").DEBUG_MODE
 
 ---@class component
 ---@field name string
@@ -132,58 +133,60 @@ function component.new(name, handler, opts)
 			if #o < outputs or (#parts == 0 and #o > outputs + 1 or #parts > 0 and #o > outputs) then
 				error("handler " .. name .. " returned " .. #o .. " outputs but expected " .. outputs)
 			end
-			for i = 1, outputs do
-				local x = o[i]
-				if type(x) == "number" then
-					x = math.floor(x)
-					if x <= signal.unknown or x >= signal.TOP then
-						error("handler " .. name .. " returned invalid value " .. x .. " at index " .. i)
-					end
-				elseif type(x) == "table" then
-					if ret.outports[i].bits ~= #x then
-						error(
-							"Component "
-								.. ret.name
-								.. " returned "
-								.. #x
-								.. " bits in output "
-								.. i
-								.. " (expected "
-								.. ret.outports[i].bits
-								.. ")"
-						)
-					end
-					for j, v in ipairs(x) do
-						if type(v) ~= "number" then
+			if DEBUG_MODE then
+				for i = 1, outputs do
+					local x = o[i]
+					if type(x) == "number" then
+						x = math.floor(x)
+						if x <= signal.unknown or x >= signal.TOP then
+							error("handler " .. name .. " returned invalid value " .. x .. " at index " .. i)
+						end
+					elseif type(x) == "table" then
+						if ret.outports[i].bits ~= #x then
 							error(
-								"handler "
-									.. name
-									.. " returned invalid type "
-									.. type(v)
-									.. " at index "
+								"Component "
+									.. ret.name
+									.. " returned "
+									.. #x
+									.. " bits in output "
 									.. i
-									.. "["
-									.. j
-									.. "]"
+									.. " (expected "
+									.. ret.outports[i].bits
+									.. ")"
 							)
 						end
-						v = math.floor(v)
-						if v <= signal.unknown or v >= signal.TOP then
-							error(
-								"handler "
-									.. name
-									.. " returned invalid value "
-									.. v
-									.. " at index "
-									.. i
-									.. "["
-									.. j
-									.. "]"
-							)
+						for j, v in ipairs(x) do
+							if type(v) ~= "number" then
+								error(
+									"handler "
+										.. name
+										.. " returned invalid type "
+										.. type(v)
+										.. " at index "
+										.. i
+										.. "["
+										.. j
+										.. "]"
+								)
+							end
+							v = math.floor(v)
+							if v <= signal.BOTTOM or v >= signal.TOP then
+								error(
+									"handler "
+										.. name
+										.. " returned invalid value "
+										.. v
+										.. " at index "
+										.. i
+										.. "["
+										.. j
+										.. "]"
+								)
+							end
 						end
+					else
+						error("handler " .. name .. " returned invalid type " .. type(x) .. " at index " .. i)
 					end
-				else
-					error("handler " .. name .. " returned invalid type " .. type(x) .. " at index " .. i)
 				end
 			end
 			local sleep = o[outputs + 1]

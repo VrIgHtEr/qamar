@@ -4,6 +4,7 @@ local connection = require("digisim.connection")
 local pq = require("digisim.pq")
 local vcd = require("digisim.vcd")
 local sigstr = vcd.sigstr
+local DEBUG_MODE = constants.DEBUG_MODE
 
 ---@class simulation
 ---@field components table<string,component>
@@ -441,9 +442,13 @@ local restable = {
 ---@param a signal
 ---@param b signal
 local function resolve(a, b)
-	return (a == nil or b == nil or a < signal.unknown or a > signal.high or b < signal.unknown or b > signal.high)
-			and signal.unknown
-		or restable[(7 * (a - signal.unknown) + (b - signal.unknown)) + 1]
+	if
+		DEBUG_MODE
+		and (a == nil or b == nil or a < signal.unknown or a > signal.high or b < signal.unknown or b > signal.high)
+	then
+		return signal.unknown
+	end
+	return restable[(7 * (a - signal.unknown) + (b - signal.unknown)) + 1]
 end
 
 ---@param time number
