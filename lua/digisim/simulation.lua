@@ -474,14 +474,6 @@ local function latch_values(time, p)
 	end
 end
 
-local function tbl_count(tbl)
-	local ret = -#tbl
-	for _ in pairs(tbl) do
-		ret = ret + 1
-	end
-	return ret
-end
-
 local inputs = {}
 
 function simulation:step()
@@ -504,7 +496,6 @@ function simulation:step()
 			self.time = nexttimestamp - 1
 		end
 	end
-	local count
 	repeat
 		local nextdirty = {}
 		self.time = self.time + 1
@@ -598,13 +589,12 @@ function simulation:step()
 		end
 
 		dirty = nextdirty
-		count = tbl_count(dirty)
 		maxstep = maxstep - 1
 		ticks = ticks + 1
 		if maxstep == 0 then
 			error("circuit failed to stabilize")
 		end
-	until count == 0
+	until next(dirty) == nil
 	return self, ticks
 end
 
