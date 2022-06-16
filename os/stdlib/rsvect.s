@@ -8,18 +8,6 @@ jal main
 1:
     j 1b
 .text
-.global memset
-memset:
-    mv t0, a0
-1:
-    beqz a2, 2f
-    sb a1, 0(t0)
-    addi t0, t0, 1
-    addi a2, a2, -1
-    j 1b
-2:
-    ret
-
 .global memcmp 
 memcmp:
     mv t0, a0

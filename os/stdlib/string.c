@@ -12,7 +12,7 @@ void *memcpy(void *dest, const void *src, size_t size) {
   return dest;
 }
 
-void *memset(void *dest, int32_t val, size_t size) {
+void *memset(void *dest, int val, size_t size) {
   uint8_t *pdest = (uint8_t *)dest;
   if (size >= 4) {
     val = val & 0xFF;
