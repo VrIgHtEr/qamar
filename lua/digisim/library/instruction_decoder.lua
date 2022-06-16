@@ -37,24 +37,18 @@ return function(simulation)
 			self:cp(3, dec, "in", 13, dec, "funct3", 1)
 			self:cp(7, dec, "in", 26, dec, "funct7", 1)
 
-			local pd1 = dec .. ".pd1"
-			self:new_pulldown(pd1, { width = 5 }):c(pd1, "q", dec, "rs1")
 			local rs1 = dec .. ".rs1"
 			self
 				:new_tristate_buffer(rs1, { width = 5 })
 				:c(rs1, "q", dec, "rs1")
 				:c(dec, "rs1_oe", rs1, "en")
 				:cp(5, dec, "in", 16, rs1, "a", 1)
-			local pd2 = dec .. ".pd2"
-			self:new_pulldown(pd2, { width = 5 }):c(pd2, "q", dec, "rs2")
 			local rs2 = dec .. ".rs2"
 			self
 				:new_tristate_buffer(rs2, { width = 5 })
 				:c(rs2, "q", dec, "rs2")
 				:c(dec, "rs2_oe", rs2, "en")
 				:cp(5, dec, "in", 21, rs2, "a", 1)
-			local pdd = dec .. ".pdd"
-			self:new_pulldown(pdd, { width = 5 }):c(pdd, "q", dec, "rd")
 			local rd = dec .. ".rd"
 			self
 				:new_tristate_buffer(rd, { width = 5 })
