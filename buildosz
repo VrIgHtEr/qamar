@@ -16,6 +16,7 @@ STDLIB_INCLUDE=${STDLIB_SRC}/include
 OUTPUT_ELF_PATH="${BUILD_DIR}/${OUTPUT_NAME}"
 OUTPUT_BIN_PATH=${OUTPUT_ELF_PATH}.bin
 
+rm -rf "${BUILD_DIR}"
 
 PREPROCESS="zig cc -E -"
 COMPILE="zig build-obj ${ZIG_OPTS} -I${STDLIB_INCLUDE}"
@@ -27,14 +28,13 @@ OBJECT_FILES=""
 
 COMPILE_FILES="$(cd ${APP_DIR} && echo $(find . -path ./zig-cache -prune -o -type f \( -name '*.zig' -o -name '*.S' -o -name '*.s' -o -name '*.C' -o -name '*.cxx' -o -name '*.cpp' -o -name '*.cc' -o -name '*.cu' -o -name '*.c' -o -name '*.stub' -o -name '*.m' -o -name '*.mm' \) -print))"
 
-rm -rf "${BUILD_DIR}"
-
 for fname in ${COMPILE_FILES}
 do
-    dname="$(realpath ${BUILD_DIR}/${fname%.*})"
-    fname="$(realpath ${APP_DIR}/${fname})"
+    dname="${BUILD_DIR}/${fname%.*}"
+    fname="${APP_DIR}/${fname}"
     mkdir -p "${dname%/*}"
-    dname=${dname}.o
+    dname=$(realpath ${dname}).o
+    fname=$(realpath ${fname})
     echo "compile: ${fname}"
     ${COMPILE} ${OUTPUT_FILE_OPTION}"${dname}" ${fname}
     OBJECT_FILES="$(realpath ${dname}) $OBJECT_FILES"
