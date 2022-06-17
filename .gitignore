@@ -11,3 +11,4 @@ vcd.fst
 vcd.fst.hier
 asm
 display.gtkw
+os/zig-cache/

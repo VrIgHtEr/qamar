@@ -1,0 +1,67 @@
+#!/bin/sh
+
+SCRIPT_PATH=$(temp="$(realpath $0)" && dirname "$temp")
+
+OS_BUILD_DIR="$SCRIPT_PATH/build/os-rv32i"
+OS_SOURCE_DIR="$SCRIPT_PATH/os"
+OS_FILES="main.c"
+LINK_SCRIPT="$OS_SOURCE_DIR/link.lds"
+OUTPUT_NAME="os"
+STDLIB_IN_PATH=$OS_SOURCE_DIR/stdlib
+STDLIB_OUT_PATH=$OS_BUILD_DIR/stdlib
+ZIG_OPTS="-target riscv32-freestanding-none -O ReleaseFast -fomit-frame-pointer --strip -fsingle-threaded"
+LD_OPTS="-nostdlib -T $LINK_SCRIPT"
+
+SRAM_PATH="${SCRIPT_PATH}/lua/sram.dat"
+
+#set up toolchain environment
+TOOLCHAIN_PATH="$SCRIPT_PATH/toolchain-rv32i"
+TOOLCHAIN_PATH_BIN="$TOOLCHAIN_PATH/bin"
+export PATH="$TOOLCHAIN_PATH_BIN:$PATH"
+TOOL_PREFIX=$TOOLCHAIN_PATH/bin/riscv32-unknown-elf-
+ZIG="zig build-obj"
+GCC="${TOOL_PREFIX}gcc"
+LD="${TOOL_PREFIX}ld"
+OBJCOPY="${TOOL_PREFIX}objcopy"
+
+rm -rf "$OS_BUILD_DIR"
+mkdir -p "$OS_BUILD_DIR"
+mkdir -p "$STDLIB_OUT_PATH"
+
+OBJECT_FILES=""
+
+for fname in $STDLIB_IN_PATH/*
+do
+    bname=$(basename "$fname")
+    pname=$STDLIB_OUT_PATH/$bname
+    oname="$STDLIB_OUT_PATH/${bname%.*}.o"
+
+    $GCC -E - < $fname > $pname
+    $ZIG $ZIG_OPTS ${pname} -femit-bin="${oname}"
+
+    OBJECT_FILES="${oname} $OBJECT_FILES"
+done
+
+for fname in $OS_FILES
+do
+    dname=${OS_BUILD_DIR}/${fname%.*}
+    oname="${fname%.*}.o"
+    fname="${OS_SOURCE_DIR}/${fname}"
+    oname="${OS_BUILD_DIR}/${oname}"
+    echo "compile: $fname"
+    $ZIG $ZIG_OPTS ${fname} -femit-bin="${oname}"
+    OBJECT_FILES="${OBJECT_FILES} ${oname}"
+done
+
+OUTPUT_ELF_PATH="${OS_BUILD_DIR}/${OUTPUT_NAME}"
+echo "link:    ${OUTPUT_ELF_PATH}"
+$LD $LD_OPTS $OBJECT_FILES -o $OUTPUT_ELF_PATH
+
+OUTPUT_BIN_PATH=${OUTPUT_ELF_PATH}.bin
+
+echo "export:  ${OUTPUT_BIN_PATH}"
+$OBJCOPY -O binary "${OUTPUT_ELF_PATH}" ${OUTPUT_BIN_PATH}
+
+echo "replace: ${SRAM_PATH}"
+rm -rf $SRAM_PATH
+cp "$OUTPUT_BIN_PATH" "$SRAM_PATH"

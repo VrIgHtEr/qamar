@@ -1,7 +1,7 @@
+#include "string.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <string.h>
 
 #define SWIDTH 3
 #define BWIDTH ((SWIDTH) * (SWIDTH))
@@ -34,11 +34,11 @@ static bool solve(int8_t *grid) {
           continue;
         memcpy(mark, rowmark, sizeof(rowmark));
         int8_t cc = col, c = topleft + (col / SWIDTH * SWIDTH), count = 0, val;
-        for (int8_t j = 0; j < BWIDTH; ++j, cc += BWIDTH)
-          mark[g[cc]] = 0;
         for (int8_t j = 0; j < SWIDTH; ++j, c += (BWIDTH - SWIDTH))
-          for (int8_t k = 0; k < SWIDTH; ++k, ++c)
+          for (int8_t k = 0; k < SWIDTH; ++k, ++c, cc += BWIDTH) {
             mark[g[c]] = 0;
+            mark[g[cc]] = 0;
+          }
         for (int8_t j = 1; j <= BWIDTH; ++j)
           if (mark[j] != 0) {
             val = j;
@@ -50,7 +50,7 @@ static bool solve(int8_t *grid) {
           ++subs;
           g[i] = val;
           rowmark[val] = 0;
-        } else if (count < subcount) {
+        } else {
           subcount = count;
           subindex = i;
           memcpy(submarks, mark, sizeof(mark));

@@ -1,6 +1,8 @@
+#ifndef __QAMAR_STRING__
+#define __QAMAR_STRING__
+
 #include <stddef.h>
 #include <stdint.h>
-#include <string.h>
 
 inline void *memcpy(void *dest, const void *src, size_t size) {
   uint8_t *pdest = (uint8_t *)dest, *psrc = (uint8_t *)src;
@@ -36,3 +38,5 @@ inline int memcmp(const void *ptr1, const void *ptr2, size_t size) {
       return 1;
   return 0;
 }
+
+#endif
