@@ -86,6 +86,6 @@ int main(void) {
   if (solve(grid))
     printgrid(grid);
 
-  asm("UNIMP\n");
+  //  asm("UNIMP\n");
   return 0;
 }

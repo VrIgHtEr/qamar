@@ -1,6 +1,4 @@
-#ifndef __QAMAR_STRING__
-#define __QAMAR_STRING__
-
+#include "string.h"
 #include <stddef.h>
 #include <stdint.h>
 
@@ -38,5 +36,3 @@ inline int memcmp(const void *ptr1, const void *ptr2, size_t size) {
       return 1;
   return 0;
 }
-
-#endif

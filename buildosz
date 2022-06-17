@@ -2,14 +2,15 @@
 
 SCRIPT_PATH=$(temp="$(realpath $0)" && dirname "$temp")
 
+OS_FILES="main.c"
 OS_BUILD_DIR="$SCRIPT_PATH/build/os-rv32i"
 OS_SOURCE_DIR="$SCRIPT_PATH/os"
-OS_FILES="main.c"
 LINK_SCRIPT="$OS_SOURCE_DIR/link.lds"
 OUTPUT_NAME="os"
+STDINCLUDE_PATH=$OS_SOURCE_DIR/stdinclude
 STDLIB_IN_PATH=$OS_SOURCE_DIR/stdlib
 STDLIB_OUT_PATH=$OS_BUILD_DIR/stdlib
-ZIG_OPTS="-target riscv32-freestanding-none -mcpu generic_rv32 -O ReleaseFast -fomit-frame-pointer --strip -fsingle-threaded"
+ZIG_OPTS="-target riscv32-freestanding-none -mcpu generic_rv32 -O ReleaseFast -fomit-frame-pointer --strip -fsingle-threaded -I${STDINCLUDE_PATH}"
 LD_OPTS="-nostdlib -T $LINK_SCRIPT"
 
 SRAM_PATH="${SCRIPT_PATH}/lua/sram.dat"
