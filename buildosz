@@ -2,8 +2,8 @@
 CWD=$(temp="$(realpath $0)" && dirname "${temp}")
 
 OUTPUT_NAME="os"
-ZIG_OPTS="-target riscv32-freestanding-none -mcpu generic_rv32 -O ReleaseFast -fomit-frame-pointer --strip -fsingle-threaded"
-LD_OPTS="-nostdlib"
+COMPILE_OPTS="-target riscv32-freestanding-none -mcpu generic_rv32 -O ReleaseFast -fomit-frame-pointer --strip -fsingle-threaded"
+LINKER_OPTS=""
 
 APP_DIR="${CWD}/${OUTPUT_NAME}"
 BUILD_DIR="${CWD}/build/${OUTPUT_NAME}-rv32i"
@@ -14,8 +14,8 @@ OUTPUT_BIN_PATH=${OUTPUT_ELF_PATH}.bin
 SRAM_PATH="${CWD}/lua/sram.dat"
 OUTPUT_FILE_OPTION="-femit-bin="
 PREPROCESS="zig cc -E -"
-COMPILE="zig build-obj ${ZIG_OPTS} -I${STDLIB_INCLUDE}"
-LINK="ld.lld -T ${LINK_SCRIPT} ${LD_OPTS} -o ${OUTPUT_ELF_PATH}"
+COMPILE="zig build-obj ${COMPILE_OPTS} -I${STDLIB_INCLUDE}"
+LINK="ld.lld -T ${LINK_SCRIPT} ${LINKER_OPTS} -o ${OUTPUT_ELF_PATH}"
 EXPORT_BINARY="llvm-objcopy -O binary ${OUTPUT_ELF_PATH} ${OUTPUT_BIN_PATH}"
 
 rm -rf "${BUILD_DIR}"
