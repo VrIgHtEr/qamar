@@ -9,7 +9,7 @@ LINK_SCRIPT="$OS_SOURCE_DIR/link.lds"
 OUTPUT_NAME="os"
 STDLIB_IN_PATH=$OS_SOURCE_DIR/stdlib
 STDLIB_OUT_PATH=$OS_BUILD_DIR/stdlib
-ZIG_OPTS="-target riscv32-freestanding-none -O ReleaseFast -fomit-frame-pointer --strip -fsingle-threaded"
+ZIG_OPTS="-target riscv32-freestanding-none -mcpu generic_rv32 -O ReleaseFast -fomit-frame-pointer --strip -fsingle-threaded"
 LD_OPTS="-nostdlib -T $LINK_SCRIPT"
 
 SRAM_PATH="${SCRIPT_PATH}/lua/sram.dat"
@@ -21,7 +21,7 @@ export PATH="$TOOLCHAIN_PATH_BIN:$PATH"
 TOOL_PREFIX=$TOOLCHAIN_PATH/bin/riscv32-unknown-elf-
 ZIG="zig build-obj"
 GCC="${TOOL_PREFIX}gcc"
-LD="${TOOL_PREFIX}ld"
+LD="ld.lld"
 OBJCOPY="${TOOL_PREFIX}objcopy"
 
 rm -rf "$OS_BUILD_DIR"
@@ -45,12 +45,10 @@ done
 for fname in $OS_FILES
 do
     dname=${OS_BUILD_DIR}/${fname%.*}
-    oname="${fname%.*}.o"
     fname="${OS_SOURCE_DIR}/${fname}"
-    oname="${OS_BUILD_DIR}/${oname}"
     echo "compile: $fname"
-    $ZIG $ZIG_OPTS ${fname} -femit-bin="${oname}"
-    OBJECT_FILES="${OBJECT_FILES} ${oname}"
+    $ZIG $ZIG_OPTS ${fname} -femit-bin="${dname}.o"
+    OBJECT_FILES="${OBJECT_FILES} ${dname}.o"
 done
 
 OUTPUT_ELF_PATH="${OS_BUILD_DIR}/${OUTPUT_NAME}"
