@@ -16,8 +16,6 @@ STDLIB_INCLUDE=${STDLIB_SRC}/include
 OUTPUT_ELF_PATH="${BUILD_DIR}/${OUTPUT_NAME}"
 OUTPUT_BIN_PATH=${OUTPUT_ELF_PATH}.bin
 
-rm -rf "${BUILD_DIR}"
-mkdir -p "${STDLIB_OUT}"
 
 PREPROCESS="zig cc -E -"
 COMPILE="zig build-obj ${ZIG_OPTS} -I${STDLIB_INCLUDE}"
@@ -28,6 +26,8 @@ EXPORT_BINARY="llvm-objcopy -O binary ${OUTPUT_ELF_PATH} ${OUTPUT_BIN_PATH}"
 OBJECT_FILES=""
 
 COMPILE_FILES="$(cd ${APP_DIR} && echo $(find . -path ./zig-cache -prune -o -type f \( -name '*.zig' -o -name '*.S' -o -name '*.s' -o -name '*.C' -o -name '*.cxx' -o -name '*.cpp' -o -name '*.cc' -o -name '*.cu' -o -name '*.c' -o -name '*.stub' -o -name '*.m' -o -name '*.mm' \) -print))"
+
+rm -rf "${BUILD_DIR}"
 
 for fname in ${COMPILE_FILES}
 do
