@@ -16,39 +16,38 @@ LD_OPTS="-nostdlib -T $LINK_SCRIPT"
 SRAM_PATH="${SCRIPT_PATH}/lua/sram.dat"
 
 #set up toolchain environment
-TOOLCHAIN_PATH="$SCRIPT_PATH/toolchain-rv32i"
-TOOLCHAIN_PATH_BIN="$TOOLCHAIN_PATH/bin"
-export PATH="$TOOLCHAIN_PATH_BIN:$PATH"
-TOOL_PREFIX=$TOOLCHAIN_PATH/bin/riscv32-unknown-elf-
-ZIG="zig build-obj"
-GCC="${TOOL_PREFIX}gcc"
 LD="ld.lld"
-OBJCOPY="${TOOL_PREFIX}objcopy"
+OBJCOPY="llvm-objcopy"
 
 rm -rf "$OS_BUILD_DIR"
 mkdir -p "$OS_BUILD_DIR"
 mkdir -p "$STDLIB_OUT_PATH"
 
+PREPROCESS="zig cc -E -"
+COMPILE="zig build-obj $ZIG_OPTS"
+
 OBJECT_FILES=""
 
+echo stdlib:
 for fname in $STDLIB_IN_PATH/*
 do
     bname=$(basename "$fname")
     pname=$STDLIB_OUT_PATH/$bname
     oname="$STDLIB_OUT_PATH/${bname%.*}.o"
-
-    $GCC -E - < $fname > $pname
-    $ZIG $ZIG_OPTS ${pname} -femit-bin="${oname}"
+    echo "process: $fname"
+    $PREPROCESS < $fname > $pname
+    echo "compile: $pname"
+    $COMPILE -femit-bin="${oname}" ${pname}
 
     OBJECT_FILES="${oname} $OBJECT_FILES"
 done
-
+echo app:
 for fname in $OS_FILES
 do
     dname=${OS_BUILD_DIR}/${fname%.*}
     fname="${OS_SOURCE_DIR}/${fname}"
     echo "compile: $fname"
-    $ZIG $ZIG_OPTS ${fname} -femit-bin="${dname}.o"
+    $COMPILE -femit-bin="${dname}.o" ${fname}
     OBJECT_FILES="${OBJECT_FILES} ${dname}.o"
 done
 
