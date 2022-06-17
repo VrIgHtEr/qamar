@@ -35,15 +35,11 @@ do
     fname="$(realpath ${APP_DIR}/${fname})"
     mkdir -p "${dname%/*}"
     dname=${dname}.o
-    echo $fname
-    echo $dname
     echo "compile: ${fname}"
     ${COMPILE} ${OUTPUT_FILE_OPTION}"${dname}" ${fname}
     OBJECT_FILES="$(realpath ${dname}) $OBJECT_FILES"
 done
 echo
-
-echo ${OBJECT_FILES}
 
 echo "link:    ${OUTPUT_ELF_PATH}"
 ${LINK} $OBJECT_FILES
