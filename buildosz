@@ -1,63 +1,62 @@
 #!/bin/sh
-CWD=$(temp="$(realpath $0)" && dirname "$temp")
-SRAM_PATH="${CWD}/lua/sram.dat"
-APP_DIR="$CWD/os"
-BUILD_DIR="$CWD/build/os-rv32i"
-APP_FILES="main.c"
-LINK_SCRIPT="$APP_DIR/link.lds"
+CWD=$(temp="$(realpath $0)" && dirname "${temp}")
+
+APP_DIR="${CWD}/os"
 OUTPUT_NAME="os"
+BUILD_DIR="${CWD}/build/${OUTPUT_NAME}-rv32i"
+
+APP_FILES="main.c"
+LINK_SCRIPT="${APP_DIR}/link.lds"
 ZIG_OPTS="-target riscv32-freestanding-none -mcpu generic_rv32 -O ReleaseFast -fomit-frame-pointer --strip -fsingle-threaded"
 LD_OPTS="-nostdlib"
 
-STDLIB_SRC=$APP_DIR/stdlib
-STDLIB_OUT=$BUILD_DIR/stdlib
+STDLIB_SRC=${APP_DIR}/stdlib
+STDLIB_OUT=${BUILD_DIR}/stdlib
 STDLIB_INCLUDE=${STDLIB_SRC}/include
 OUTPUT_ELF_PATH="${BUILD_DIR}/${OUTPUT_NAME}"
 OUTPUT_BIN_PATH=${OUTPUT_ELF_PATH}.bin
 
-rm -rf "$BUILD_DIR"
-mkdir -p "$BUILD_DIR"
-mkdir -p "$STDLIB_OUT"
+rm -rf "${BUILD_DIR}"
+mkdir -p "${BUILD_DIR}"
+mkdir -p "${STDLIB_OUT}"
 
 PREPROCESS="zig cc -E -"
 COMPILE="zig build-obj ${ZIG_OPTS} -I${STDLIB_INCLUDE}"
-LINK="ld.lld -T $LINK_SCRIPT -o ${OUTPUT_ELF_PATH} ${LD_OPTS}"
-EXPORT_IMAGE="llvm-objcopy -O binary ${OUTPUT_ELF_PATH} ${OUTPUT_BIN_PATH}"
+OUTPUT_FILE_OPTION="-femit-bin="
+LINK="ld.lld -T ${LINK_SCRIPT} -o ${OUTPUT_ELF_PATH} ${LD_OPTS}"
+EXPORT_BINARY="llvm-objcopy -O binary ${OUTPUT_ELF_PATH} ${OUTPUT_BIN_PATH}"
 
 OBJECT_FILES=""
 
-for fname in $STDLIB_SRC/*
+for fname in ${STDLIB_SRC}/*
 do
-    if ! [ -d $fname ]
+    if ! [ -d ${fname} ]
     then
-        bname=$(basename "$fname")
-        pname=$STDLIB_OUT/$bname
-        oname="$STDLIB_OUT/${bname%.*}.o"
-        echo "stdlib:  $fname"
-        $PREPROCESS < $fname > $pname
-        $COMPILE -femit-bin="${oname}" ${pname}
-        OBJECT_FILES="${oname} $OBJECT_FILES"
+        bname=$(basename "${fname}")
+        pname=${STDLIB_OUT}/${bname}
+        oname="${STDLIB_OUT}/${bname%.*}.o"
+        echo "stdlib:  ${fname}"
+        ${PREPROCESS} < ${fname} > ${pname}
+        ${COMPILE} ${OUTPUT_FILE_OPTION}"${oname}" ${pname}
+        OBJECT_FILES="${oname} ${OBJECT_FILES}"
     fi
 done
-echo
-
-for fname in $APP_FILES
+for fname in ${APP_FILES}
 do
     dname=${BUILD_DIR}/${fname%.*}
     fname="${APP_DIR}/${fname}"
-    echo "compile: $fname"
-    $COMPILE -femit-bin="${dname}.o" ${fname}
+    echo "compile: ${fname}"
+    ${COMPILE} ${OUTPUT_FILE_OPTION}"${dname}.o" ${fname}
     OBJECT_FILES="${OBJECT_FILES} ${dname}.o"
 done
 echo
 
 echo "link:    ${OUTPUT_ELF_PATH}"
-$LINK $OBJECT_FILES
-echo
-
+${LINK} ${OBJECT_FILES}
 echo "export:  ${OUTPUT_BIN_PATH}"
-$EXPORT_IMAGE
+${EXPORT_BINARY}
 echo
 
+SRAM_PATH="${CWD}/lua/sram.dat"
 echo "replace: ${SRAM_PATH}"
-rm -rf $SRAM_PATH && cp "$OUTPUT_BIN_PATH" "$SRAM_PATH"
+rm -rf ${SRAM_PATH} && cp "${OUTPUT_BIN_PATH}" "${SRAM_PATH}"
