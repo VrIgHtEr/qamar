@@ -9,56 +9,73 @@
 
 static volatile int8_t TEST[BSIZE];
 
+#ifdef printresult
+#include <stdio.h>
+#endif
 static void printgrid(const int8_t *grid) {
-  for (int8_t i = 0; i < BSIZE; ++i)
+  for (int8_t i = 0; i < BSIZE; ++i) {
+#ifdef printresult
+    printf("%d", grid[i]);
+#endif
     TEST[i] = grid[i];
+  }
+#ifdef printresult
+  printf("\n");
+#endif
 }
 
 static bool solve(int8_t *grid) {
-  int8_t g[BSIZE], submarks[BWIDTH + 1];
+  int8_t g[BSIZE], submarks[BWIDTH + 1], mark[BWIDTH + 1];
   memcpy(g, grid, sizeof(g));
+  mark[0] = 0;
   int8_t subindex, subcount;
   for (;;) {
     int8_t subs = 0;
     subindex = -1;
     subcount = BWIDTH + 1;
-    for (int8_t row = 0, i = 0, src = 0; row < BWIDTH; ++row, src += BWIDTH) {
-      int8_t topleft = row / SWIDTH * SWIDTH * BWIDTH;
-      int8_t rowmark[BWIDTH + 1], mark[BWIDTH + 1];
-      rowmark[0] = 0;
-      memset(rowmark + 1, 1, BWIDTH);
-      for (int8_t j = 0, rc = src; j < BWIDTH; ++j, ++rc)
-        rowmark[g[rc]] = 0;
-      for (int8_t col = 0; col < BWIDTH; ++col, ++i) {
-        if (g[i])
-          continue;
-        memcpy(mark, rowmark, sizeof(rowmark));
-        int8_t cc = col, c = topleft + (col / SWIDTH * SWIDTH), count = 0, val;
-        for (int8_t j = 0; j < SWIDTH; ++j, c += (BWIDTH - SWIDTH))
-          for (int8_t k = 0; k < SWIDTH; ++k, ++c, cc += BWIDTH) {
+
+    for (int8_t cell = 0; cell < BSIZE; ++cell) {
+      if (!g[cell]) {
+        int8_t r = cell / BWIDTH * BWIDTH;
+        int8_t c = cell % BWIDTH;
+        int8_t s =
+            (r / (SWIDTH * BWIDTH) * (SWIDTH * BWIDTH)) + c / SWIDTH * SWIDTH;
+        memset(mark + 1, 1, BWIDTH);
+        for (int i = 0; i < SWIDTH; ++i, s += BWIDTH - SWIDTH)
+          for (int j = 0; j < SWIDTH; ++j, ++r, c += BWIDTH, ++s) {
+            mark[g[r]] = 0;
             mark[g[c]] = 0;
-            mark[g[cc]] = 0;
+            mark[g[s]] = 0;
+#ifdef printresult
+            if (i | j)
+              printf("     %d,      %d,      %d\n", (int32_t)r, (int32_t)c,
+                     (int32_t)s);
+            else
+              printf("row: %d, col: %d, sqr: %d\n", (int32_t)r, (int32_t)c,
+                     (int32_t)s);
+#endif
           }
-        for (int8_t j = 1; j <= BWIDTH; ++j)
-          if (mark[j] != 0) {
-            val = j;
+        int8_t count = 0;
+        int8_t val = 0;
+        for (int8_t i = 1; i <= BWIDTH; ++i)
+          if (mark[i]) {
             ++count;
+            val = i;
           }
         if (count == 0)
           return false;
         if (count == 1) {
           ++subs;
-          g[i] = val;
-          rowmark[val] = 0;
+          g[cell] = val;
         } else {
+          subindex = cell;
           subcount = count;
-          subindex = i;
-          memcpy(submarks, mark, sizeof(mark));
+          memcpy(submarks + 1, mark + 1, BWIDTH);
         }
       }
-      if (subs == 0 || subindex < 0)
-        break;
     }
+    if (subs == 0 || subindex < 0)
+      break;
   }
   if (subindex < 0) {
     memcpy(grid, g, sizeof(g));

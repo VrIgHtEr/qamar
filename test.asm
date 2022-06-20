@@ -1,5 +1,4 @@
-.section .text
-.global _start
+.text
 _start:
 
 jal initialize
@@ -48,9 +47,9 @@ J IdleLoop
 .equ SIZE, 32
 .equ ADDR, 1000000
 
-li t0, SIZE
+li t0, 32
 li t1, 0
-li t2, ADDR
+li t2, 1000000
 init_loop:
 slli t3, t1, 2
 add t3, t3, t2
@@ -59,7 +58,7 @@ addi t1, t1, 1
 addi t0, t0, -1
 bnez t0, init_loop
 
-li s0, SIZE-1
+li s0, 31
 search_loop:
 
 fence.i
@@ -73,9 +72,9 @@ fence.i
 fence.i
 fence.i
 
-li a0, ADDR
+li a0, 1000000
 mv a1, s0
-li a2, SIZE
+li a2, 32
 jal binsearch
 
 fence.i
@@ -91,7 +90,7 @@ fence.i
 
 addi s0, s0, -1
 bge s0, zero, search_loop
-li s0, SIZE-1
+li s0, 31
 j search_loop
 
 #------------------------------------------------------------------------------------
@@ -106,8 +105,8 @@ binsearch:
 
     addi    t1, zero, 0  # left = 0
     addi    t2, a2, -1   # right = size - 1
-1: # while loop
-    bgt     t1, t2, 1f   # left > right, break
+startloop: # while loop
+    bgt     t1, t2, binsearch_ret   # left > right, break
     add     t0, t1, t2   # mid = left + right
     srai    t0, t0, 1    # mid = (left + right) / 2
 
@@ -117,19 +116,19 @@ binsearch:
     lw      t3, 0(t3)    # Dereference arr[mid]
 
     # See if the needle (a1) > arr[mid] (t3)
-    ble     a1, t3, 2f   # if needle <= t3, we need to check the next condition
+    ble     a1, t3, binsearch_a   # if needle <= t3, we need to check the next condition
     # If we get here, then the needle is > arr[mid]
     addi    t1, t0, 1    # left = mid + 1
-    j 1b
-2:
-    bge     a1, t3, 2f   # skip if needle >= arr[mid]
+    j startloop
+binsearch_a:
+    bge     a1, t3, binsearch_b   # skip if needle >= arr[mid]
     # If we get here, then needle < arr[mid]
     addi    t2, t0, -1   # right = mid - 1
-    j 1b
-2:
+    j startloop
+binsearch_b:
     # If we get here, then needle == arr[mid]
     addi    a0, t0, 0
-1:
+binsearch_ret:
     ret
 #-------------------------------------------------------------------------------------
 
@@ -159,34 +158,34 @@ mul_finish:
 
 .global mul3264
 mul3264:
-    bleu a1, a0, 1f
+    bleu a1, a0, mul3264_start
     xor a0, a0, a1
     xor a1, a1, a0
     xor a0, a0, a1
-1:
+mul3264_start:
     mv t0, a0
     li t1, 0
     mv t2, a1
     li a0, 0
     li a1, 0
-1:
-    bnez t2, 2f
+mul3264_loop:
+    bnez t2, mul3264_a
     ret
-2:
+mul3264_a:
     andi t3, t2, 1
-    beqz t3, 2f
+    beqz t3, mul3264_b
 
     add a0, a0, t0
     add a1, a1, t1
-    bgeu a0, t0, 2f
+    bgeu a0, t0, mul3264_b
     addi a1, a1, 1
-2:
+mul3264_b:
     srli t2, t2, 1
     srli t3, t0, 31
     slli t1, t1, 1
     or t1, t1, t3
     slli t0, t0, 1
-    j 1b
+    j mul3264_loop
 
 #-------------------------------------------------------------------------------------
 initialize:
