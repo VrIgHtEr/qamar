@@ -1,46 +1,50 @@
 #!/bin/sh
 CWD=$(temp="$(realpath $0)" && dirname "${temp}")
 
-OUTPUT_NAME="os"
-COMPILE_OPTS="-target riscv32-freestanding-none -mcpu generic_rv32 -O ReleaseFast -fomit-frame-pointer --strip -fsingle-threaded -fPIE"
-LINKER_OPTS=""
+build () {
+    OUTPUT_NAME="os"
+    COMPILE_OPTS="-target riscv32-freestanding-none -mcpu generic_rv32 -O ReleaseFast -fomit-frame-pointer --strip -fsingle-threaded -fPIE"
+    LINKER_OPTS=""
+    
+    APP_DIR="${CWD}/${OUTPUT_NAME}"
+    BUILD_DIR="${CWD}/build/${OUTPUT_NAME}-rv32i"
+    LINK_SCRIPT="${APP_DIR}/link.lds"
+    STDLIB_INCLUDE=${APP_DIR}/stdlib/include
+    OUTPUT_ELF_PATH="${BUILD_DIR}/${OUTPUT_NAME}"
+    OUTPUT_BIN_PATH=${OUTPUT_ELF_PATH}.bin
+    SRAM_PATH="${CWD}/lua/sram.dat"
+    OUTPUT_FILE_OPTION="-femit-bin="
+    PREPROCESS="zig cc -E -"
+    COMPILE="zig build-obj ${COMPILE_OPTS} -I${STDLIB_INCLUDE}"
+    LINK="ld.lld -T ${LINK_SCRIPT} ${LINKER_OPTS} -o ${OUTPUT_ELF_PATH}"
+    EXPORT_BINARY="llvm-objcopy -O binary ${OUTPUT_ELF_PATH} ${OUTPUT_BIN_PATH}"
+    
+    rm -rf "${BUILD_DIR}"
+    mkdir -p "${BUILD_DIR}"
+    
+    for fname in $(cd ${APP_DIR} && echo $(find . -path ./zig-cache -prune -o -type f \( -name '*.zig' -o -name '*.S' -o -name '*.s' -o -name '*.C' -o -name '*.cxx' -o -name '*.cpp' -o -name '*.cc' -o -name '*.cu' -o -name '*.c' -o -name '*.bc' -o -name '*.stub' -o -name '*.m' -o -name '*.mm' \) -print))
+    do
+        dname="${BUILD_DIR}/${fname%.*}.o"
+        mkdir -p "${dname%/*}"
+        dname=$(realpath ${dname})
+        fname="$(realpath ${APP_DIR}/${fname})"
+        echo "compile: ${fname}"
+        if ! ${COMPILE} ${OUTPUT_FILE_OPTION}"${dname}" ${fname}
+        then
+            return 1
+        fi
+    done
+    echo
+    
+    echo "link:    ${OUTPUT_ELF_PATH}" 
+    if ! ${LINK} $(find ${BUILD_DIR} -type f \( -name '*.o' -o -name '*.obj' -o -name '*.lib' -o -name '*.a' -o -name '*.so' -o -name '*.dll' -o -name '*.dylib' -o -name '*.tbd' \)) ; then return 1 ; fi
+    echo "export:  ${OUTPUT_BIN_PATH}"
+    if ! ${EXPORT_BINARY} ; then return 1 ; fi
+    echo
+    echo "replace: ${SRAM_PATH}"
+    rm -rf ${SRAM_PATH}
+    mkdir -p ${SRAM_PATH%/*}
+    cp "${OUTPUT_BIN_PATH}" "${SRAM_PATH}"
+}
 
-APP_DIR="${CWD}/${OUTPUT_NAME}"
-BUILD_DIR="${CWD}/build/${OUTPUT_NAME}-rv32i"
-LINK_SCRIPT="${APP_DIR}/link.lds"
-STDLIB_INCLUDE=${APP_DIR}/stdlib/include
-OUTPUT_ELF_PATH="${BUILD_DIR}/${OUTPUT_NAME}"
-OUTPUT_BIN_PATH=${OUTPUT_ELF_PATH}.bin
-SRAM_PATH="${CWD}/lua/sram.dat"
-OUTPUT_FILE_OPTION="-femit-bin="
-PREPROCESS="zig cc -E -"
-COMPILE="zig build-obj ${COMPILE_OPTS} -I${STDLIB_INCLUDE}"
-LINK="ld.lld -T ${LINK_SCRIPT} ${LINKER_OPTS} -o ${OUTPUT_ELF_PATH}"
-EXPORT_BINARY="llvm-objcopy -O binary ${OUTPUT_ELF_PATH} ${OUTPUT_BIN_PATH}"
-
-rm -rf "${BUILD_DIR}"
-mkdir -p "${BUILD_DIR}"
-
-for fname in $(cd ${APP_DIR} && echo $(find . -path ./zig-cache -prune -o -type f \( -name '*.zig' -o -name '*.S' -o -name '*.s' -o -name '*.C' -o -name '*.cxx' -o -name '*.cpp' -o -name '*.cc' -o -name '*.cu' -o -name '*.c' -o -name '*.bc' -o -name '*.stub' -o -name '*.m' -o -name '*.mm' \) -print))
-do
-    dname="${BUILD_DIR}/${fname%.*}.o"
-    mkdir -p "${dname%/*}"
-    dname=$(realpath ${dname})
-    fname="$(realpath ${APP_DIR}/${fname})"
-    echo "compile: ${fname}"
-    if ! ${COMPILE} ${OUTPUT_FILE_OPTION}"${dname}" ${fname}
-    then
-        return 1
-    fi
-done
-echo
-
-echo "link:    ${OUTPUT_ELF_PATH}" 
-if ! ${LINK} $(find ${BUILD_DIR} -type f \( -name '*.o' -o -name '*.obj' -o -name '*.lib' -o -name '*.a' -o -name '*.so' -o -name '*.dll' -o -name '*.dylib' -o -name '*.tbd' \)) ; then return 1 ; fi
-echo "export:  ${OUTPUT_BIN_PATH}"
-if ! ${EXPORT_BINARY} ; then return 1 ; fi
-echo
-echo "replace: ${SRAM_PATH}"
-rm -rf ${SRAM_PATH}
-mkdir -p ${SRAM_PATH%/*}
-cp "${OUTPUT_BIN_PATH}" "${SRAM_PATH}"
+build $@
