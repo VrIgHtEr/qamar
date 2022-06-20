@@ -103,6 +103,6 @@ int main(void) {
   if (solve(grid))
     printgrid(grid);
 
-  //  asm("UNIMP\n");
+  asm(".word 0\n");
   return 0;
 }
