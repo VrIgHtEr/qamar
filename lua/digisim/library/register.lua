@@ -9,7 +9,7 @@ return function(simulation)
 		---@param name string
 		---@param opts boolean
 		function(self, name, opts)
-			opts = opts or { width = 1 }
+			opts = opts or { width = 1, logname = nil }
 			local width = opts.width or 1
 			if type(width) ~= "number" then
 				error("invalid width type")
@@ -31,6 +31,15 @@ return function(simulation)
 			local ob = name .. ".bufb"
 			self:new_tristate_buffer(oa, { width = width }):c(oa, "q", name, "outa"):c(name, "oea", oa, "en")
 			self:new_tristate_buffer(ob, { width = width }):c(ob, "q", name, "outb"):c(name, "oeb", ob, "en")
+
+			if opts.logname ~= nil then
+				local logger = name .. ".logger"
+				self
+					:add_component(logger, { names = { inputs = { { "value", width } } } }, function(_, input)
+						self.log[opts.logname] = input
+					end)
+					:c(oa, "a", logger, "value")
+			end
 
 			for i = 1, width do
 				local b = name .. ".bits.b" .. (i - 1)

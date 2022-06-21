@@ -1,3 +1,4 @@
+*.corestate
 *.lxt
 *.out
 toolchain-rv32i/

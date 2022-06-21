@@ -81,7 +81,7 @@ return function(simulation)
 						file:write(string.char(data))
 						file:flush()
 					end
-					io.stderr:write("WRITE : " .. data .. " : " .. address .. "\n")
+					io.stderr:write("[" .. address .. "]:" .. data .. "\n")
 				end
 				prevWrite = write
 				if oe == signal.high then
@@ -93,7 +93,6 @@ return function(simulation)
 					if address ~= paddress or val ~= pval or poe ~= oe then
 						paddress = address
 						pval = val
-						--						io.stderr:write("READ : " .. address .. " : " .. val .. "\n")
 					end
 					return ret
 				else

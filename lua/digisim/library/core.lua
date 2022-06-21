@@ -192,7 +192,10 @@ return function(simulation)
 			s:c(alu, "lt", control, "alu_lt")
 			------------------------------------------------------------------------------
 			local registers = core .. ".registers"
-			s:new_register_bank(registers, { width = BUS_WIDTH, selwidth = REGISTER_SELECT_WIDTH, trace = opts.trace })
+			s:new_register_bank(
+				registers,
+				{ width = BUS_WIDTH, selwidth = REGISTER_SELECT_WIDTH, logname = "x", trace = opts.trace }
+			)
 			s
 				:c(control, "rst~", registers, "~rst")
 				:c(clk, "rising", registers, "rising")

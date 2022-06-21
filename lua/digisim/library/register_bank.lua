@@ -9,7 +9,7 @@ return function(simulation)
 		---@param name string
 		---@param opts boolean
 		function(self, name, opts)
-			opts = opts or { width = 1, selwidth = 1 }
+			opts = opts or { width = 1, selwidth = 1, logname = nil }
 			local width = opts.width or 1
 			if type(width) ~= "number" then
 				error("invalid width type")
@@ -60,7 +60,13 @@ return function(simulation)
 			for i = 1, numregs do
 				local n = r .. (i - 1)
 				if i > 1 then
-					self:new_register(n, { width = width })
+					local logname
+					if opts.logname ~= nil then
+						logname = opts.logname .. (i - 1)
+					else
+						logname = nil
+					end
+					self:new_register(n, { width = width, logname = logname })
 					self:c(name, "~rst", n, "~rst")
 					self:c(name, "rising", n, "rising")
 					self:cp(1, selw, "q", i, n, "write", 1)

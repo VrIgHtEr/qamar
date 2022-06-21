@@ -12,6 +12,7 @@ local DEBUG_MODE = constants.DEBUG_MODE
 ---@field time number
 ---@field trace vcd
 ---@field queue pq
+---@field log table<string,signal[]|signal>
 ---@field simulation_started boolean
 local simulation = {}
 local MT = { __index = simulation }
@@ -25,6 +26,7 @@ function simulation.new()
 		trace = vcd.new(),
 		queue = pq.new(),
 		simulation_started = false,
+		log = {},
 	}, MT)
 	ret:add_component("VCC", { names = { outputs = { "q" } } }, function()
 		return 1
