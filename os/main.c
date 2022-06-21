@@ -36,10 +36,10 @@ static bool solve(int8_t *grid) {
 
     for (int8_t cell = 0; cell < BSIZE; ++cell) {
       if (!g[cell]) {
-        int8_t r = cell / BWIDTH * BWIDTH;
+        int8_t r = cell / BWIDTH;
         int8_t c = cell % BWIDTH;
-        int8_t s =
-            (r / (SWIDTH * BWIDTH) * (SWIDTH * BWIDTH)) + c / SWIDTH * SWIDTH;
+        int8_t s = (r / SWIDTH * (SWIDTH * BWIDTH)) + c / SWIDTH * SWIDTH;
+        r *= BWIDTH;
         memset(mark + 1, 1, BWIDTH);
         for (int i = 0; i < SWIDTH; ++i, s += BWIDTH - SWIDTH)
           for (int j = 0; j < SWIDTH; ++j, ++r, c += BWIDTH, ++s) {

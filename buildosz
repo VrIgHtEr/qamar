@@ -3,7 +3,7 @@ CWD=$(temp="$(realpath $0)" && dirname "${temp}")
 
 build () {
     OUTPUT_NAME="os"
-    COMPILE_OPTS="-target riscv32-freestanding-none -mcpu generic_rv32 -O ReleaseFast -fomit-frame-pointer --strip -fsingle-threaded -fPIE"
+    COMPILE_OPTS="-target riscv32-freestanding-none -mcpu generic_rv32 -O ReleaseFast -fomit-frame-pointer --strip -fsingle-threaded -fno-PIE"
     LINKER_OPTS=""
     
     APP_DIR="${CWD}/${OUTPUT_NAME}"
