@@ -16,13 +16,13 @@ sim:c(rst, "q", core, "rst~")
 -----------------------------------------------------------------------------------------------------
 
 local max = 0
+local edge = 0
 
 local plog = {}
 while sim.time < constants.SIM_TIME do
 	--io.stderr:write("TIME: " .. sim.time .. "\n")
 	local x
 	_, x = sim:step()
-
 	local strings = {}
 	for name, value in pairs(sim.log) do
 		if type(value) == "number" then
@@ -54,8 +54,9 @@ while sim.time < constants.SIM_TIME do
 		end
 	end
 	io.stderr:write("#")
-	io.stderr:write(sim.time)
+	io.stderr:write(edge)
 	io.stderr:write("\n")
+	edge = edge + 1
 	if #strings > 0 then
 		io.stderr:write(table.concat(strings, "\n"))
 		io.stderr:write("\n")

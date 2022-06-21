@@ -144,9 +144,9 @@ local success, err = pcall(function()
 			local c1 = line:sub(1, 1)
 			if c1 ~= '"' then
 				if c1 == "#" then
-					local time = tonumber(line:sub(2))
+					local time = tostring(tonumber(line:sub(2)))
 					local pos = positions["[TIME]"]
-					printat(pos, "TIME", time)
+					printat(pos, "[TIME]", time)
 				else
 					local index = line:find(":")
 					if index ~= nil then
