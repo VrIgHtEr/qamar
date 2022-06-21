@@ -25,9 +25,8 @@ static void printgrid(const int8_t *grid) {
 }
 
 static bool solve(int8_t *grid) {
-  int8_t g[BSIZE], submarks[BWIDTH + 1], rowmarks[BWIDTH + 1], mark[BWIDTH + 1];
+  int8_t g[BSIZE], submarks[BWIDTH + 1], mark[BWIDTH + 1];
   memcpy(g, grid, sizeof(g));
-  rowmarks[0] = 0;
   mark[0] = 0;
   int8_t subindex, subcount;
   for (;;) {
@@ -35,20 +34,15 @@ static bool solve(int8_t *grid) {
     subindex = -1;
     subcount = BWIDTH + 1;
     for (int8_t row = 0, cell = 0, rl = 0; row < BWIDTH; ++row, rl += BWIDTH) {
-      int8_t rowdirty = 1;
       for (int8_t col = 0; col < BWIDTH; ++col, ++cell)
         if (!g[cell]) {
-          if (rowdirty) {
-            rowdirty = 0;
-            memset(rowmarks + 1, 1, BWIDTH);
-            for (int8_t i = rl, max = rl + BWIDTH; i < max; ++i)
-              rowmarks[g[i]] = 0;
-          }
+          int8_t r = rl;
           int8_t c = col;
           int8_t s = (BWIDTH * SWIDTH * (row / SWIDTH)) + col / SWIDTH * SWIDTH;
-          memcpy(mark + 1, rowmarks + 1, BWIDTH);
+          memset(mark + 1, 1, BWIDTH);
           for (int i = 0; i < SWIDTH; ++i, s += BWIDTH - SWIDTH)
-            for (int j = 0; j < SWIDTH; ++j, c += BWIDTH, ++s) {
+            for (int j = 0; j < SWIDTH; ++j, c += BWIDTH, ++s, ++r) {
+              mark[g[r]] = 0;
               mark[g[c]] = 0;
               mark[g[s]] = 0;
 #ifdef printresult
@@ -72,7 +66,6 @@ static bool solve(int8_t *grid) {
           if (count == 1) {
             ++subs;
             g[cell] = val;
-            rowmarks[val] = 0;
           } else {
             subindex = cell;
             subcount = count;
@@ -109,6 +102,5 @@ int main(void) {
   if (solve(grid))
     printgrid(grid);
 
-  // asm(".word 0\n");
   return 0;
 }

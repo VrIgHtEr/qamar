@@ -1,6 +1,7 @@
 #!/bin/luajit
 
 local positions = {
+	x0 = { 0, 1, 3, 8, changegroup = "register", alias = "zero", format = "hex" },
 	x1 = { 1, 1, 3, 8, changegroup = "register", alias = "ra", format = "hex" },
 	x2 = { 2, 1, 3, 8, changegroup = "register", alias = "sp", format = "hex" },
 	x3 = { 3, 1, 3, 8, changegroup = "register", alias = "gp", format = "hex" },
@@ -34,7 +35,7 @@ local positions = {
 	x31 = { 31, 1, 3, 8, changegroup = "register", alias = "t6", format = "hex" },
 	["[TIME]"] = { 1, 20, 5, 11, alias = "clock" },
 	["PC"] = { 3, 20, 5, 11, changegroup = "i", alias = "pc", format = "decimal" },
-	["INSTR"] = { 4, 20, 5, 11, changegroup = "i", alias = "i", format = "hex" },
+	["INSTR"] = { 4, 20, 5, 32, changegroup = "i", alias = "i", format = "risc-v" },
 }
 
 function string:rpad(amt, char)
@@ -86,6 +87,99 @@ local function parsenumber(value)
 	return v
 end
 
+local function findalias(n)
+	local x = positions[n]
+	if not x or not x.alias then
+		return n
+	end
+	return x.alias
+end
+
+local function disassemble(i)
+	local opcode = bit.band(i, 0x7f)
+	local rd = bit.band(0x1f, bit.rshift(i, 7))
+	local ui = bit.lshift(bit.rshift(i, 12), 12)
+	local f3 = bit.band(7, bit.rshift(i, 12))
+	local rs1 = bit.band(0x1f, bit.rshift(i, 15))
+	local rs2 = bit.band(0x1f, bit.rshift(i, 20))
+	local f7 = bit.rshift(i, 25)
+	local immi = bit.arshift(i, 20)
+	if opcode == 0x37 then
+		return "lui   " .. findalias("x" .. rd) .. ", " .. ui
+	elseif opcode == 0x17 then
+		return "auipc " .. findalias("x" .. rd) .. ", " .. ui
+	elseif opcode == 0x13 then
+		if f3 == 0 and f7 == 0 then
+			return "addi  " .. findalias("x" .. rd) .. ", " .. findalias("x" .. rs1) .. ", " .. immi
+		elseif f3 == 1 and f7 == 0 then
+			return "slli  " .. findalias("x" .. rd) .. ", " .. findalias("x" .. rs1) .. ", " .. immi
+		elseif f3 == 2 and f7 == 0 then
+			return "slti  " .. findalias("x" .. rd) .. ", " .. findalias("x" .. rs1) .. ", " .. immi
+		elseif f3 == 3 and f7 == 0 then
+			return "sltiu " .. findalias("x" .. rd) .. ", " .. findalias("x" .. rs1) .. ", " .. immi
+		elseif f3 == 4 and f7 == 0 then
+			return "xori  " .. findalias("x" .. rd) .. ", " .. findalias("x" .. rs1) .. ", " .. immi
+		elseif f3 == 5 then
+			if f7 == 0 then
+				return "srli  " .. findalias("x" .. rd) .. ", " .. findalias("x" .. rs1) .. ", " .. immi
+			elseif f7 == 0x20 then
+				return "srai  " .. findalias("x" .. rd) .. ", " .. findalias("x" .. rs1) .. ", " .. bit.band(0x1f, immi)
+			end
+		elseif f3 == 6 and f7 == 0 then
+			return "ori   " .. findalias("x" .. rd) .. ", " .. findalias("x" .. rs1) .. ", " .. immi
+		elseif f3 == 7 and f7 == 0 then
+			return "andi  " .. findalias("x" .. rd) .. ", " .. findalias("x" .. rs1) .. ", " .. immi
+		end
+	elseif opcode == 0x33 then
+		if f3 == 0 then
+			if f7 == 0 then
+				return "add   "
+					.. findalias("x" .. rd)
+					.. ", "
+					.. findalias("x" .. rs1)
+					.. ", "
+					.. findalias("x" .. rs2)
+			elseif f7 == 0x20 then
+				return "sub   "
+					.. findalias("x" .. rd)
+					.. ", "
+					.. findalias("x" .. rs1)
+					.. ", "
+					.. findalias("x" .. rs2)
+			end
+		elseif f3 == 1 and f7 == 0 then
+			return "sll   " .. findalias("x" .. rd) .. ", " .. findalias("x" .. rs1) .. ", " .. findalias("x" .. rs2)
+		elseif f3 == 2 and f7 == 0 then
+			return "slt   " .. findalias("x" .. rd) .. ", " .. findalias("x" .. rs1) .. ", " .. findalias("x" .. rs2)
+		elseif f3 == 3 and f7 == 0 then
+			return "sltu  " .. findalias("x" .. rd) .. ", " .. findalias("x" .. rs1) .. ", " .. findalias("x" .. rs2)
+		elseif f3 == 4 and f7 == 0 then
+			return "xor   " .. findalias("x" .. rd) .. ", " .. findalias("x" .. rs1) .. ", " .. findalias("x" .. rs2)
+		elseif f3 == 5 then
+			if f7 == 0 then
+				return "srl   "
+					.. findalias("x" .. rd)
+					.. ", "
+					.. findalias("x" .. rs1)
+					.. ", "
+					.. findalias("x" .. rs2)
+			elseif f7 == 0x20 then
+				return "sra   "
+					.. findalias("x" .. rd)
+					.. ", "
+					.. findalias("x" .. rs1)
+					.. ", "
+					.. findalias("x" .. rs2)
+			end
+		elseif f3 == 6 and f7 == 0 then
+			return "or    " .. findalias("x" .. rd) .. ", " .. findalias("x" .. rs1) .. ", " .. findalias("x" .. rs2)
+		elseif f3 == 7 and f7 == 0 then
+			return "and   " .. findalias("x" .. rd) .. ", " .. findalias("x" .. rs1) .. ", " .. findalias("x" .. rs2)
+		end
+	end
+	return ""
+end
+
 local function printat(pos, name, value)
 	if pos.alias ~= nil then
 		name = pos.alias
@@ -101,6 +195,11 @@ local function printat(pos, name, value)
 		elseif pos.format == "hex" then
 			local v = bit.tohex(parsenumber(value)):lpad(8, "0")
 			value = v:lpad(pos[4])
+		elseif pos.format == "risc-v" then
+			local i = parsenumber(value)
+			local v = bit.tohex(i):lpad(8, "0")
+			local d = disassemble(i):rpad(pos[4] - 12)
+			value = (v .. " " .. d):lpad(pos[4])
 		else
 			value = value:lpad(pos[4])
 		end
