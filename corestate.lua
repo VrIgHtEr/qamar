@@ -32,7 +32,7 @@ local positions = {
 	x29 = { 29, 1, 3, 8, changegroup = "register", alias = "t4", format = "hex" },
 	x30 = { 30, 1, 3, 8, changegroup = "register", alias = "t5", format = "hex" },
 	x31 = { 31, 1, 3, 8, changegroup = "register", alias = "t6", format = "hex" },
-	["[TIME]"] = { 1, 20, 5, 11, alias = "tick" },
+	["[TIME]"] = { 1, 20, 5, 11, alias = "clock" },
 	["PC"] = { 3, 20, 5, 11, changegroup = "i", alias = "pc", format = "decimal" },
 	["INSTR"] = { 4, 20, 5, 11, changegroup = "i", alias = "i", format = "hex" },
 }
@@ -144,7 +144,7 @@ local success, err = pcall(function()
 			local c1 = line:sub(1, 1)
 			if c1 ~= '"' then
 				if c1 == "#" then
-					local time = tostring(tonumber(line:sub(2)))
+					local time = math.floor(tonumber(line:sub(2)) / 2)
 					local pos = positions["[TIME]"]
 					printat(pos, "[TIME]", time)
 				else
