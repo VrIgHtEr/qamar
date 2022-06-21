@@ -1,2 +1,33 @@
-#!/bin/env sh
-build/linux-release/qamar | shmidcat | gtkwave -v -I display.gtkw -g -O /dev/null $@
+create_fifos () {
+    while [ $1 ];
+    do
+        rm -rf $1
+        mkfifo $1
+        shift 1
+    done
+}
+
+delete_fifos () {
+    while [ $1 ];
+    do
+        rm -rf $1
+        shift 1
+    done
+}
+
+shmem=shmem.corestate
+stderr=stderr.corestate
+fifos="$stderr $shmem"
+create_fifos $fifos
+
+cleanup () {
+    delete_fifos $fifos
+    exit
+}
+
+trap "cleanup" INT
+
+build/linux-release/qamar 1>shmem.corestate 2>stderr.corestate &
+lua corestate.lua 0<stderr.corestate &
+shmidcat 0<shmem.corestate | gtkwave -v -I display.gtkw -g -O /dev/null $@
+cleanup

@@ -141,7 +141,7 @@ return function(simulation)
 				:c(lu, "out", buses, "d")
 			------------------------------------------------------------------------------
 			local pc = core .. ".pc"
-			s:new_program_counter(pc, { trace = opts.trace })
+			s:new_program_counter(pc, { trace = opts.trace, logname = "PC" })
 			s:c(control, "rst~", pc, "rst~")
 			s:c(clk, "rising", pc, "rising")
 			s:c(clk, "falling", pc, "falling")
@@ -153,7 +153,7 @@ return function(simulation)
 			s:c(pc, "pc", control, "pc")
 			------------------------------------------------------------------------------
 			local xu = core .. ".xu"
-			s:new_execution_unit(xu, { trace = opts.trace })
+			s:new_execution_unit(xu, { trace = opts.trace, logname = "INSTR" })
 			s:c(buses, "d", xu, "d")
 			s:c(clk, "rising", xu, "rising")
 			s:c(clk, "falling", xu, "falling")

@@ -11,7 +11,7 @@ return function(simulation)
 		---@param f string
 		---@param opts boolean
 		function(s, f, opts)
-			opts = opts or {}
+			opts = opts or { logname = nil }
 			opts.names = {
 				inputs = {
 					{ "d", BITS },
@@ -62,7 +62,7 @@ return function(simulation)
 
 			local ireg = f .. ".ireg"
 			s
-				:new_ms_d_flipflop_bank(ireg, { width = BITS })
+				:new_ms_d_flipflop_bank(ireg, { width = BITS, logname = opts.logname })
 				:c(f, "rst~", ireg, "rst~")
 				:c(f, "falling", ireg, "falling")
 				:c(cc0, "q", ireg, "rising")

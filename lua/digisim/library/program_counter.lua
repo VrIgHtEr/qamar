@@ -11,7 +11,7 @@ return function(simulation)
 		---@param f string
 		---@param opts boolean
 		function(s, f, opts)
-			opts = opts or {}
+			opts = opts or { logname = nil }
 			opts.names = {
 				inputs = {
 					"rst~",
@@ -35,7 +35,7 @@ return function(simulation)
 			s:new_and_bank(latch_trigger):c(f, "rising", latch_trigger, "a"):c(latchor, "q", latch_trigger, "b")
 			local pc = f .. ".register"
 			s
-				:new_ms_d_flipflop_bank(pc, { width = BITS })
+				:new_ms_d_flipflop_bank(pc, { width = BITS, logname = opts.logname })
 				:c(f, "rst~", pc, "rst~")
 				:c(latch_trigger, "q", pc, "rising")
 				:c(f, "falling", pc, "falling")
