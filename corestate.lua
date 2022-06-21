@@ -1,40 +1,40 @@
 #!/bin/luajit
 
 local positions = {
-	x1 = { 1, 1, 3, 33 },
-	x2 = { 2, 1, 3, 33 },
-	x3 = { 3, 1, 3, 33 },
-	x4 = { 4, 1, 3, 33 },
-	x5 = { 5, 1, 3, 33 },
-	x6 = { 6, 1, 3, 33 },
-	x7 = { 7, 1, 3, 33 },
-	x8 = { 8, 1, 3, 33 },
-	x9 = { 9, 1, 3, 33 },
-	x10 = { 10, 1, 3, 33 },
-	x11 = { 11, 1, 3, 33 },
-	x12 = { 12, 1, 3, 33 },
-	x13 = { 13, 1, 3, 33 },
-	x14 = { 14, 1, 3, 33 },
-	x15 = { 15, 1, 3, 33 },
-	x16 = { 16, 1, 3, 33 },
-	x17 = { 17, 1, 3, 33 },
-	x18 = { 18, 1, 3, 33 },
-	x19 = { 19, 1, 3, 33 },
-	x20 = { 20, 1, 3, 33 },
-	x21 = { 21, 1, 3, 33 },
-	x22 = { 22, 1, 3, 33 },
-	x23 = { 23, 1, 3, 33 },
-	x24 = { 24, 1, 3, 33 },
-	x25 = { 25, 1, 3, 33 },
-	x26 = { 26, 1, 3, 33 },
-	x27 = { 27, 1, 3, 33 },
-	x28 = { 28, 1, 3, 33 },
-	x29 = { 29, 1, 3, 33 },
-	x30 = { 30, 1, 3, 33 },
-	x31 = { 31, 1, 3, 33 },
-	["[TIME]"] = { 1, 39, 5, 11 },
-	["PC"] = { 3, 39, 5, 33 },
-	["INSTR"] = { 4, 39, 5, 33 },
+	x1 = { 1, 1, 3, 33, changegroup = "register", alias = "ra" },
+	x2 = { 2, 1, 3, 33, changegroup = "register", alias = "sp" },
+	x3 = { 3, 1, 3, 33, changegroup = "register", alias = "gp" },
+	x4 = { 4, 1, 3, 33, changegroup = "register", alias = "tp" },
+	x5 = { 5, 1, 3, 33, changegroup = "register", alias = "t0" },
+	x6 = { 6, 1, 3, 33, changegroup = "register", alias = "t1" },
+	x7 = { 7, 1, 3, 33, changegroup = "register", alias = "t2" },
+	x8 = { 8, 1, 3, 33, changegroup = "register", alias = "s0" },
+	x9 = { 9, 1, 3, 33, changegroup = "register", alias = "s1" },
+	x10 = { 10, 1, 3, 33, changegroup = "register", alias = "a0" },
+	x11 = { 11, 1, 3, 33, changegroup = "register", alias = "a1" },
+	x12 = { 12, 1, 3, 33, changegroup = "register", alias = "a2" },
+	x13 = { 13, 1, 3, 33, changegroup = "register", alias = "a3" },
+	x14 = { 14, 1, 3, 33, changegroup = "register", alias = "a4" },
+	x15 = { 15, 1, 3, 33, changegroup = "register", alias = "a5" },
+	x16 = { 16, 1, 3, 33, changegroup = "register", alias = "a6" },
+	x17 = { 17, 1, 3, 33, changegroup = "register", alias = "a7" },
+	x18 = { 18, 1, 3, 33, changegroup = "register", alias = "s2" },
+	x19 = { 19, 1, 3, 33, changegroup = "register", alias = "s3" },
+	x20 = { 20, 1, 3, 33, changegroup = "register", alias = "s4" },
+	x21 = { 21, 1, 3, 33, changegroup = "register", alias = "s5" },
+	x22 = { 22, 1, 3, 33, changegroup = "register", alias = "s6" },
+	x23 = { 23, 1, 3, 33, changegroup = "register", alias = "s7" },
+	x24 = { 24, 1, 3, 33, changegroup = "register", alias = "s8" },
+	x25 = { 25, 1, 3, 33, changegroup = "register", alias = "s9" },
+	x26 = { 26, 1, 3, 33, changegroup = "register", alias = "s10" },
+	x27 = { 27, 1, 3, 33, changegroup = "register", alias = "s11" },
+	x28 = { 28, 1, 3, 33, changegroup = "register", alias = "t3" },
+	x29 = { 29, 1, 3, 33, changegroup = "register", alias = "t4" },
+	x30 = { 30, 1, 3, 33, changegroup = "register", alias = "t5" },
+	x31 = { 31, 1, 3, 33, changegroup = "register", alias = "t6" },
+	["[TIME]"] = { 1, 39, 5, 11, alias = "tick" },
+	["PC"] = { 3, 39, 5, 33, changegroup = "i", alias = "pc" },
+	["INSTR"] = { 4, 39, 5, 33, changegroup = "i", alias = "i" },
 }
 
 function string:rpad(amt, char)
@@ -62,26 +62,55 @@ function string:lpad(amt, char)
 end
 
 local function enter()
-	io.stdout:write("\x1b[?25l\x1b[?1049h\x1b[2J"):flush()
+	io.stdout:write("\x1b[?25l\x1b[?1049h\x1b[2J")
+	io.stdout:flush()
 end
 
 local function exit()
-	io.stdout:write("\x1b[?25h\x1b[?1049l"):flush()
+	io.stdout:write("\x1b[?25h\x1b[?1049l")
+	io.stdout:flush()
 end
 
+---@type table<string,table>
+local changegroups = {}
+
 local function printat(pos, name, value)
-	io.stdout
-		:write(
-			"\x1b["
-				.. pos[1]
-				.. ";"
-				.. pos[2]
-				.. "H"
-				.. tostring(name):rpad(pos[3])
-				.. ":"
-				.. tostring(value):lpad(pos[4])
-		)
-		:flush()
+	if pos.alias ~= nil then
+		name = pos.alias
+	end
+	name = name ~= nil and tostring(name) or ""
+	if name:len() > 0 then
+		name = name:rpad(pos[3])
+	end
+	value = value ~= nil and tostring(value) or ""
+	if value:len() > 0 then
+		value = value:lpad(pos[4])
+	end
+	local str
+	if name:len() == 0 then
+		str = value
+	elseif value:len() == 0 then
+		str = name
+	else
+		str = name .. ":" .. value
+	end
+	if pos.changegroup then
+		local cg = changegroups[pos.changegroup]
+		if cg == nil then
+			cg = {}
+			changegroups[pos.changegroup] = cg
+		end
+		if cg.pos and cg.pos ~= pos then
+			io.stdout:write("\x1b[37m\x1b[" .. cg.pos[1] .. ";" .. cg.pos[2] .. "H" .. cg.text)
+		end
+		cg.pos = pos
+		cg.text = str
+		io.stdout:write("\x1b[31m")
+	else
+		io.stdout:write("\x1b[37m")
+	end
+	io.stdout:write("\x1b[" .. pos[1] .. ";" .. pos[2] .. "H" .. str)
+	io.stdout:flush()
 end
 
 local success, err = pcall(function()

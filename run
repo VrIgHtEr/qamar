@@ -28,6 +28,6 @@ cleanup () {
 trap "cleanup" INT
 
 build/linux-release/qamar 1>shmem.corestate 2>stderr.corestate &
-lua corestate.lua 0<stderr.corestate &
+./corestate.lua 0<stderr.corestate &
 shmidcat 0<shmem.corestate | gtkwave -v -I display.gtkw -g -O /dev/null $@
 cleanup
