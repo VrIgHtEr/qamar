@@ -35,11 +35,15 @@ static bool solve(int8_t *grid) {
     subindex = -1;
     subcount = BWIDTH + 1;
     for (int8_t row = 0, cell = 0, rl = 0; row < BWIDTH; ++row, rl += BWIDTH) {
-      memset(rowmarks + 1, 1, BWIDTH);
-      for (int8_t i = rl, max = rl + BWIDTH; i < max; ++i)
-        rowmarks[g[i]] = 0;
+      int8_t rowdirty = 1;
       for (int8_t col = 0; col < BWIDTH; ++col, ++cell)
         if (!g[cell]) {
+          if (rowdirty) {
+            rowdirty = 0;
+            memset(rowmarks + 1, 1, BWIDTH);
+            for (int8_t i = rl, max = rl + BWIDTH; i < max; ++i)
+              rowmarks[g[i]] = 0;
+          }
           int8_t c = col;
           int8_t s = (BWIDTH * SWIDTH * (row / SWIDTH)) + col / SWIDTH * SWIDTH;
           memcpy(mark + 1, rowmarks + 1, BWIDTH);
@@ -68,6 +72,7 @@ static bool solve(int8_t *grid) {
           if (count == 1) {
             ++subs;
             g[cell] = val;
+            rowmarks[val] = 0;
           } else {
             subindex = cell;
             subcount = count;
