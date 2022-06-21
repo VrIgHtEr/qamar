@@ -25,54 +25,55 @@ static void printgrid(const int8_t *grid) {
 }
 
 static bool solve(int8_t *grid) {
-  int8_t g[BSIZE], submarks[BWIDTH + 1], mark[BWIDTH + 1];
+  int8_t g[BSIZE], submarks[BWIDTH + 1], rowmarks[BWIDTH + 1], mark[BWIDTH + 1];
   memcpy(g, grid, sizeof(g));
+  rowmarks[0] = 0;
   mark[0] = 0;
   int8_t subindex, subcount;
   for (;;) {
     int8_t subs = 0;
     subindex = -1;
     subcount = BWIDTH + 1;
-
-    for (int8_t cell = 0; cell < BSIZE; ++cell) {
-      if (!g[cell]) {
-        int8_t r = cell / BWIDTH;
-        int8_t c = cell % BWIDTH;
-        int8_t s = (r / SWIDTH * (SWIDTH * BWIDTH)) + c / SWIDTH * SWIDTH;
-        r *= BWIDTH;
-        memset(mark + 1, 1, BWIDTH);
-        for (int i = 0; i < SWIDTH; ++i, s += BWIDTH - SWIDTH)
-          for (int j = 0; j < SWIDTH; ++j, ++r, c += BWIDTH, ++s) {
-            mark[g[r]] = 0;
-            mark[g[c]] = 0;
-            mark[g[s]] = 0;
+    for (int8_t row = 0, cell = 0, rl = 0; row < BWIDTH; ++row, rl += BWIDTH) {
+      memset(rowmarks + 1, 1, BWIDTH);
+      for (int8_t i = rl, max = rl + BWIDTH; i < max; ++i)
+        rowmarks[g[i]] = 0;
+      for (int8_t col = 0; col < BWIDTH; ++col, ++cell)
+        if (!g[cell]) {
+          int8_t c = col;
+          int8_t s = (BWIDTH * SWIDTH * (row / SWIDTH)) + col / SWIDTH * SWIDTH;
+          memcpy(mark + 1, rowmarks + 1, BWIDTH);
+          for (int i = 0; i < SWIDTH; ++i, s += BWIDTH - SWIDTH)
+            for (int j = 0; j < SWIDTH; ++j, c += BWIDTH, ++s) {
+              mark[g[c]] = 0;
+              mark[g[s]] = 0;
 #ifdef printresult
-            if (i | j)
-              printf("     %d,      %d,      %d\n", (int32_t)r, (int32_t)c,
-                     (int32_t)s);
-            else
-              printf("row: %d, col: %d, sqr: %d\n", (int32_t)r, (int32_t)c,
-                     (int32_t)s);
+              if (i | j)
+                printf("     %d,      %d,      %d\n", (int32_t)row, (int32_t)c,
+                       (int32_t)s);
+              else
+                printf("row: %d, col: %d, sqr: %d\n", (int32_t)row, (int32_t)c,
+                       (int32_t)s);
 #endif
+            }
+          int8_t count = 0;
+          int8_t val = 0;
+          for (int8_t i = 1; i <= BWIDTH; ++i)
+            if (mark[i]) {
+              ++count;
+              val = i;
+            }
+          if (count == 0)
+            return false;
+          if (count == 1) {
+            ++subs;
+            g[cell] = val;
+          } else {
+            subindex = cell;
+            subcount = count;
+            memcpy(submarks + 1, mark + 1, BWIDTH);
           }
-        int8_t count = 0;
-        int8_t val = 0;
-        for (int8_t i = 1; i <= BWIDTH; ++i)
-          if (mark[i]) {
-            ++count;
-            val = i;
-          }
-        if (count == 0)
-          return false;
-        if (count == 1) {
-          ++subs;
-          g[cell] = val;
-        } else {
-          subindex = cell;
-          subcount = count;
-          memcpy(submarks + 1, mark + 1, BWIDTH);
         }
-      }
     }
     if (subs == 0 || subindex < 0)
       break;
@@ -103,6 +104,6 @@ int main(void) {
   if (solve(grid))
     printgrid(grid);
 
-  asm(".word 0\n");
+  // asm(".word 0\n");
   return 0;
 }
