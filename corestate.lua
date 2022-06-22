@@ -1,41 +1,41 @@
 #!/bin/luajit
 
 local positions = {
-	x0 = { 0, 1, 3, 8, changegroup = "register", alias = "zero", format = "hex" },
-	x1 = { 1, 1, 3, 8, changegroup = "register", alias = "ra", format = "hex" },
-	x2 = { 2, 1, 3, 8, changegroup = "register", alias = "sp", format = "hex" },
-	x3 = { 3, 1, 3, 8, changegroup = "register", alias = "gp", format = "hex" },
-	x4 = { 4, 1, 3, 8, changegroup = "register", alias = "tp", format = "hex" },
-	x5 = { 5, 1, 3, 8, changegroup = "register", alias = "t0", format = "hex" },
-	x6 = { 6, 1, 3, 8, changegroup = "register", alias = "t1", format = "hex" },
-	x7 = { 7, 1, 3, 8, changegroup = "register", alias = "t2", format = "hex" },
-	x8 = { 8, 1, 3, 8, changegroup = "register", alias = "s0", format = "hex" },
-	x9 = { 9, 1, 3, 8, changegroup = "register", alias = "s1", format = "hex" },
-	x10 = { 10, 1, 3, 8, changegroup = "register", alias = "a0", format = "hex" },
-	x11 = { 11, 1, 3, 8, changegroup = "register", alias = "a1", format = "hex" },
-	x12 = { 12, 1, 3, 8, changegroup = "register", alias = "a2", format = "hex" },
-	x13 = { 13, 1, 3, 8, changegroup = "register", alias = "a3", format = "hex" },
-	x14 = { 14, 1, 3, 8, changegroup = "register", alias = "a4", format = "hex" },
-	x15 = { 15, 1, 3, 8, changegroup = "register", alias = "a5", format = "hex" },
-	x16 = { 16, 1, 3, 8, changegroup = "register", alias = "a6", format = "hex" },
-	x17 = { 17, 1, 3, 8, changegroup = "register", alias = "a7", format = "hex" },
-	x18 = { 18, 1, 3, 8, changegroup = "register", alias = "s2", format = "hex" },
-	x19 = { 19, 1, 3, 8, changegroup = "register", alias = "s3", format = "hex" },
-	x20 = { 20, 1, 3, 8, changegroup = "register", alias = "s4", format = "hex" },
-	x21 = { 21, 1, 3, 8, changegroup = "register", alias = "s5", format = "hex" },
-	x22 = { 22, 1, 3, 8, changegroup = "register", alias = "s6", format = "hex" },
-	x23 = { 23, 1, 3, 8, changegroup = "register", alias = "s7", format = "hex" },
-	x24 = { 24, 1, 3, 8, changegroup = "register", alias = "s8", format = "hex" },
-	x25 = { 25, 1, 3, 8, changegroup = "register", alias = "s9", format = "hex" },
-	x26 = { 26, 1, 3, 8, changegroup = "register", alias = "s10", format = "hex" },
-	x27 = { 27, 1, 3, 8, changegroup = "register", alias = "s11", format = "hex" },
-	x28 = { 28, 1, 3, 8, changegroup = "register", alias = "t3", format = "hex" },
-	x29 = { 29, 1, 3, 8, changegroup = "register", alias = "t4", format = "hex" },
-	x30 = { 30, 1, 3, 8, changegroup = "register", alias = "t5", format = "hex" },
-	x31 = { 31, 1, 3, 8, changegroup = "register", alias = "t6", format = "hex" },
-	["[TIME]"] = { 1, 20, 5, 11, alias = "clock" },
-	["PC"] = { 3, 20, 5, 11, changegroup = "i", alias = "pc", format = "decimal" },
-	["INSTR"] = { 4, 20, 5, 32, changegroup = "i", alias = "i", format = "risc-v", filter = 0 },
+	x0 = { 5 + 1, 1, 5, 11, changegroup = "register", alias = "zero", format = "hex" },
+	x1 = { 5 + 2, 1, 5, 11, changegroup = "register", alias = "ra", format = "hex" },
+	x2 = { 5 + 3, 1, 5, 11, changegroup = "register", alias = "sp", format = "hex" },
+	x3 = { 5 + 4, 1, 5, 11, changegroup = "register", alias = "gp", format = "hex" },
+	x4 = { 5 + 5, 1, 5, 11, changegroup = "register", alias = "tp", format = "hex" },
+	x5 = { 5 + 6, 1, 5, 11, changegroup = "register", alias = "t0", format = "hex" },
+	x6 = { 5 + 7, 1, 5, 11, changegroup = "register", alias = "t1", format = "hex" },
+	x7 = { 5 + 8, 1, 5, 11, changegroup = "register", alias = "t2", format = "hex" },
+	x8 = { 5 + 9, 1, 5, 11, changegroup = "register", alias = "s0", format = "hex" },
+	x9 = { 5 + 10, 1, 5, 11, changegroup = "register", alias = "s1", format = "hex" },
+	x10 = { 5 + 11, 1, 5, 11, changegroup = "register", alias = "a0", format = "hex" },
+	x11 = { 5 + 12, 1, 5, 11, changegroup = "register", alias = "a1", format = "hex" },
+	x12 = { 5 + 13, 1, 5, 11, changegroup = "register", alias = "a2", format = "hex" },
+	x13 = { 5 + 14, 1, 5, 11, changegroup = "register", alias = "a3", format = "hex" },
+	x14 = { 5 + 15, 1, 5, 11, changegroup = "register", alias = "a4", format = "hex" },
+	x15 = { 5 + 16, 1, 5, 11, changegroup = "register", alias = "a5", format = "hex" },
+	x16 = { 5 + 1, 25, 5, 11, changegroup = "register", alias = "a6", format = "hex" },
+	x17 = { 5 + 2, 25, 5, 11, changegroup = "register", alias = "a7", format = "hex" },
+	x18 = { 5 + 3, 25, 5, 11, changegroup = "register", alias = "s2", format = "hex" },
+	x19 = { 5 + 4, 25, 5, 11, changegroup = "register", alias = "s3", format = "hex" },
+	x20 = { 5 + 5, 25, 5, 11, changegroup = "register", alias = "s4", format = "hex" },
+	x21 = { 5 + 6, 25, 5, 11, changegroup = "register", alias = "s5", format = "hex" },
+	x22 = { 5 + 7, 25, 5, 11, changegroup = "register", alias = "s6", format = "hex" },
+	x23 = { 5 + 8, 25, 5, 11, changegroup = "register", alias = "s7", format = "hex" },
+	x24 = { 5 + 9, 25, 5, 11, changegroup = "register", alias = "s8", format = "hex" },
+	x25 = { 5 + 10, 25, 5, 11, changegroup = "register", alias = "s9", format = "hex" },
+	x26 = { 5 + 11, 25, 5, 11, changegroup = "register", alias = "s10", format = "hex" },
+	x27 = { 5 + 12, 25, 5, 11, changegroup = "register", alias = "s11", format = "hex" },
+	x28 = { 5 + 13, 25, 5, 11, changegroup = "register", alias = "t3", format = "hex" },
+	x29 = { 5 + 14, 25, 5, 11, changegroup = "register", alias = "t4", format = "hex" },
+	x30 = { 5 + 15, 25, 5, 11, changegroup = "register", alias = "t5", format = "hex" },
+	x31 = { 5 + 16, 25, 5, 11, changegroup = "register", alias = "t6", format = "hex" },
+	["[TIME]"] = { 1, 1, 5, 11, alias = "clock" },
+	["PC"] = { 3, 1, 5, 11, changegroup = "i", alias = "pc", format = "decimal" },
+	["INSTR"] = { 4, 1, 5, 32, changegroup = "i", alias = "i", format = "risc-v", filter = 0 },
 }
 
 function string:rpad(amt, char)
@@ -43,6 +43,9 @@ function string:rpad(amt, char)
 	amt = math.floor(amt)
 	if amt <= 0 then
 		return ""
+	end
+	if self:len() > amt then
+		return self:sub(1, amt)
 	end
 	while self:len() < amt do
 		self = self .. char
@@ -55,6 +58,9 @@ function string:lpad(amt, char)
 	amt = math.floor(amt)
 	if amt <= 0 then
 		return ""
+	end
+	if self:len() > amt then
+		return self:sub(self:len() - amt + 1, self:len())
 	end
 	while self:len() < amt do
 		self = char .. self
