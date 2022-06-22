@@ -42,7 +42,7 @@ local positions = {
 	x31 = { 5 + 16, 25, 5, 11, changegroup = "register", alias = "t6", format = "hex" },
 	["[TIME]"] = { 1, 1, 5, 11, alias = "clock" },
 	["PC"] = { 3, 1, 5, 11, changegroup = "i", alias = "pc", format = "decimal" },
-	["INSTR"] = { 4, 1, 5, 32, changegroup = "i", alias = "i", format = "risc-v", filter = 0 },
+	["INSTR"] = { 4, 1, 5, 32, alias = "i", format = "risc-v", filter = 0 },
 }
 
 function string:ltrim(char)
