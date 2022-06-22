@@ -45,6 +45,23 @@ local positions = {
 	["INSTR"] = { 4, 1, 5, 32, changegroup = "i", alias = "i", format = "risc-v", filter = 0 },
 }
 
+function string:ltrim(char)
+	if char == nil then
+		char = " "
+	elseif type(char) ~= "string" or char:len() == 0 then
+		error("invalid char")
+	else
+		char = char:sub(1, 1)
+	end
+	while self:len() > 0 do
+		if self:sub(1, 1) ~= char then
+			break
+		end
+		self = self:sub(2)
+	end
+	return self
+end
+
 function string:rpad(amt, char)
 	char = char or " "
 	amt = math.floor(amt)
@@ -307,7 +324,13 @@ local function printat(pos, name, value)
 		cg.text = str
 		io.stdout:write("\x1b[31m")
 	else
-		io.stdout:write("\x1b[37m")
+		io.stdout:write("\x1b[3")
+		if pos.color ~= nil and pos.color >= 0 and pos.color < 8 then
+			io.stdout:write(math.floor(pos.color))
+		else
+			io.stdout:write("7")
+		end
+		io.stdout:write("m")
 	end
 	io.stdout:write("\x1b[" .. pos[1] .. ";" .. pos[2] .. "H" .. str)
 	io.stdout:flush()
@@ -318,7 +341,7 @@ local mwin = {
 	left = 47,
 	rows = 30,
 	cols = 16,
-	addr_topleft = 0xFFFFF - 30 * 16,
+	addr_topleft = 0x100000 - 30 * 16,
 	addrwidth = 8,
 	spacing = 3,
 	group = 4,
@@ -347,8 +370,8 @@ local mwin = {
 	draw = function(self)
 		for row, left, right in self:irows() do
 			local top, l, _, r = self:coords(row)
-			printat({ top, l, self.addrwidth, 0 }, tohex(left):lpad(self.addrwidth))
-			printat({ top, r, self.addrwidth, 0 }, tohex(right):rpad(self.addrwidth))
+			printat({ top, l, self.addrwidth, 0, color = 2 }, tohex(left):ltrim("0"):lpad(self.addrwidth))
+			printat({ top, r, self.addrwidth, 0, color = 2 }, tohex(right):ltrim("0"):rpad(self.addrwidth))
 		end
 	end,
 	update = function(self, address, value)

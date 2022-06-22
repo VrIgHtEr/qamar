@@ -1,7 +1,7 @@
 .global  _start
 .section .text.prologue
 _start:
-li sp, 0xFFFFF
+li sp, 0x100000
 mv fp, sp
 la gp, __data_start
 jal main
