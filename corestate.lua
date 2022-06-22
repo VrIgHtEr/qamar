@@ -35,7 +35,7 @@ local positions = {
 	x31 = { 31, 1, 3, 8, changegroup = "register", alias = "t6", format = "hex" },
 	["[TIME]"] = { 1, 20, 5, 11, alias = "clock" },
 	["PC"] = { 3, 20, 5, 11, changegroup = "i", alias = "pc", format = "decimal" },
-	["INSTR"] = { 4, 20, 5, 32, changegroup = "i", alias = "i", format = "risc-v" },
+	["INSTR"] = { 4, 20, 5, 32, changegroup = "i", alias = "i", format = "risc-v", filter = 0 },
 }
 
 function string:rpad(amt, char)
@@ -95,29 +95,66 @@ local function findalias(n)
 	return x.alias
 end
 
+local band = bit.band
+local bor = bit.bor
+local rshift = bit.rshift
+local lshift = bit.lshift
+local arshift = bit.arshift
+
 local function disassemble(i)
-	local opcode = bit.band(i, 0x7f)
-	local rd = bit.band(0x1f, bit.rshift(i, 7))
-	local ui = bit.lshift(bit.rshift(i, 12), 12)
-	local f3 = bit.band(7, bit.rshift(i, 12))
-	local rs1 = bit.band(0x1f, bit.rshift(i, 15))
-	local rs2 = bit.band(0x1f, bit.rshift(i, 20))
-	local f7 = bit.rshift(i, 25)
-	local immi = bit.arshift(i, 20)
-	if opcode == 0x37 then
+	local opcode = band(i, 0x7f)
+	local rd = band(0x1f, bit.rshift(i, 7))
+	local ui = lshift(rshift(i, 12), 12)
+	local f3 = band(7, rshift(i, 12))
+	local rs1 = band(0x1f, rshift(i, 15))
+	local rs2 = band(0x1f, rshift(i, 20))
+	local f7 = rshift(i, 25)
+
+	local immi = arshift(i, 20)
+
+	local immb = bor(
+		lshift(arshift(i, 31), 12),
+		lshift(band(1, rshift(i, 7)), 11),
+		lshift(band(63, rshift(i, 25)), 5),
+		lshift(band(15, rshift(i, 25)), 5)
+	)
+
+	local imms = bor(lshift(arshift(i, 25), 5), band(31, rshift(i, 7)))
+
+	local immj = bor(0, 0)
+
+	if opcode == 0xf then
+		if f3 == 0 then
+			return "fence"
+		end
+	elseif opcode == 0x73 then
+		if f7 == 0 and rs1 == 0 and f3 == 0 and rd == 0 then
+			if rs2 == 0 then
+				return "ecall"
+			elseif rs2 == 1 then
+				return "ebreak"
+			end
+		end
+	elseif opcode == 0x37 then
 		return "lui   " .. findalias("x" .. rd) .. ", " .. ui
 	elseif opcode == 0x17 then
 		return "auipc " .. findalias("x" .. rd) .. ", " .. ui
+	elseif opcode == 0x6f then
+		return "jal   " .. findalias("x" .. rd) .. ", " .. immj
+	elseif opcode == 0x67 then
+		if f3 == 0 then
+			return "jalr  " .. findalias("x" .. rd) .. ", " .. immi .. "(" .. findalias("x" .. rs1) .. ")"
+		end
 	elseif opcode == 0x13 then
-		if f3 == 0 and f7 == 0 then
+		if f3 == 0 then
 			return "addi  " .. findalias("x" .. rd) .. ", " .. findalias("x" .. rs1) .. ", " .. immi
 		elseif f3 == 1 and f7 == 0 then
 			return "slli  " .. findalias("x" .. rd) .. ", " .. findalias("x" .. rs1) .. ", " .. immi
-		elseif f3 == 2 and f7 == 0 then
+		elseif f3 == 2 then
 			return "slti  " .. findalias("x" .. rd) .. ", " .. findalias("x" .. rs1) .. ", " .. immi
-		elseif f3 == 3 and f7 == 0 then
+		elseif f3 == 3 then
 			return "sltiu " .. findalias("x" .. rd) .. ", " .. findalias("x" .. rs1) .. ", " .. immi
-		elseif f3 == 4 and f7 == 0 then
+		elseif f3 == 4 then
 			return "xori  " .. findalias("x" .. rd) .. ", " .. findalias("x" .. rs1) .. ", " .. immi
 		elseif f3 == 5 then
 			if f7 == 0 then
@@ -125,9 +162,9 @@ local function disassemble(i)
 			elseif f7 == 0x20 then
 				return "srai  " .. findalias("x" .. rd) .. ", " .. findalias("x" .. rs1) .. ", " .. bit.band(0x1f, immi)
 			end
-		elseif f3 == 6 and f7 == 0 then
+		elseif f3 == 6 then
 			return "ori   " .. findalias("x" .. rd) .. ", " .. findalias("x" .. rs1) .. ", " .. immi
-		elseif f3 == 7 and f7 == 0 then
+		elseif f3 == 7 then
 			return "andi  " .. findalias("x" .. rd) .. ", " .. findalias("x" .. rs1) .. ", " .. immi
 		end
 	elseif opcode == 0x33 then
@@ -176,6 +213,40 @@ local function disassemble(i)
 		elseif f3 == 7 and f7 == 0 then
 			return "and   " .. findalias("x" .. rd) .. ", " .. findalias("x" .. rs1) .. ", " .. findalias("x" .. rs2)
 		end
+	elseif opcode == 0x63 then
+		if f3 == 0 then
+			return "beq   " .. findalias("x" .. rs1) .. ", " .. findalias("x" .. rs2) .. "," .. immb
+		elseif f3 == 1 then
+			return "bne   " .. findalias("x" .. rs1) .. ", " .. findalias("x" .. rs2) .. "," .. immb
+		elseif f3 == 4 then
+			return "blt   " .. findalias("x" .. rs1) .. ", " .. findalias("x" .. rs2) .. "," .. immb
+		elseif f3 == 5 then
+			return "bge   " .. findalias("x" .. rs1) .. ", " .. findalias("x" .. rs2) .. "," .. immb
+		elseif f3 == 6 then
+			return "bltu  " .. findalias("x" .. rs1) .. ", " .. findalias("x" .. rs2) .. "," .. immb
+		elseif f3 == 7 then
+			return "bgeu  " .. findalias("x" .. rs1) .. ", " .. findalias("x" .. rs2) .. "," .. immb
+		end
+	elseif opcode == 0x03 then
+		if f3 == 0 then
+			return "lb    " .. findalias("x" .. rd) .. ", " .. immi .. "(" .. findalias("x" .. rs1) .. ")"
+		elseif f3 == 1 then
+			return "lh    " .. findalias("x" .. rd) .. ", " .. immi .. "(" .. findalias("x" .. rs1) .. ")"
+		elseif f3 == 2 then
+			return "lw    " .. findalias("x" .. rd) .. ", " .. immi .. "(" .. findalias("x" .. rs1) .. ")"
+		elseif f3 == 4 then
+			return "lbu   " .. findalias("x" .. rd) .. ", " .. immi .. "(" .. findalias("x" .. rs1) .. ")"
+		elseif f3 == 5 then
+			return "lhu   " .. findalias("x" .. rd) .. ", " .. immi .. "(" .. findalias("x" .. rs1) .. ")"
+		end
+	elseif opcode == 0x23 then
+		if f3 == 0 then
+			return "sb    " .. findalias("x" .. rs2) .. ", " .. imms .. "(" .. findalias("x" .. rs1) .. ")"
+		elseif f3 == 1 then
+			return "sh    " .. findalias("x" .. rs2) .. ", " .. imms .. "(" .. findalias("x" .. rs1) .. ")"
+		elseif f3 == 2 then
+			return "sw    " .. findalias("x" .. rs2) .. ", " .. imms .. "(" .. findalias("x" .. rs1) .. ")"
+		end
 	end
 	return ""
 end
@@ -197,9 +268,13 @@ local function printat(pos, name, value)
 			value = v:lpad(pos[4])
 		elseif pos.format == "risc-v" then
 			local i = parsenumber(value)
-			local v = bit.tohex(i):lpad(8, "0")
-			local d = disassemble(i):rpad(pos[4] - 12)
-			value = (v .. " " .. d):lpad(pos[4])
+			if pos.filter ~= nil and i == pos.filter then
+				return
+			else
+				local v = bit.tohex(i):lpad(8, "0")
+				local d = disassemble(i):rpad(pos[4] - 12)
+				value = (v .. " " .. d):lpad(pos[4])
+			end
 		else
 			value = value:lpad(pos[4])
 		end
