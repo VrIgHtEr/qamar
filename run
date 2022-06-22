@@ -1,3 +1,5 @@
+#!/bin/bash
+
 create_fifos () {
     while [ $1 ];
     do
@@ -17,7 +19,8 @@ delete_fifos () {
 
 shmem=shmem.corestate
 stderr=stderr.corestate
-fifos="$stderr $shmem"
+vcd=vcd.corestate
+fifos="$stderr $vcd $shmem"
 create_fifos $fifos
 
 cleanup () {
@@ -27,7 +30,9 @@ cleanup () {
 
 trap "cleanup" INT
 
-build/linux-release/qamar 1>shmem.corestate 2>stderr.corestate &
-./corestate.lua 0<stderr.corestate &
-shmidcat 0<shmem.corestate | gtkwave -v -I display.gtkw -g -O /dev/null $@
+build/linux-release/qamar 1>$vcd 2>$stderr &
+./corestate.lua <$stderr &
+shmidcat <$vcd >$shmem 2>/dev/null &
+gtkwave -v -I display.gtkw -g -O /dev/null $@ <$shmem
+kill $(jobs -p)
 cleanup

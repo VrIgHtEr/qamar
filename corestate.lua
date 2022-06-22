@@ -1,4 +1,11 @@
 #!/bin/luajit
+local band = bit.band
+local bor = bit.bor
+local rshift = bit.rshift
+local lshift = bit.lshift
+local arshift = bit.arshift
+local tobit = bit.tobit
+local tohex = bit.tohex
 
 local positions = {
 	x0 = { 5 + 1, 1, 5, 11, changegroup = "register", alias = "zero", format = "hex" },
@@ -100,12 +107,6 @@ local function findalias(n)
 	end
 	return x.alias
 end
-
-local band = bit.band
-local bor = bit.bor
-local rshift = bit.rshift
-local lshift = bit.lshift
-local arshift = bit.arshift
 
 local function disassemble(i)
 	local opcode = band(i, 0x7f)
@@ -312,8 +313,65 @@ local function printat(pos, name, value)
 	io.stdout:flush()
 end
 
+local mwin = {
+	top = 2,
+	left = 47,
+	rows = 30,
+	cols = 16,
+	addr_topleft = 0xFFFFF - 30 * 16,
+	addrwidth = 8,
+	spacing = 3,
+	group = 4,
+	pos = {},
+	irows = function(self)
+		local row = 0
+		return function()
+			if row < self.rows then
+				local left = self.addr_topleft + row * self.cols
+				local right = left + self.cols - 1
+				row = row + 1
+				return row, tobit(left), tobit(right)
+			end
+		end
+	end,
+	coords = function(self, row)
+		local top = self.top + row - 1
+		local left = self.left
+		local display_left = left + self.addrwidth + self.spacing
+		local right = display_left
+			+ self.cols * 2
+			+ self.spacing
+			+ math.floor((self.cols + self.group - 1) / self.group - 1)
+		return top, left, display_left, right
+	end,
+	draw = function(self)
+		for row, left, right in self:irows() do
+			local top, l, _, r = self:coords(row)
+			printat({ top, l, self.addrwidth, 0 }, tohex(left):lpad(self.addrwidth))
+			printat({ top, r, self.addrwidth, 0 }, tohex(right):rpad(self.addrwidth))
+		end
+	end,
+	update = function(self, address, value)
+		if address >= self.addr_topleft and address < self.addr_topleft + (self.rows * self.cols) then
+			local pos = self.pos[address]
+			if not pos then
+				local reladdress = address - self.addr_topleft
+				local row = math.floor(reladdress / self.cols) + 1
+				pos = { row, 0, 2, 0, changegroup = "memory" }
+				local _, _, col = self:coords(row)
+				local addroffset = reladdress % self.cols
+				local spacers = math.floor(addroffset / self.group)
+				pos[2] = col + addroffset * 2 + spacers
+				self.pos[address] = pos
+			end
+			printat(pos, tohex(band(value, 255)):sub(7))
+		end
+	end,
+}
+
 local success, err = pcall(function()
 	enter()
+	mwin:draw()
 	while true do
 		local line = io.stdin:read("*line")
 		if not line then
@@ -333,6 +391,10 @@ local success, err = pcall(function()
 						local name = line:sub(1, index - 1)
 						local value = line:sub(index + 1)
 						if name:sub(1, 1) == "[" then
+							if name:sub(name:len(), name:len()) == "]" then
+								name = name:sub(2, name:len() - 1)
+								mwin:update(tobit(tonumber(name)), tobit(tonumber(value)))
+							end
 						else
 							local pos = positions[name]
 							if pos then
