@@ -15,7 +15,7 @@ pub fn output(grid:[]u8) void {
 
 pub fn solve(grid:[]u8) bool {
     var g : [bsize]u8 = undefined;
-    @memcpy(g[0..], grid.ptr,bsize);
+    @memcpy(&g, grid.ptr,bsize);
 
     var subcell : u8 = bsize;
     var submark : [bwidth+1]u8 = undefined;
@@ -33,13 +33,14 @@ pub fn solve(grid:[]u8) bool {
             var col : u8 = 0;
             while (col < bwidth) : ({col += 1; cell += 1;}){
                 if (g[cell] == 0) {
-                    @memset(mark[1..],1,bwidth);
+                    @memset(&mark,1,bwidth+1);
+                    mark[0] = 0;
                     var r : u8 = rl;
                     var c : u8 = col;
                     var s : u8 = ((swidth * bwidth) * (row / swidth)) + (swidth * (col / swidth));
 
-                    var x : u8 = 0; while(x<bwidth) : ({x += 1;s += bwidth - swidth;}){
-                        var y : u8 = 0; while(y<bwidth) : ({y += 1; r += 1; c += bwidth; s += 1;}){
+                    var x : u8 = 0; while(x<swidth) : ({x += 1;s += bwidth - swidth;}){
+                        var y : u8 = 0; while(y<swidth) : ({y += 1; r += 1; c += bwidth; s += 1;}){
                             mark[g[r]] = 0;
                             mark[g[c]] = 0;
                             mark[g[s]] = 0;
@@ -61,7 +62,7 @@ pub fn solve(grid:[]u8) bool {
                         subs += 1;
                     } else {
                         subcell = cell;
-                        @memcpy(submark[1..],mark[1..],bwidth);
+                        @memcpy(&submark,&mark,bwidth+1);
                     }
                 }
             }
