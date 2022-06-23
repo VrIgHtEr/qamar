@@ -3,7 +3,7 @@
 _start:
 la sp, __stack_base
 mv fp, sp
-la gp, __data_start
+la gp, __bss_start
 jal main
 .word 0
 1:

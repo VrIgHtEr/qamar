@@ -17,6 +17,8 @@ delete_fifos () {
     done
 }
 
+if [ -z $DISPLAY ] ; then export DISPLAY=:0 ; fi
+
 shmem=shmem.corestate
 stderr=stderr.corestate
 vcd=vcd.corestate
