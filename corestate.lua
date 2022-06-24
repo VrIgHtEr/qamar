@@ -339,9 +339,9 @@ end
 local mwin = {
 	top = 2,
 	left = 47,
-	rows = 30,
+	rows = 45,
 	cols = 16,
-	addr_topleft = 0x10000 - 30 * 16,
+	addr_topleft = 0x10000 - 45 * 16,
 	addrwidth = 8,
 	spacing = 3,
 	group = 4,
