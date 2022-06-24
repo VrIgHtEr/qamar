@@ -19,22 +19,29 @@ delete_fifos () {
 
 if [ -z $DISPLAY ] ; then export DISPLAY=:0 ; fi
 
-shmem=shmem.corestate
-stderr=stderr.corestate
-vcd=vcd.corestate
-fifos="$stderr $vcd $shmem"
-create_fifos $fifos
-
-cleanup () {
-    delete_fifos $fifos
-    exit
+run () {
+    shmem=shmem.corestate
+    stderr=stderr.corestate
+    vcd=vcd.corestate
+    fifos="$stderr $vcd $shmem"
+    create_fifos $fifos
+    
+    local PID=
+    cleanup () {
+        kill -- $PID
+        delete_fifos $fifos
+    }
+    
+    trap "cleanup" INT
+    
+    build/linux-release/qamar 1>$vcd 2>$stderr &
+    PID="$! $PID"
+    shmidcat <$vcd >$shmem 2>/dev/null &
+    PID="$! $PID"
+    ./corestate.lua <$stderr &
+    PID="$! $PID"
+    gtkwave -v -I display.gtkw -g -O /dev/null $@ <$shmem
+    cleanup
 }
 
-trap "cleanup" INT
-
-build/linux-release/qamar 1>$vcd 2>$stderr &
-./corestate.lua <$stderr &
-shmidcat <$vcd >$shmem 2>/dev/null &
-gtkwave -v -I display.gtkw -g -O /dev/null $@ <$shmem
-kill $(jobs -p)
-cleanup
+run $@

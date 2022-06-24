@@ -15,47 +15,122 @@ BUILD_LTO=1
 
 LINK_NOSTDLIB=
 
+BUILD_LOCAL=0
+BUILD_EXCLUDES=(zig-cache)
+BUILD_SRC_EXTS=("*.zig" "*.S" "*.s" "*.C" "*.cxx" "*.cpp" "*.cc" "*.cu" "*.c" "*.bc" "*.stub" "*.m" "*.mm")
+BUILD_OBJ_EXTS=("*.o" "*.obj" "*.lib" "*.a" "*.so" "*.dll" "*.dylib" "*.tbd")
+BUILD_SRC=
+BUILD_OBJ=
+
 build_compile_opts () {
-    if [ -z $TARGET_NAME ] ; then TARGET_NAME=riscv32 ; fi
-    if [ -z $TARGET_OS ] ; then TARGET_OS=freestanding ; fi
-    if [ -z $TARGET_ABI ] ; then TARGET_ABI=none ; fi
-    local RET="-target $TARGET_NAME-$TARGET_OS-$TARGET_ABI"
-    
-    if [ -z $TARGET_CPU ] ; then TARGET_CPU=generic_rv32 ; fi
-    RET="$RET -mcpu $TARGET_CPU"
+    COMPILE_OPTS=()
+    if [ $BUILD_LOCAL -eq 0 ]; then
+        if [ -z $TARGET_NAME ] ; then TARGET_NAME=riscv32 ; fi
+        if [ -z $TARGET_OS ] ; then TARGET_OS=freestanding ; fi
+        if [ -z $TARGET_ABI ] ; then TARGET_ABI=none ; fi
+        COMPILE_OPTS+=(-target "$TARGET_NAME-$TARGET_OS-$TARGET_ABI")
+        
+        if [ -z $TARGET_CPU ] ; then TARGET_CPU=generic_rv32 ; fi
+        COMPILE_OPTS+=(-mcpu "$TARGET_CPU")
+
+        if [ -z $BUILD_PIE ] ; then COMPILE_OPTS+=(-fno-PIE) ; else COMPILE_OPTS+=(-fPIE) ; fi
+        if [ -z $BUILD_PIC ] ; then COMPILE_OPTS+=(-fno-PIC) ; else COMPILE_OPTS+=(-fPIC) ; fi
+    fi
     
     if [ -z $BUILD_MODE ] ; then BUILD_MODE=ReleaseSmall ; fi
-    RET="$RET -O $BUILD_MODE"
+    COMPILE_OPTS+=(-O "$BUILD_MODE")
 
-    if [ -n $BUILD_STRIP ] ; then RET="$RET --strip" ; fi
+    if [ -n $BUILD_STRIP ] ; then COMPILE_OPTS+=(--strip) ; fi
 
-    if [ -n $BUILD_SINGLE_THREADED ] ; then RET="$RET -fsingle-threaded" ; fi
+    if [ -n $BUILD_SINGLE_THREADED ] ; then COMPILE_OPTS+=(-fsingle-threaded) ; fi
 
-    if [ -z $BUILD_PIE ] ; then RET="$RET -fno-PIE" ; else RET="$RET -fPIE" ; fi
-    if [ -z $BUILD_PIC ] ; then RET="$RET -fno-PIC" ; else RET="$RET -fPIC" ; fi
-    if [ -z $BUILD_LTO ] ; then RET="$RET -fno-lto" ; else RET="$RET -flto" ; fi
-
-    echo "$RET"
+    if [ -z $BUILD_LTO ] ; then COMPILE_OPTS+=(-fno-lto) ; else COMPILE_OPTS+=(-flto) ; fi
 }
 
 build_linker_opts () {
-    local RET
-    if [ -n $LINK_NOSTDLIB ] ; then RET="$RET -nostdlib" ; fi
+    LINKER_OPTS=()
+    if [ $BUILD_LOCAL -eq 0 ]; then
+        if [ -n $LINK_NOSTDLIB ] ; then LINKER_OPTS+=(-nostdlib) ; fi
+    fi
+}
+
+build_src_query () {
+    BUILD_SRC_QUERY=(find .)
+    local first=1
+    local excludes=(${BUILD_EXCLUDES[@]})
+    if [ $BUILD_LOCAL -eq 1 ]; then excludes+=('stdlib');fi
+    for exclude in ${excludes[@]}; do
+        if [ $first -eq 1 ]; then
+            first=0
+        else
+            BUILD_SRC_QUERY+=(-o)
+        fi
+        BUILD_SRC_QUERY+=(-path "./${exclude}" -prune);
+    done
+    if [ ${#BUILD_EXCLUDES[@]} -gt 0 ]; then BUILD_SRC_QUERY+=(-o); fi
+    BUILD_SRC_QUERY+=(-type f)
+    if [ ${#BUILD_SRC_EXTS[@]} -gt 0 ]; then
+        BUILD_SRC_QUERY+=(\()
+        first=1
+        for ext in ${BUILD_SRC_EXTS[@]}; do
+            if [ $first -eq 1 ]; then
+                first=0
+            else
+                BUILD_SRC_QUERY+=(-o)
+            fi
+            BUILD_SRC_QUERY+=(-name ${ext})
+        done
+        BUILD_SRC_QUERY+=(\))
+    fi
+    BUILD_SRC_QUERY+=(-print)
+}
+
+build_obj_query () {
+    BUILD_OBJ_QUERY=(find .)
+    local first=1
+    for exclude in ${BUILD_EXCLUDES[@]}; do
+        if [ $first -eq 1 ]; then
+            first=0
+        else
+            BUILD_OBJ_QUERY+=(-o)
+        fi
+        BUILD_OBJ_QUERY+=(-path "./${exclude}" -prune);
+    done
+    if [ ${#BUILD_EXCLUDES[@]} -gt 0 ]; then BUILD_OBJ_QUERY+=(-o); fi
+    BUILD_OBJ_QUERY+=(-type f)
+    if [ ${#BUILD_OBJ_EXTS[@]} -gt 0 ]; then
+        BUILD_OBJ_QUERY+=(\()
+        first=1
+        for ext in ${BUILD_OBJ_EXTS[@]}; do
+            if [ $first -eq 1 ]; then
+                first=0
+            else
+                BUILD_OBJ_QUERY+=(-o)
+            fi
+            BUILD_OBJ_QUERY+=(-name ${ext})
+        done
+        BUILD_OBJ_QUERY+=(\))
+    fi
+    BUILD_OBJ_QUERY+=(-print)
 }
 
 find_source_files () {
     if [ -z $1 ] ; then return 1 ; fi
-    echo $(cd $1 && echo $(find . -path ./zig-cache -prune -o -type f \( -name '*.zig' -o -name '*.S' -o -name '*.s' -o -name '*.C' -o -name '*.cxx' -o -name '*.cpp' -o -name '*.cc' -o -name '*.cu' -o -name '*.c' -o -name '*.bc' -o -name '*.stub' -o -name '*.m' -o -name '*.mm' \) -print))
+    BUILD_SRC=( $(set -o noglob && cd $1 && ${BUILD_SRC_QUERY[@]}) )
 }
 
 find_object_files () {
     if [ -z $1 ] ; then return 1 ; fi
-    find $1 -type f \( -name '*.o' -o -name '*.obj' -o -name '*.lib' -o -name '*.a' -o -name '*.so' -o -name '*.dll' -o -name '*.dylib' -o -name '*.tbd' \)
+    local ret=( $(set -o noglob && cd $1 && ${BUILD_OBJ_QUERY[@]}) )
+    BUILD_OBJ=()
+    for r in ${ret[@]}; do
+        BUILD_OBJ+=($(cd "${BUILD_DIR}" && realpath $r))
+    done
 }
 
 build () {
-    COMPILE_OPTS=$(build_compile_opts)
-    LINKER_OPTS=$(build_linker_opts)
+    build_compile_opts
+    build_linker_opts
     
     APP_DIR="${CWD}/${PROJECT_NAME}"
     BUILD_DIR="${CWD}/build/${PROJECT_NAME}-rv32i"
@@ -65,14 +140,16 @@ build () {
     OUTPUT_BIN_PATH=${OUTPUT_ELF_PATH}.bin
     SRAM_PATH="${CWD}/lua/sram.dat"
     OUTPUT_FILE_OPTION="-femit-bin="
-    COMPILE="zig build-obj ${COMPILE_OPTS} -I${STDLIB_INCLUDE}"
-    LINK="ld.lld -T ${LINK_SCRIPT} ${LINKER_OPTS} -o ${OUTPUT_ELF_PATH}"
+    COMPILE="zig build-obj ${COMPILE_OPTS[@]} -I${STDLIB_INCLUDE}"
+    LINK="ld.lld -T ${LINK_SCRIPT} ${LINKER_OPTS[@]} -o ${OUTPUT_ELF_PATH}"
     EXPORT_BINARY="llvm-objcopy -O binary ${OUTPUT_ELF_PATH} ${OUTPUT_BIN_PATH}"
     
     rm -rf "${BUILD_DIR}"
     mkdir -p "${BUILD_DIR}"
     
-    for fname in $(find_source_files $APP_DIR)
+    find_source_files $APP_DIR
+
+    for fname in ${BUILD_SRC[@]}
     do
         dname="${BUILD_DIR}/${fname%.*}.o"
         mkdir -p "${dname%/*}"
@@ -86,8 +163,9 @@ build () {
     done
     echo
     
+    find_object_files $BUILD_DIR
     echo "link:    ${OUTPUT_ELF_PATH}" 
-    if ! ${LINK} $(find_object_files $BUILD_DIR) ; then return 1 ; fi
+    if ! ${LINK} ${BUILD_OBJ[@]} ; then return 1 ; fi
     echo "export:  ${OUTPUT_BIN_PATH}"
     if ! ${EXPORT_BINARY} ; then return 1 ; fi
     echo
@@ -97,4 +175,21 @@ build () {
     cp "${OUTPUT_BIN_PATH}" "${SRAM_PATH}"
 }
 
-build $@
+BUILD_ARGS=
+parse_args () {
+    while [ $# -gt 0 ] ; do
+        if [ $1 = "--local" ] ; then
+            BUILD_LOCAL=1
+        else
+            BUILD_ARGS=$@
+            return
+        fi
+        shift 1
+    done
+}
+
+parse_args $@
+build_src_query
+build_obj_query
+
+build $BUILD_ARGS
