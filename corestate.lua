@@ -128,23 +128,20 @@ end
 local function disassemble(i)
 	local opcode = band(i, 0x7f)
 	local rd = band(0x1f, bit.rshift(i, 7))
-	local ui = lshift(rshift(i, 12), 12)
 	local f3 = band(7, rshift(i, 12))
 	local rs1 = band(0x1f, rshift(i, 15))
 	local rs2 = band(0x1f, rshift(i, 20))
 	local f7 = rshift(i, 25)
 
 	local immi = arshift(i, 20)
-
+	local imms = bor(lshift(arshift(i, 25), 5), band(31, rshift(i, 7)))
 	local immb = bor(
 		lshift(arshift(i, 31), 12),
 		lshift(band(1, rshift(i, 7)), 11),
 		lshift(band(63, rshift(i, 25)), 5),
 		lshift(band(15, rshift(i, 25)), 5)
 	)
-
-	local imms = bor(lshift(arshift(i, 25), 5), band(31, rshift(i, 7)))
-
+	local immu = lshift(rshift(i, 12), 12)
 	local immj = bor(
 		lshift(arshift(i, 31), 20),
 		lshift(band(rshift(i, 21), 0x3ff), 1),
@@ -165,9 +162,9 @@ local function disassemble(i)
 			end
 		end
 	elseif opcode == 0x37 then
-		return "lui   " .. findalias("x" .. rd) .. ", " .. ui
+		return "lui   " .. findalias("x" .. rd) .. ", " .. immu
 	elseif opcode == 0x17 then
-		return "auipc " .. findalias("x" .. rd) .. ", " .. ui
+		return "auipc " .. findalias("x" .. rd) .. ", " .. immu
 	elseif opcode == 0x6f then
 		return "jal   " .. findalias("x" .. rd) .. ", " .. immj
 	elseif opcode == 0x67 then
