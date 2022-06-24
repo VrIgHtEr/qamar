@@ -1,5 +1,6 @@
 #!/bin/sh
 CWD=$(temp="$(realpath $0)" && dirname "${temp}")
+
 PROJECT_NAME=os
 TARGET_NAME=riscv32
 TARGET_OS=freestanding
@@ -24,7 +25,7 @@ BUILD_OBJ=
 
 build_compile_opts () {
     COMPILE_OPTS=()
-    if [ $BUILD_LOCAL -eq 0 ]; then
+    if [ $BUILD_LOCAL -ne 1 ]; then
         if [ -z $TARGET_NAME ] ; then TARGET_NAME=riscv32 ; fi
         if [ -z $TARGET_OS ] ; then TARGET_OS=freestanding ; fi
         if [ -z $TARGET_ABI ] ; then TARGET_ABI=none ; fi
@@ -36,6 +37,9 @@ build_compile_opts () {
         if [ -z $BUILD_PIE ] ; then COMPILE_OPTS+=(-fno-PIE) ; else COMPILE_OPTS+=(-fPIE) ; fi
         if [ -z $BUILD_PIC ] ; then COMPILE_OPTS+=(-fno-PIC) ; else COMPILE_OPTS+=(-fPIC) ; fi
     fi
+    if [ $BUILD_LOCAL -eq 1 ]; then
+        COMPILE_OPTS+=(--libc "$BUILD_LIBC_DEF")
+    fi
     
     if [ -z $BUILD_MODE ] ; then BUILD_MODE=ReleaseSmall ; fi
     COMPILE_OPTS+=(-O "$BUILD_MODE")
@@ -43,13 +47,11 @@ build_compile_opts () {
     if [ -n $BUILD_STRIP ] ; then COMPILE_OPTS+=(--strip) ; fi
 
     if [ -n $BUILD_SINGLE_THREADED ] ; then COMPILE_OPTS+=(-fsingle-threaded) ; fi
-
-    if [ -z $BUILD_LTO ] ; then COMPILE_OPTS+=(-fno-lto) ; else COMPILE_OPTS+=(-flto) ; fi
 }
 
 build_linker_opts () {
     LINKER_OPTS=()
-    if [ $BUILD_LOCAL -eq 0 ]; then
+    if [ $BUILD_LOCAL -ne 1 ]; then
         if [ -n $LINK_NOSTDLIB ] ; then LINKER_OPTS+=(-nostdlib) ; fi
     fi
 }
@@ -129,9 +131,6 @@ find_object_files () {
 }
 
 build () {
-    build_compile_opts
-    build_linker_opts
-    
     APP_DIR="${CWD}/${PROJECT_NAME}"
     BUILD_DIR="${CWD}/build/${PROJECT_NAME}-rv32i"
     LINK_SCRIPT="${APP_DIR}/link.lds"
@@ -140,10 +139,20 @@ build () {
     OUTPUT_BIN_PATH=${OUTPUT_ELF_PATH}.bin
     SRAM_PATH="${CWD}/lua/sram.dat"
     OUTPUT_FILE_OPTION="-femit-bin="
+    BUILD_LIBC_DEF="$APP_DIR/libc.def"
+
+    build_compile_opts
     COMPILE="zig build-obj ${COMPILE_OPTS[@]} -I${STDLIB_INCLUDE}"
+
+    build_linker_opts
     LINK="ld.lld -T ${LINK_SCRIPT} ${LINKER_OPTS[@]} -o ${OUTPUT_ELF_PATH}"
+
     EXPORT_BINARY="llvm-objcopy -O binary ${OUTPUT_ELF_PATH} ${OUTPUT_BIN_PATH}"
     
+    if [ $BUILD_LOCAL -eq 1 ]; then
+        if ! zig libc > "$BUILD_LIBC_DEF" ; then return 1 ; fi
+    fi
+
     rm -rf "${BUILD_DIR}"
     mkdir -p "${BUILD_DIR}"
     

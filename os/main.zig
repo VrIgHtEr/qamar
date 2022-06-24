@@ -1,6 +1,12 @@
 const std = @import("std");
+const builtin = @import("builtin");
+const prt = builtin.os.tag != std.Target.Os.Tag.freestanding;
 const Allocator = std.mem.Allocator;
-var __heap: [32768 + 16384]u8 = undefined;
+var __heap: [1048576]u8 = undefined;
+
+fn print(comptime fmt: []const u8, args: anytype) void {
+    if (prt) std.debug.print(fmt, args);
+}
 
 const Solver = struct {
     heap: *Allocator,

@@ -25,7 +25,14 @@ run () {
     vcd=vcd.corestate
     fifos="$stderr $vcd $shmem"
     create_fifos $fifos
-    
+
+    local enable_gui=1
+    while [ $# -gt 0 ]; do
+        if [ $1 = "--nogui" -o $1 = "-n" ]; then enable_gui=0;shift 1
+        else return 1
+        fi
+    done
+
     local PID=
     cleanup () {
         kill -- $PID
@@ -34,13 +41,17 @@ run () {
     
     trap "cleanup" INT
     
-    build/linux-release/qamar 1>$vcd 2>$stderr &
-    PID="$! $PID"
-    shmidcat <$vcd >$shmem 2>/dev/null &
-    PID="$! $PID"
     ./corestate.lua <$stderr &
     PID="$! $PID"
-    gtkwave -v -I display.gtkw -g -O /dev/null $@ <$shmem
+    if [ $enable_gui -gt 0 ] ; then 
+        shmidcat <$vcd >$shmem 2>/dev/null &
+        PID="$! $PID"
+        build/linux-release/qamar 1>$vcd 2>$stderr &
+        PID="$! $PID"
+        gtkwave -v -I display.gtkw -g -O /dev/null <$shmem
+    else
+        build/linux-release/qamar 1>/dev/null 2>$stderr
+    fi
     cleanup
 }
 

@@ -1,3 +1,4 @@
+os/libc.def
 main
 *.dat
 *.corestate

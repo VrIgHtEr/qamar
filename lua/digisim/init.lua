@@ -19,7 +19,7 @@ local max = 0
 local edge = 0
 
 local plog = {}
-while sim.time < constants.SIM_TIME do
+while true or sim.time < constants.SIM_TIME do
 	--io.stderr:write("TIME: " .. sim.time .. "\n")
 	local x
 	_, x = sim:step()
