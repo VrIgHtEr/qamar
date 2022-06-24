@@ -145,7 +145,12 @@ local function disassemble(i)
 
 	local imms = bor(lshift(arshift(i, 25), 5), band(31, rshift(i, 7)))
 
-	local immj = bor(0, 0)
+	local immj = bor(
+		lshift(arshift(i, 31), 20),
+		lshift(band(rshift(i, 21), 0x3ff), 1),
+		lshift(band(rshift(i, 20), 1), 11),
+		lshift(band(rshift(i, 12), 0xff), 12)
+	)
 
 	if opcode == 0xf then
 		if f3 == 0 then
