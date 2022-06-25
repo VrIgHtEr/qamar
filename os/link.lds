@@ -1,7 +1,7 @@
 ENTRY(_start);
 
 SECTIONS {
-    __ram_size = 0x100000;
+    __ram_size = 0x200000;
     __ram_end = ((__ram_size)-1);
     __stack_size = 0x8000;
     __stack_base = (__ram_size);

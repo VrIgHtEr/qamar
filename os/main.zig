@@ -15,7 +15,7 @@ const Solver = struct {
     gw: usize,
     s: usize,
 
-    const Node = struct { top: *Node, up: *Node, down: *Node, left: *Node, right: *Node, data: union { n: usize, a: packed struct { cell: u16, value: u16 } } };
+    const Node = struct { top: *Node, up: *Node, down: *Node, left: *Node, right: *Node, data: packed struct { cell: u16, value: u16 } };
 
     pub fn new(heap: *Allocator, square: usize) !Solver {
         const gw = square * square;
@@ -38,26 +38,26 @@ const Solver = struct {
         root.right = root;
         root.down = root;
         root.up = root;
-        root.data.n = 0;
-        var constraints: []*Node = try heap.alloc(*Node, numconstraints);
-        defer heap.free(constraints);
+        root.data.cell = 0;
+        root.data.value = 0;
         var prev = root;
-        for (constraints) |_, index| {
+        var index: usize = 0;
+        while (index < numconstraints) : (index += 1) {
             const constraint = &ret.nodes[ptr];
             ptr += 1;
-            constraints[index] = constraint;
             prev.right = constraint;
             constraint.left = prev;
             prev = constraint;
             constraint.top = constraint;
             constraint.up = constraint;
             constraint.down = constraint;
-            constraint.data.n = 0;
+            constraint.data.cell = 0;
+            constraint.data.value = 0;
         }
         prev.right = root;
         root.left = prev;
         prev = root;
-        var index: usize = 0;
+        index = 0;
         while (index < numactions) : (index += 1) {
             const action = &ret.nodes[ptr];
             ptr += 1;
@@ -74,10 +74,10 @@ const Solver = struct {
             const plank = row % square;
             const sqr = plank * square + strip;
 
-            action.data.a.cell = @intCast(u16, cell);
-            action.data.a.value = @intCast(u16, value);
+            action.data.cell = @truncate(u16, cell);
+            action.data.value = @truncate(u16, value);
 
-            const ac = [_]*Node{ constraints[cell], constraints[cell * 1 + row * gw + value], constraints[cell * 2 + col * gw + value], constraints[cell * 3 + sqr * gw + value] };
+            const ac = [_]*Node{ &ret.nodes[cell + 1], &ret.nodes[cell * 1 + row * gw + value + 1], &ret.nodes[cell * 2 + col * gw + value + 1], &ret.nodes[cell * 3 + sqr * gw + value + 1] };
             var prevaction = action;
             for (ac) |top| {
                 const an = &ret.nodes[ptr];
@@ -88,12 +88,12 @@ const Solver = struct {
                 prevaction = an;
 
                 an.top = top;
-                top.data.n += 1;
+                top.data.value += 1;
 
                 top.up.down = an;
                 top.up = an;
                 an.down = top;
-                an.data.n = action.data.n;
+                an.data = action.data;
             }
             action.left = prevaction;
             prevaction.right = action;
@@ -103,13 +103,13 @@ const Solver = struct {
         return ret;
     }
 
-    pub fn solve(self: *Solver, puzzle: [*:0]u8) !bool {
+    pub fn solve(self: *const Solver, puzzle: [*]u8) !bool {
         _ = self;
-        _ = puzzle.len;
-        for (puzzle) |char, index| {
-            if (index >= self.gs)
-                return error.PuzzleTooBig;
+        _ = self.gs;
 
+        var index: usize = 0;
+        while (index < self.gs) : (index += 1) {
+            const char = puzzle[index];
             var val: usize = 0;
             if (char >= '0' and char <= '9') {
                 val = char - '0';
@@ -119,6 +119,7 @@ const Solver = struct {
                 val = char - 'A' + 10;
             }
         }
+        return false;
     }
 };
 
@@ -232,8 +233,14 @@ pub export fn main() void {
     var fba = std.heap.FixedBufferAllocator.init(__heap[0..]);
     var allocator = &fba.allocator();
     vol = allocator.create(Solver) catch undefined;
-
-    vol.* = Solver.new(allocator, 3) catch undefined;
+    const sqsize = 3;
+    const gwidth = sqsize * sqsize;
+    const gsize = gwidth * gwidth;
+    vol.* = Solver.new(allocator, sqsize) catch undefined;
+    var pzl: [gsize]u8 = undefined;
+    @memcpy(&pzl, "013500420087004000004079603062040508000050102038091000000900800700815009891007250", gsize);
+    var slv = @ptrCast(*Solver, vol);
+    _ = slv.solve(&pzl) catch undefined;
 
     var puzzle = [_]u8{ 0, 1, 3, 5, 0, 0, 4, 2, 0, 0, 8, 7, 0, 0, 4, 0, 0, 0, 0, 0, 4, 0, 7, 9, 6, 0, 3, 0, 6, 2, 0, 4, 0, 5, 0, 8, 0, 0, 0, 0, 5, 0, 1, 0, 2, 0, 3, 8, 0, 9, 1, 0, 0, 0, 0, 0, 0, 9, 0, 0, 8, 0, 0, 7, 0, 0, 8, 1, 5, 0, 0, 9, 8, 9, 1, 0, 0, 7, 2, 5, 0 };
     if (solve(puzzle[0..])) {
