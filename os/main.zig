@@ -79,7 +79,7 @@ const Solver = struct {
             var actioncell = @bitCast(i16, @truncate(u16, cell));
             var actionvalue = @truncate(u16, value);
 
-            const ac = [_]*Node{ &ret.nodes[cell + 1], &ret.nodes[cell * 1 + row * gw + value + 1], &ret.nodes[cell * 2 + col * gw + value + 1], &ret.nodes[cell * 3 + sqr * gw + value + 1] };
+            const ac = [_]*Node{ &ret.nodes[cell + 1], &ret.nodes[gs * 1 + row * gw + value + 1], &ret.nodes[gs * 2 + col * gw + value + 1], &ret.nodes[gs * 3 + sqr * gw + value + 1] };
             var prevaction: *Node = undefined;
             var firstaction: *Node = undefined;
             for (ac) |top, idx| {
@@ -114,7 +114,7 @@ const Solver = struct {
         var i = n.up;
         while (i != n) : (i = i.up) {
             var j = i.left;
-            while (j != i) : (j = i.left) {
+            while (j != i) : (j = j.left) {
                 j.up.down = j;
                 j.down.up = j;
                 j.top.data.value += 1;
@@ -132,7 +132,7 @@ const Solver = struct {
         var i = n.down;
         while (i != n) : (i = i.down) {
             var j = i.right;
-            while (j != i) : (j = i.right) {
+            while (j != i) : (j = j.right) {
                 j.up.down = j.down;
                 j.down.up = j.up;
                 j.top.data.value -= 1;
@@ -240,10 +240,10 @@ const Solver = struct {
                 self.unwind();
                 return error.SudokuConstraintViolation;
             }
-            if (self.search()) {
-                self.extract(puzzle);
-                return true;
-            }
+        }
+        if (self.search()) {
+            self.extract(puzzle);
+            return true;
         }
         return false;
     }
@@ -353,19 +353,15 @@ pub fn solve(grid: []u8) bool {
     return false;
 }
 
-var vol: *volatile Solver = undefined;
-
 pub export fn main() void {
     var fba = std.heap.FixedBufferAllocator.init(__heap[0..]);
     var allocator = &fba.allocator();
-    vol = allocator.create(Solver) catch undefined;
     const sqsize = 3;
     const gwidth = sqsize * sqsize;
     const gsize = gwidth * gwidth;
-    vol.* = Solver.new(allocator, sqsize) catch undefined;
+    var slv = Solver.new(allocator, sqsize) catch undefined;
     var pzl: [gsize]u8 = undefined;
     @memcpy(&pzl, "013500420087004000004079603062040508000050102038091000000900800700815009891007250", gsize);
-    var slv = @ptrCast(*Solver, vol);
     var solved = slv.solve(&pzl) catch undefined;
     print("{s}\n", .{solved});
 
