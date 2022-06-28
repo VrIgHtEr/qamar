@@ -64,6 +64,7 @@ const Solver = struct {
         prev.right = root;
         root.left = prev;
         prev = root;
+
         index = 0;
         while (index < numactions) : (index += 1) {
             ptr += 1;
@@ -95,18 +96,16 @@ const Solver = struct {
                 an.top = top;
                 top.data.value += 1;
 
-                top.up.down = an;
-                an.up = top.up.down;
-                top.up = an;
+                an.up = top.up;
                 an.down = top;
+                top.up.down = an;
+                top.up = an;
                 an.data.cell = actioncell;
                 an.data.value = actionvalue;
             }
             firstaction.left = prevaction;
             prevaction.right = firstaction;
         }
-        root.up = prev;
-        prev.down = root;
         return ret;
     }
 
