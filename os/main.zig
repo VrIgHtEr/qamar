@@ -17,7 +17,34 @@ const Solver = struct {
     gw: usize,
     s: usize,
 
-    const Node = struct { top: *Node, up: *Node, down: *Node, left: *Node, right: *Node, data: packed struct { cell: i16, value: u16 } };
+    const ConstraintType = enum(u2) {
+        row,
+        col,
+        square,
+    };
+
+    const Node = struct {
+        top: *Node,
+        up: *Node,
+        down: *Node,
+        left: *Node,
+        right: *Node,
+        data: packed struct { cell: i16, value: u16 },
+    };
+
+    pub fn printconstraint(self: *const Solver, n: *const Node) void {
+        const c = n.top;
+        if (c.data.cell < 0) {
+            const amt = @intCast(usize, -(c.data.cell + 1));
+            const t = @intToEnum(ConstraintType, @divTrunc(amt, self.gs));
+            const cv = amt % self.gs;
+            const group = cv / self.gw;
+            const value = cv % self.gw;
+            print("{any} {any} has value {any}", .{ t, group, value + 1 });
+        } else {
+            print("cell {any} filled", .{c.data.cell});
+        }
+    }
 
     pub fn new(heap: *Allocator, square: usize) !Solver {
         const gw = square * square;
@@ -58,7 +85,7 @@ const Solver = struct {
             constraint.down = constraint;
             if (index < gs) {
                 constraint.data.cell = @truncate(i16, @bitCast(isize, index));
-            } else constraint.data.cell = -1;
+            } else constraint.data.cell = -@truncate(i16, @bitCast(isize, index - gs)) - 1;
             constraint.data.value = 0;
         }
         prev.right = root;
@@ -67,14 +94,12 @@ const Solver = struct {
 
         index = 0;
         while (index < numactions) : (index += 1) {
-            ptr += 1;
-
             const value = index / gs;
             const cell = index % gs;
             const row = cell / gw;
             const col = cell % gw;
-            const strip = col % square;
-            const plank = row % square;
+            const strip = col / square;
+            const plank = row / square;
             const sqr = plank * square + strip;
 
             var actioncell = @bitCast(i16, @truncate(u16, cell));
@@ -109,7 +134,10 @@ const Solver = struct {
         return ret;
     }
 
-    pub fn uncover(n: *Node) void {
+    pub fn uncover(self: *Solver, n: *Node) void {
+        print("UNCOVER: ", .{});
+        self.printconstraint(n);
+        print("\n", .{});
         var i = n.up;
         while (i != n) : (i = i.up) {
             var j = i.left;
@@ -124,10 +152,12 @@ const Solver = struct {
         n.right.left = n;
     }
 
-    pub fn cover(n: *Node) void {
+    pub fn cover(self: *Solver, n: *Node) void {
         n.left.right = n.right;
         n.right.left = n.left;
-
+        print("COVER: ", .{});
+        self.printconstraint(n);
+        print("\n", .{});
         var i = n.down;
         while (i != n) : (i = i.down) {
             var j = i.right;
@@ -143,10 +173,10 @@ const Solver = struct {
         self.stack[self.stackptr] = n;
         self.stackptr += 1;
 
-        Solver.cover(n.top);
+        self.cover(n.top);
         var r = n.right;
         while (r != n) : (r = r.right) {
-            Solver.cover(r.top);
+            self.cover(r.top);
         }
     }
 
@@ -155,9 +185,9 @@ const Solver = struct {
         var n = self.stack[self.stackptr];
         var r = n.left;
         while (r != n) : (r = r.left) {
-            Solver.uncover(r.top);
+            self.uncover(r.top);
         }
-        Solver.uncover(n.top);
+        self.uncover(n.top);
         return n;
     }
 
@@ -210,7 +240,7 @@ const Solver = struct {
         while (self.stackptr > 0) {
             var n = self.undo();
             const cell = @intCast(usize, @bitCast(u16, n.data.cell));
-            var value = @truncate(u8, n.data.value);
+            var value = @truncate(u8, n.data.value) + 1;
             if (value < 10) {
                 value += '0';
             } else value += ('A' - 10);
@@ -232,8 +262,9 @@ const Solver = struct {
             }
             if (val > self.gw) return error.SudokuInvalidCellValue;
             if (val == 0) continue;
-            if (self.find_node(index, val)) |n| {
-                print("value {d} in cell {d}\n", .{ val, index });
+            if (self.find_node(index, val - 1)) |n| {
+                self.printconstraint(n);
+                print("\n", .{});
                 self.apply(n);
             } else {
                 self.unwind();
@@ -256,9 +287,17 @@ var out: u8 = undefined;
 var h_out: *volatile u8 = &out;
 
 pub fn output(grid: []u8) void {
-    for (grid) |item| {
+    for (grid) |item, index| {
+        const col = index % bwidth;
+        if (col > 0 and col % 3 == 0) print(" ", .{});
+        if (index > 0) {
+            if (col == 0) print("\n", .{});
+            if (index % (swidth * bwidth) == 0) print("\n", .{});
+        }
+        print("{any}", .{item});
         h_out.* = item;
     }
+    print("\n", .{});
 }
 
 pub fn solve(grid: []u8) bool {
@@ -351,20 +390,43 @@ pub fn solve(grid: []u8) bool {
     }
     return false;
 }
+var allocator: *Allocator = undefined;
+
+pub fn outputPuzzle(grid: []u8) void {
+    for (grid) |item, index| {
+        const col = index % bwidth;
+        if (col > 0 and col % 3 == 0) print(" ", .{});
+        if (index > 0) {
+            if (col == 0) print("\n", .{});
+            if (index % (swidth * bwidth) == 0) print("\n", .{});
+        }
+        print("{c}", .{item});
+        h_out.* = item;
+    }
+    print("\n", .{});
+}
 
 pub export fn main() void {
     var fba = std.heap.FixedBufferAllocator.init(__heap[0..]);
-    var allocator = &fba.allocator();
+    allocator = &fba.allocator();
     const sqsize = 3;
     const gwidth = sqsize * sqsize;
     const gsize = gwidth * gwidth;
     var slv = Solver.new(allocator, sqsize) catch undefined;
+    _ = slv;
     var pzl: [gsize]u8 = undefined;
     @memcpy(&pzl, "013500420087004000004079603062040508000050102038091000000900800700815009891007250", gsize);
-    var solved = slv.solve(&pzl) catch undefined;
-    print("{s}\n", .{solved});
+    @memcpy(&pzl, "800000000003600000070090200050007000000045700000100030001000068008500010090000400", gsize);
+    @memcpy(&pzl, "002490000590100700700500200003040100000900500005000342001004900049062050006000073", gsize);
+    var solved = slv.solve(&pzl) catch false;
+    if (solved)
+        outputPuzzle(pzl[0..]);
+    print("-----------------------------------\n", .{});
 
-    var puzzle = [_]u8{ 0, 1, 3, 5, 0, 0, 4, 2, 0, 0, 8, 7, 0, 0, 4, 0, 0, 0, 0, 0, 4, 0, 7, 9, 6, 0, 3, 0, 6, 2, 0, 4, 0, 5, 0, 8, 0, 0, 0, 0, 5, 0, 1, 0, 2, 0, 3, 8, 0, 9, 1, 0, 0, 0, 0, 0, 0, 9, 0, 0, 8, 0, 0, 7, 0, 0, 8, 1, 5, 0, 0, 9, 8, 9, 1, 0, 0, 7, 2, 5, 0 };
+    //var puzzle = [_]u8{ 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 6, 0, 0, 0, 0, 0, 0, 7, 0, 0, 9, 0, 2, 0, 0, 0, 5, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 4, 5, 7, 0, 0, 0, 0, 0, 1, 0, 0, 0, 3, 0, 0, 0, 1, 0, 0, 0, 0, 6, 8, 0, 0, 8, 5, 0, 0, 0, 1, 0, 0, 9, 0, 0, 0, 0, 4, 0, 0 };
+    var puzzle = [_]u8{
+        0, 0, 2, 4, 9, 0, 0, 0, 0, 5, 9, 0, 1, 0, 0, 7, 0, 0, 7, 0, 0, 5, 0, 0, 2, 0, 0, 0, 0, 3, 0, 4, 0, 1, 0, 0, 0, 0, 0, 9, 0, 0, 5, 0, 0, 0, 0, 5, 0, 0, 0, 3, 4, 2, 0, 0, 1, 0, 0, 4, 9, 0, 0, 0, 4, 9, 0, 6, 2, 0, 5, 0, 0, 0, 6, 0, 0, 0, 0, 7, 3,
+    };
     if (solve(puzzle[0..])) {
         output(puzzle[0..]);
     }
