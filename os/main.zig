@@ -212,6 +212,7 @@ const Solver = struct {
     }
 
     pub fn uncover(self: *Solver, n: *Node) void {
+        _ = self;
         var i = n.up;
         while (i != n) : (i = i.up) {
             var j = i.left;
@@ -228,6 +229,7 @@ const Solver = struct {
     }
 
     pub fn cover(self: *Solver, n: *Node) void {
+        _ = self;
         //self.heap_float_to_top(n.pqindex);
         //_ = self.heap_pop();
         n.left.right = n.right;
