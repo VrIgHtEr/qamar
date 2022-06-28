@@ -219,17 +219,17 @@ const Solver = struct {
                 j.up.down = j;
                 j.down.up = j;
                 j.top.data.value += 1;
-                self.heap_sink(j.top.pqindex);
+                //self.heap_sink(j.top.pqindex);
             }
         }
         n.left.right = n;
         n.right.left = n;
-        self.heap_add(n);
+        //self.heap_add(n);
     }
 
     pub fn cover(self: *Solver, n: *Node) void {
-        self.heap_float_to_top(n.pqindex);
-        _ = self.heap_pop();
+        //self.heap_float_to_top(n.pqindex);
+        //_ = self.heap_pop();
         n.left.right = n.right;
         n.right.left = n.left;
         var i = n.down;
@@ -239,7 +239,7 @@ const Solver = struct {
                 j.up.down = j.down;
                 j.down.up = j.up;
                 j.top.data.value -= 1;
-                self.heap_float(j.top.pqindex);
+                //self.heap_float(j.top.pqindex);
             }
         }
     }
