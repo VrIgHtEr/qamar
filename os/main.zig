@@ -12,6 +12,8 @@ const Solver = struct {
     heap: *Allocator,
     nodes: [*]Node,
     stack: [*]*Node,
+    pq: [*]*Node,
+    pqsize: usize,
     stackptr: usize,
     gs: usize,
     gw: usize,
@@ -29,13 +31,14 @@ const Solver = struct {
         down: *Node,
         left: *Node,
         right: *Node,
+        pqindex: usize,
         data: packed struct { cell: i16, value: u16 },
     };
 
     pub fn printconstraint(self: *const Solver, n: *const Node) void {
         const c = n.top;
-        if (c.data.cell < 0) {
-            const amt = @intCast(usize, -(c.data.cell + 1));
+        if (c.data.cell >= self.gs) {
+            const amt = @intCast(usize, c.data.cell) - self.gs;
             const t = @intToEnum(ConstraintType, @divTrunc(amt, self.gs));
             const cv = amt % self.gs;
             const group = cv / self.gw;
@@ -52,16 +55,27 @@ const Solver = struct {
         const numconstraints = gs * 4;
         const numactions = gw * gs;
         const numnodes = numactions * 4 + numconstraints + 1;
-        const alloc = try heap.alloc(Node, numnodes);
-        const stk = try heap.alloc(*Node, gs);
+
         var ret: Solver = undefined;
-        ret.stack = stk.ptr;
-        ret.stackptr = 0;
         ret.heap = heap;
-        ret.nodes = alloc.ptr;
         ret.gs = gs;
         ret.gw = gw;
         ret.s = square;
+
+        const alloc = try heap.alloc(Node, numnodes);
+        errdefer (heap.free(alloc));
+        ret.nodes = alloc.ptr;
+
+        const stk = try heap.alloc(*Node, gs);
+        errdefer (heap.free(stk));
+        ret.stack = stk.ptr;
+        ret.stackptr = 0;
+
+        const pq = try heap.alloc(*Node, numconstraints);
+        errdefer (heap.free(pq));
+        ret.pqsize = 0;
+        ret.pq = pq.ptr;
+
         var ptr: usize = 0;
         var root = &ret.nodes[ptr];
         ptr += 1;
@@ -83,10 +97,11 @@ const Solver = struct {
             constraint.top = constraint;
             constraint.up = constraint;
             constraint.down = constraint;
-            if (index < gs) {
-                constraint.data.cell = @truncate(i16, @bitCast(isize, index));
-            } else constraint.data.cell = -@truncate(i16, @bitCast(isize, index - gs)) - 1;
+            constraint.data.cell = @truncate(i16, @bitCast(isize, index));
             constraint.data.value = 0;
+            constraint.pqindex = index;
+            ret.pqsize += 1;
+            ret.pq[index] = constraint;
         }
         prev.right = root;
         root.left = prev;
@@ -134,10 +149,69 @@ const Solver = struct {
         return ret;
     }
 
+    fn heap_float_to_top(self: *Solver, idx: usize) void {
+        var i = idx;
+        while (i > 0) {
+            const p = ((i - 1) >> 1);
+            self.pq[i].pqindex = p;
+            self.pq[p].pqindex = i;
+            const t = self.pq[i];
+            self.pq[i] = self.pq[p];
+            self.pq[p] = t;
+            i = p;
+        }
+    }
+
+    fn heap_float(self: *Solver, idx: usize) void {
+        var i = idx;
+        while (i > 0) {
+            const p = ((i - 1) >> 1);
+            if (self.pq[i].data.value >= self.pq[p].data.value)
+                return;
+            self.pq[i].pqindex = p;
+            self.pq[p].pqindex = i;
+            const t = self.pq[i];
+            self.pq[i] = self.pq[p];
+            self.pq[p] = t;
+            i = p;
+        }
+    }
+
+    fn heap_sink(self: *Solver, idx: usize) void {
+        var i = idx;
+        const max = self.pqsize >> 1;
+        while (i < max) {
+            var c = (i + 1) * 2;
+            if (c == self.pqsize or self.pq[c - 1].data.value < self.pq[c].data.value) c -= 1;
+            if (self.pq[i].data.value <= self.pq[c].data.value) return;
+            self.pq[i].pqindex = c;
+            self.pq[c].pqindex = i;
+            const t = self.pq[i];
+            self.pq[i] = self.pq[c];
+            self.pq[c] = t;
+            i = c;
+        }
+    }
+
+    fn heap_add(self: *Solver, n: *Node) void {
+        self.pq[self.pqsize] = n;
+        n.pqindex = self.pqsize;
+        self.pqsize += 1;
+        self.heap_float(self.pqsize - 1);
+    }
+
+    fn heap_pop(self: *Solver) ?*Node {
+        if (self.pqsize == 0) return null;
+        self.pqsize -= 1;
+        const ret = self.pq[0];
+        if (self.pqsize > 0) {
+            self.pq[0] = self.pq[self.pqsize];
+            self.heap_sink(0);
+        }
+        return ret;
+    }
+
     pub fn uncover(self: *Solver, n: *Node) void {
-        print("UNCOVER: ", .{});
-        self.printconstraint(n);
-        print("\n", .{});
         var i = n.up;
         while (i != n) : (i = i.up) {
             var j = i.left;
@@ -145,19 +219,19 @@ const Solver = struct {
                 j.up.down = j;
                 j.down.up = j;
                 j.top.data.value += 1;
+                self.heap_sink(j.top.pqindex);
             }
         }
-
         n.left.right = n;
         n.right.left = n;
+        self.heap_add(n);
     }
 
     pub fn cover(self: *Solver, n: *Node) void {
+        self.heap_float_to_top(n.pqindex);
+        _ = self.heap_pop();
         n.left.right = n.right;
         n.right.left = n.left;
-        print("COVER: ", .{});
-        self.printconstraint(n);
-        print("\n", .{});
         var i = n.down;
         while (i != n) : (i = i.down) {
             var j = i.right;
@@ -165,6 +239,7 @@ const Solver = struct {
                 j.up.down = j.down;
                 j.down.up = j.up;
                 j.top.data.value -= 1;
+                self.heap_float(j.top.pqindex);
             }
         }
     }
@@ -263,8 +338,6 @@ const Solver = struct {
             if (val > self.gw) return error.SudokuInvalidCellValue;
             if (val == 0) continue;
             if (self.find_node(index, val - 1)) |n| {
-                self.printconstraint(n);
-                print("\n", .{});
                 self.apply(n);
             } else {
                 self.unwind();
@@ -417,16 +490,13 @@ pub export fn main() void {
     var pzl: [gsize]u8 = undefined;
     @memcpy(&pzl, "013500420087004000004079603062040508000050102038091000000900800700815009891007250", gsize);
     @memcpy(&pzl, "800000000003600000070090200050007000000045700000100030001000068008500010090000400", gsize);
-    @memcpy(&pzl, "002490000590100700700500200003040100000900500005000342001004900049062050006000073", gsize);
+    //@memcpy(&pzl, "002490000590100700700500200003040100000900500005000342001004900049062050006000073", gsize);
     var solved = slv.solve(&pzl) catch false;
     if (solved)
         outputPuzzle(pzl[0..]);
     print("-----------------------------------\n", .{});
 
-    //var puzzle = [_]u8{ 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 6, 0, 0, 0, 0, 0, 0, 7, 0, 0, 9, 0, 2, 0, 0, 0, 5, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 4, 5, 7, 0, 0, 0, 0, 0, 1, 0, 0, 0, 3, 0, 0, 0, 1, 0, 0, 0, 0, 6, 8, 0, 0, 8, 5, 0, 0, 0, 1, 0, 0, 9, 0, 0, 0, 0, 4, 0, 0 };
-    var puzzle = [_]u8{
-        0, 0, 2, 4, 9, 0, 0, 0, 0, 5, 9, 0, 1, 0, 0, 7, 0, 0, 7, 0, 0, 5, 0, 0, 2, 0, 0, 0, 0, 3, 0, 4, 0, 1, 0, 0, 0, 0, 0, 9, 0, 0, 5, 0, 0, 0, 0, 5, 0, 0, 0, 3, 4, 2, 0, 0, 1, 0, 0, 4, 9, 0, 0, 0, 4, 9, 0, 6, 2, 0, 5, 0, 0, 0, 6, 0, 0, 0, 0, 7, 3,
-    };
+    var puzzle = [_]u8{ 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 6, 0, 0, 0, 0, 0, 0, 7, 0, 0, 9, 0, 2, 0, 0, 0, 5, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 4, 5, 7, 0, 0, 0, 0, 0, 1, 0, 0, 0, 3, 0, 0, 0, 1, 0, 0, 0, 0, 6, 8, 0, 0, 8, 5, 0, 0, 0, 1, 0, 0, 9, 0, 0, 0, 0, 4, 0, 0 };
     if (solve(puzzle[0..])) {
         output(puzzle[0..]);
     }
