@@ -49,6 +49,19 @@ const Solver = struct {
         }
     }
 
+    pub fn free(self: *Solver) void {
+        self.heap.free(self.nodes[0..(1 + self.gs * 4 + self.gs * self.gw * 4)]);
+        self.nodes = undefined;
+
+        self.heap.free(self.stack[0..self.gs]);
+        self.stack = undefined;
+
+        self.heap.free(self.pq[0..(self.gs * 4)]);
+        self.pq = undefined;
+
+        self.heap = undefined;
+    }
+
     pub fn new(heap: *Allocator, square: usize) !Solver {
         const gw = square * square;
         const gs = gw * gw;
@@ -465,7 +478,6 @@ pub fn solve(grid: []u8) bool {
     }
     return false;
 }
-var allocator: *Allocator = undefined;
 
 pub fn outputPuzzle(grid: []u8) void {
     for (grid) |item, index| {
@@ -482,89 +494,26 @@ pub fn outputPuzzle(grid: []u8) void {
 }
 
 pub export fn main() void {
-    var puzzle = [_]u8{
-        0,
-        1,
-        3,
-        5,
-        0,
-        0,
-        4,
-        2,
-        0,
-        0,
-        8,
-        7,
-        0,
-        0,
-        4,
-        0,
-        0,
-        0,
-        0,
-        0,
-        4,
-        0,
-        7,
-        9,
-        6,
-        0,
-        3,
-        0,
-        6,
-        2,
-        0,
-        4,
-        0,
-        5,
-        0,
-        8,
-        0,
-        0,
-        0,
-        0,
-        5,
-        0,
-        1,
-        0,
-        2,
-        0,
-        3,
-        8,
-        0,
-        9,
-        1,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        9,
-        0,
-        0,
-        8,
-        0,
-        0,
-        7,
-        0,
-        0,
-        8,
-        1,
-        5,
-        0,
-        0,
-        9,
-        8,
-        9,
-        1,
-        0,
-        0,
-        7,
-        2,
-        5,
-        0,
-    };
+    const sqsize = 3;
+    const gwidth = sqsize * sqsize;
+    const gsize = gwidth * gwidth;
+
+    var pzl: [gsize]u8 = undefined;
+    @memcpy(&pzl, "013500420087004000004079603062040508000050102038091000000900800700815009891007250", gsize);
+    //@memcpy(&pzl, "800000000003600000070090200050007000000045700000100030001000068008500010090000400", gsize);
+    //@memcpy(&pzl, "002490000590100700700500200003040100000900500005000342001004900049062050006000073", gsize);
+
+    var puzzle: [gsize]u8 = undefined;
+    for (pzl) |char, index| {
+        if (char >= '0' and char <= '9') {
+            puzzle[index] = char - '0';
+        } else if (char >= 'a' and char <= 'z') {
+            puzzle[index] = char - 'a' + 10;
+        } else if (char >= 'Z' and char <= 'Z') {
+            puzzle[index] = char - 'A' + 10;
+        }
+    }
+
     if (solve(puzzle[0..])) {
         output(puzzle[0..]);
     }
@@ -572,17 +521,12 @@ pub export fn main() void {
     print("-----------------------------------\n", .{});
 
     var fba = std.heap.FixedBufferAllocator.init(__heap[0..]);
-    allocator = &fba.allocator();
-    const sqsize = 3;
-    const gwidth = sqsize * sqsize;
-    const gsize = gwidth * gwidth;
-    var slv = Solver.new(allocator, sqsize) catch undefined;
-    _ = slv;
-    var pzl: [gsize]u8 = undefined;
-    @memcpy(&pzl, "013500420087004000004079603062040508000050102038091000000900800700815009891007250", gsize);
-    //@memcpy(&pzl, "800000000003600000070090200050007000000045700000100030001000068008500010090000400", gsize);
-    //@memcpy(&pzl, "002490000590100700700500200003040100000900500005000342001004900049062050006000073", gsize);
-    var solved = slv.solve(&pzl) catch false;
-    if (solved)
-        outputPuzzle(pzl[0..]);
+    var allocator = fba.allocator();
+    var slv: ?Solver = Solver.new(&allocator, sqsize) catch null;
+    if (slv) |_| {
+        defer (slv.?.free());
+        var solved = slv.?.solve(&pzl) catch false;
+        if (solved)
+            outputPuzzle(pzl[0..]);
+    }
 }
