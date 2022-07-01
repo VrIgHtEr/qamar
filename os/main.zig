@@ -34,15 +34,7 @@ fn SolverType(comptime square: usize) type {
     const C = NarrowType(num_cells + 1);
     const V = NarrowType(num_values + 1);
 
-    const Node = struct {
-        top: N,
-        up: N,
-        down: N,
-        left: N,
-        right: N,
-        cell: C,
-        value: V,
-    };
+    const Node = packed struct { top: N, up: N, down: N, left: N, right: N, cell: C, value: V, _reserved: u32 };
 
     return struct {
         stackptr: C,
@@ -57,7 +49,7 @@ fn SolverType(comptime square: usize) type {
             inline while (i < num_cells) : (i += 1)
                 ret.stack[i] = 0;
 
-            ret.nodes[0] = .{ .top = 0, .up = 0, .down = 0, .cell = 0, .value = 0, .left = 0, .right = 0 };
+            ret.nodes[0] = .{ .top = 0, .up = 0, .down = 0, .cell = 0, .value = 0, .left = 0, .right = 0, ._reserved = 0 };
             i = 0;
             inline while (i < num_constraints) : (i += 1) {
                 const idx = @intCast(N, i + start_constraints);
