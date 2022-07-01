@@ -3,17 +3,259 @@ const builtin = @import("builtin");
 const prt = builtin.os.tag != std.Target.Os.Tag.freestanding;
 const Allocator = std.mem.Allocator;
 var __heap: [1048576]u8 = undefined;
+const sqsize = 3;
+var solver = SolverType(sqsize).init();
 
 fn print(comptime fmt: []const u8, args: anytype) void {
     if (prt) std.debug.print(fmt, args);
+}
+
+fn NarrowType(comptime x: usize) type {
+    if (x <= 256) {
+        return u8;
+    } else if (x <= 65536) {
+        return u16;
+    } else if (x <= 0x100000000) {
+        return u32;
+    } else return u64;
+}
+
+fn SolverType(comptime square: usize) type {
+    const num_values = square * square;
+    const num_cells = num_values * num_values;
+    const num_constraints = num_cells * 4;
+    const num_actions = num_cells * num_values;
+    const num_action_nodes = num_actions * 4;
+    const num_nodes = num_constraints + num_action_nodes + 1;
+    const start_constraints = 1;
+    const end_constraints = num_constraints + 1;
+
+    const N = NarrowType(num_nodes + 1);
+    const C = NarrowType(num_cells + 1);
+    const V = NarrowType(num_values + 1);
+
+    const Node = struct {
+        top: N,
+        up: N,
+        down: N,
+        left: N,
+        right: N,
+        cell: C,
+        value: V,
+    };
+
+    return struct {
+        stackptr: C,
+        stack: [num_cells]N,
+        nodes: [num_nodes]Node,
+
+        pub fn init() @This() {
+            @setEvalBranchQuota(65536);
+            comptime var ret: @This() = undefined;
+            ret.stackptr = 0;
+            comptime var i = 0;
+            inline while (i < num_cells) : (i += 1)
+                ret.stack[i] = 0;
+
+            ret.nodes[0] = .{ .top = 0, .up = 0, .down = 0, .cell = 0, .value = 0, .left = 0, .right = 0 };
+            i = 0;
+            inline while (i < num_constraints) : (i += 1) {
+                const idx = @intCast(N, i + start_constraints);
+                ret.nodes[idx - 1].right = idx;
+                ret.nodes[idx].top = idx;
+                ret.nodes[idx].up = idx;
+                ret.nodes[idx].down = idx;
+                ret.nodes[idx].left = idx - 1;
+                if (i < num_cells) {
+                    ret.nodes[idx].cell = i;
+                } else {
+                    ret.nodes[idx].cell = num_cells;
+                }
+                ret.nodes[idx].value = num_values;
+            }
+            ret.nodes[0].left = num_constraints;
+            ret.nodes[num_constraints].right = 0;
+
+            i = 0;
+            inline while (i < num_actions) : (i += 1) {
+                const idx = @intCast(N, i * 4 + end_constraints);
+
+                const value = i / num_cells;
+                const cell = i % num_cells;
+                const row = cell / num_values;
+                const col = cell % num_values;
+                const strip = col / square;
+                const plank = row / square;
+                const sqr = plank * square + strip;
+
+                const actioncell = @intCast(C, cell);
+                const actionvalue = @intCast(V, value);
+
+                const ac = [_]N{ @intCast(N, start_constraints + cell), @intCast(N, start_constraints + num_cells + row * num_values + value), @intCast(N, start_constraints + num_cells * 2 + col * num_values + value), @intCast(N, start_constraints + num_cells * 3 + sqr * num_values + value) };
+
+                comptime var anindex: usize = 0;
+                inline while (anindex < 4) : (anindex += 1) {
+                    const anidx = @intCast(N, idx + anindex);
+                    ret.nodes[anidx].top = ac[anindex];
+                    ret.nodes[anidx].down = ac[anindex];
+                    ret.nodes[anidx].up = ret.nodes[ac[anindex]].up;
+                    ret.nodes[ret.nodes[ac[anindex]].up].down = anidx;
+                    ret.nodes[ac[anindex]].up = anidx;
+                    if (anindex == 0) {
+                        ret.nodes[anidx].left = idx + 3;
+                        ret.nodes[idx + 3].right = anidx;
+                    } else {
+                        ret.nodes[anidx - 1].right = anidx;
+                        ret.nodes[anidx].left = anidx - 1;
+                    }
+                    ret.nodes[anidx].cell = actioncell;
+                    ret.nodes[anidx].value = actionvalue;
+                }
+            }
+            return ret;
+        }
+
+        pub fn uncover(self: *@This(), n: N) void {
+            var i = self.nodes[n].up;
+            while (i != n) : (i = self.nodes[i].up) {
+                var j = self.nodes[i].left;
+                while (j != i) : (j = self.nodes[j].left) {
+                    self.nodes[self.nodes[j].up].down = j;
+                    self.nodes[self.nodes[j].down].up = j;
+                    self.nodes[self.nodes[j].top].value += 1;
+                }
+            }
+            self.nodes[self.nodes[n].left].right = n;
+            self.nodes[self.nodes[n].right].left = n;
+        }
+
+        pub fn cover(self: *@This(), n: N) void {
+            self.nodes[self.nodes[n].left].right = self.nodes[n].right;
+            self.nodes[self.nodes[n].right].left = self.nodes[n].left;
+            var i = self.nodes[n].down;
+            while (i != n) : (i = self.nodes[i].down) {
+                var j = self.nodes[i].right;
+                while (j != i) : (j = self.nodes[j].right) {
+                    self.nodes[self.nodes[j].up].down = self.nodes[j].down;
+                    self.nodes[self.nodes[j].down].up = self.nodes[j].up;
+                    self.nodes[self.nodes[j].top].value -= 1;
+                }
+            }
+        }
+
+        pub fn apply(self: *@This(), n: N) void {
+            self.stack[self.stackptr] = n;
+            self.stackptr += 1;
+
+            self.cover(self.nodes[n].top);
+            var r = self.nodes[n].right;
+            while (r != n) : (r = self.nodes[r].right) {
+                self.cover(self.nodes[r].top);
+            }
+        }
+
+        pub fn undo(self: *@This()) N {
+            self.stackptr -= 1;
+            var n = self.stack[self.stackptr];
+            var r = self.nodes[n].left;
+            while (r != n) : (r = self.nodes[r].left) {
+                self.uncover(self.nodes[r].top);
+            }
+            self.uncover(self.nodes[n].top);
+            return n;
+        }
+
+        pub fn find_node(self: *@This(), cell: C, value: V) ?N {
+            var n = self.nodes[0].right;
+            while (n != 0) : (n = self.nodes[n].right) {
+                if (self.nodes[n].cell == cell) {
+                    var a = self.nodes[n].down;
+                    while (a != n) : (a = self.nodes[a].down) {
+                        if (self.nodes[a].value == value) return a;
+                    }
+                }
+            }
+            return null;
+        }
+
+        pub fn select_node(self: *@This()) ?N {
+            var n = self.nodes[0].right;
+            var ret: ?N = null;
+            while (n != 0) : (n = self.nodes[n].right) {
+                if (self.nodes[n].value == 0) return n;
+                if (ret) |r| {
+                    if (self.nodes[n].value < self.nodes[r].value)
+                        ret = n;
+                } else {
+                    ret = n;
+                }
+            }
+            return ret;
+        }
+
+        pub fn search(self: *@This()) bool {
+            if (self.select_node()) |con| {
+                var n = self.nodes[con].down;
+                while (n != con) : (n = self.nodes[n].down) {
+                    self.apply(n);
+                    if (self.search())
+                        return true;
+                    _ = self.undo();
+                }
+            } else return true;
+            return false;
+        }
+
+        pub fn unwind(self: *@This()) void {
+            while (self.stackptr > 0) _ = self.undo();
+        }
+
+        pub fn extract(self: *@This(), puzzle: [*]u8) void {
+            while (self.stackptr > 0) {
+                var n = self.undo();
+                const cell = self.nodes[n].cell;
+                var value = @truncate(u8, self.nodes[n].value) + 1;
+                if (value < 10) {
+                    value += '0';
+                } else value += ('A' - 10);
+                puzzle[cell] = value;
+            }
+        }
+
+        pub fn solve(self: *@This(), puzzle: [*]u8) !bool {
+            var index: C = 0;
+            while (index < num_cells) : (index += 1) {
+                const char = puzzle[index];
+                var val: V = 0;
+                if (char >= '0' and char <= '9') {
+                    val = char - '0';
+                } else if (char >= 'a' and char <= 'z') {
+                    val = char - 'a' + 10;
+                } else if (char >= 'A' and char <= 'Z') {
+                    val = char - 'A' + 10;
+                }
+                if (val > num_values) return error.SudokuInvalidCellValue;
+                if (val == 0) continue;
+                if (self.find_node(index, val - 1)) |n| {
+                    self.apply(n);
+                } else {
+                    self.unwind();
+                    return error.SudokuConstraintViolation;
+                }
+            }
+            if (self.search()) {
+                self.extract(puzzle);
+                return true;
+            }
+            return error.SudokuUnsolvable;
+        }
+    };
 }
 
 const Solver = struct {
     heap: *Allocator,
     nodes: [*]Node,
     stack: [*]*Node,
-    pq: [*]*Node,
-    pqsize: usize,
     stackptr: usize,
     gs: usize,
     gw: usize,
@@ -31,7 +273,6 @@ const Solver = struct {
         down: *Node,
         left: *Node,
         right: *Node,
-        pqindex: usize,
         data: packed struct { cell: i16, value: u16 },
     };
 
@@ -56,13 +297,10 @@ const Solver = struct {
         self.heap.free(self.stack[0..self.gs]);
         self.stack = undefined;
 
-        self.heap.free(self.pq[0..(self.gs * 4)]);
-        self.pq = undefined;
-
         self.heap = undefined;
     }
 
-    pub fn new(heap: *Allocator, square: usize) !Solver {
+    pub fn new(heap: *Allocator, comptime square: usize) !Solver {
         const gw = square * square;
         const gs = gw * gw;
         const numconstraints = gs * 4;
@@ -83,11 +321,6 @@ const Solver = struct {
         errdefer (heap.free(stk));
         ret.stack = stk.ptr;
         ret.stackptr = 0;
-
-        const pq = try heap.alloc(*Node, numconstraints);
-        errdefer (heap.free(pq));
-        ret.pqsize = 0;
-        ret.pq = pq.ptr;
 
         var ptr: usize = 0;
         var root = &ret.nodes[ptr];
@@ -112,9 +345,6 @@ const Solver = struct {
             constraint.down = constraint;
             constraint.data.cell = @truncate(i16, @bitCast(isize, index));
             constraint.data.value = 0;
-            constraint.pqindex = index;
-            ret.pqsize += 1;
-            ret.pq[index] = constraint;
         }
         prev.right = root;
         root.left = prev;
@@ -162,68 +392,6 @@ const Solver = struct {
         return ret;
     }
 
-    fn heap_float_to_top(self: *Solver, idx: usize) void {
-        var i = idx;
-        while (i > 0) {
-            const p = ((i - 1) >> 1);
-            self.pq[i].pqindex = p;
-            self.pq[p].pqindex = i;
-            const t = self.pq[i];
-            self.pq[i] = self.pq[p];
-            self.pq[p] = t;
-            i = p;
-        }
-    }
-
-    fn heap_float(self: *Solver, idx: usize) void {
-        var i = idx;
-        while (i > 0) {
-            const p = ((i - 1) >> 1);
-            if (self.pq[i].data.value >= self.pq[p].data.value)
-                return;
-            self.pq[i].pqindex = p;
-            self.pq[p].pqindex = i;
-            const t = self.pq[i];
-            self.pq[i] = self.pq[p];
-            self.pq[p] = t;
-            i = p;
-        }
-    }
-
-    fn heap_sink(self: *Solver, idx: usize) void {
-        var i = idx;
-        const max = self.pqsize >> 1;
-        while (i < max) {
-            var c = (i + 1) * 2;
-            if (c == self.pqsize or self.pq[c - 1].data.value < self.pq[c].data.value) c -= 1;
-            if (self.pq[i].data.value <= self.pq[c].data.value) return;
-            self.pq[i].pqindex = c;
-            self.pq[c].pqindex = i;
-            const t = self.pq[i];
-            self.pq[i] = self.pq[c];
-            self.pq[c] = t;
-            i = c;
-        }
-    }
-
-    fn heap_add(self: *Solver, n: *Node) void {
-        self.pq[self.pqsize] = n;
-        n.pqindex = self.pqsize;
-        self.pqsize += 1;
-        self.heap_float(self.pqsize - 1);
-    }
-
-    fn heap_pop(self: *Solver) ?*Node {
-        if (self.pqsize == 0) return null;
-        self.pqsize -= 1;
-        const ret = self.pq[0];
-        if (self.pqsize > 0) {
-            self.pq[0] = self.pq[self.pqsize];
-            self.heap_sink(0);
-        }
-        return ret;
-    }
-
     pub fn uncover(self: *Solver, n: *Node) void {
         _ = self;
         var i = n.up;
@@ -233,18 +401,14 @@ const Solver = struct {
                 j.up.down = j;
                 j.down.up = j;
                 j.top.data.value += 1;
-                //self.heap_sink(j.top.pqindex);
             }
         }
         n.left.right = n;
         n.right.left = n;
-        //self.heap_add(n);
     }
 
     pub fn cover(self: *Solver, n: *Node) void {
         _ = self;
-        //self.heap_float_to_top(n.pqindex);
-        //_ = self.heap_pop();
         n.left.right = n.right;
         n.right.left = n.left;
         var i = n.down;
@@ -254,7 +418,6 @@ const Solver = struct {
                 j.up.down = j.down;
                 j.down.up = j.up;
                 j.top.data.value -= 1;
-                //self.heap_float(j.top.pqindex);
             }
         }
     }
@@ -363,7 +526,7 @@ const Solver = struct {
             self.extract(puzzle);
             return true;
         }
-        return false;
+        return error.SudokuUnsolvable;
     }
 };
 
@@ -479,54 +642,57 @@ pub fn solve(grid: []u8) bool {
     return false;
 }
 
-pub fn outputPuzzle(grid: []u8) void {
+pub fn outputPuzzle(sqr: usize, grid: []u8) void {
+    const numvals = sqr * sqr;
     for (grid) |item, index| {
-        const col = index % bwidth;
-        if (col > 0 and col % 3 == 0) print(" ", .{});
+        const col = index % numvals;
+        if (col > 0 and col % swidth == 0) print(" ", .{});
         if (index > 0) {
             if (col == 0) print("\n", .{});
-            if (index % (swidth * bwidth) == 0) print("\n", .{});
+            if (index % (sqr * numvals) == 0) print("\n", .{});
         }
         print("{c}", .{item});
         h_out.* = item;
     }
     print("\n", .{});
 }
-
 pub export fn main() void {
-    const sqsize = 3;
     const gwidth = sqsize * sqsize;
     const gsize = gwidth * gwidth;
 
     var pzl: [gsize]u8 = undefined;
     @memcpy(&pzl, "013500420087004000004079603062040508000050102038091000000900800700815009891007250", gsize);
-    //@memcpy(&pzl, "800000000003600000070090200050007000000045700000100030001000068008500010090000400", gsize);
-    //@memcpy(&pzl, "002490000590100700700500200003040100000900500005000342001004900049062050006000073", gsize);
+    //    //@memcpy(&pzl, "800000000003600000070090200050007000000045700000100030001000068008500010090000400", gsize);
+    //    //@memcpy(&pzl, "002490000590100700700500200003040100000900500005000342001004900049062050006000073", gsize);
+    //
+    //    var puzzle: [gsize]u8 = undefined;
+    //    for (pzl) |char, index| {
+    //        if (char >= '0' and char <= '9') {
+    //            puzzle[index] = char - '0';
+    //        } else if (char >= 'a' and char <= 'z') {
+    //            puzzle[index] = char - 'a' + 10;
+    //        } else if (char >= 'Z' and char <= 'Z') {
+    //            puzzle[index] = char - 'A' + 10;
+    //        }
+    //    }
+    //
+    //    if (solve(puzzle[0..])) {
+    //        output(puzzle[0..]);
+    //    }
+    //
+    //    print("-----------------------------------\n", .{});
+    //
+    //    var fba = std.heap.FixedBufferAllocator.init(__heap[0..]);
+    //    var allocator = fba.allocator();
+    //    var slv: ?Solver = Solver.new(&allocator, sqsize) catch null;
+    //    if (slv) |_| {
+    //        defer (slv.?.free());
+    //        var solved = slv.?.solve(&pzl) catch false;
+    //        if (solved)
+    //            outputPuzzle(pzl[0..]);
+    //    }
 
-    var puzzle: [gsize]u8 = undefined;
-    for (pzl) |char, index| {
-        if (char >= '0' and char <= '9') {
-            puzzle[index] = char - '0';
-        } else if (char >= 'a' and char <= 'z') {
-            puzzle[index] = char - 'a' + 10;
-        } else if (char >= 'Z' and char <= 'Z') {
-            puzzle[index] = char - 'A' + 10;
-        }
-    }
-
-    if (solve(puzzle[0..])) {
-        output(puzzle[0..]);
-    }
-
-    print("-----------------------------------\n", .{});
-
-    var fba = std.heap.FixedBufferAllocator.init(__heap[0..]);
-    var allocator = fba.allocator();
-    var slv: ?Solver = Solver.new(&allocator, sqsize) catch null;
-    if (slv) |_| {
-        defer (slv.?.free());
-        var solved = slv.?.solve(&pzl) catch false;
-        if (solved)
-            outputPuzzle(pzl[0..]);
+    if (solver.solve(&pzl) catch false) {
+        outputPuzzle(sqsize, pzl[0..]);
     }
 }
