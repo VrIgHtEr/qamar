@@ -341,9 +341,9 @@ end
 local mwin = {
 	top = 2,
 	left = 47,
-	rows = 45,
-	cols = 16,
-	addr_topleft = 0x200000 - 45 * 16,
+	rows = 55,
+	cols = 64,
+	addr_topleft = 0x200000 - 55 * 64,
 	addrwidth = 8,
 	spacing = 3,
 	group = 4,
@@ -381,7 +381,7 @@ local mwin = {
 			local pos = self.pos[address]
 			if not pos then
 				local reladdress = address - self.addr_topleft
-				local row = math.floor(reladdress / self.cols) + 1
+				local row = math.floor(reladdress / self.cols) + self.top
 				pos = { row, 0, 2, 0, changegroup = "memory" }
 				local _, _, col = self:coords(row)
 				local addroffset = reladdress % self.cols
