@@ -215,6 +215,7 @@ fn SolverType(comptime square: usize) type {
         }
 
         pub fn solve(self: *@This(), puzzle: [*]u8) !bool {
+            self.unwind();
             var index: C = 0;
             while (index < num_cells) : (index += 1) {
                 const char = puzzle[index];
@@ -239,6 +240,7 @@ fn SolverType(comptime square: usize) type {
                 self.extract(puzzle);
                 return true;
             }
+            self.unwind();
             return error.SudokuUnsolvable;
         }
     };
