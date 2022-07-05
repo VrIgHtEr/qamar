@@ -356,6 +356,8 @@ local mwin = {
 				local right = left + self.cols - 1
 				row = row + 1
 				return row, tobit(left), tobit(right)
+			else
+				return
 			end
 		end
 	end,
@@ -418,7 +420,10 @@ local success, err = pcall(function()
 						if name:sub(1, 1) == "[" then
 							if name:sub(name:len(), name:len()) == "]" then
 								name = name:sub(2, name:len() - 1)
-								mwin:update(tobit(tonumber(name)), tobit(tonumber(value)))
+								local n, v = tonumber(name), tonumber(value)
+								if n and v then
+									mwin:update(tobit(math.floor(n)), tobit(math.floor(v)))
+								end
 							end
 						else
 							local pos = positions[name]
