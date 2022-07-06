@@ -13,6 +13,7 @@ BUILD_SINGLE_THREADED=1
 BUILD_PIE=
 BUILD_PIC=
 BUILD_LTO=1
+BUILD_CFLAGS=( -mno-unaligned-access )
 
 LINK_NOSTDLIB=
 
@@ -39,6 +40,9 @@ build_compile_opts () {
     fi
     if [ $BUILD_LOCAL -eq 1 ]; then
         COMPILE_OPTS+=(--libc "$BUILD_LIBC_DEF")
+    fi
+    if [ -n "$BUILD_CFLAGS" ] ; then
+        COMPILE_OPTS+=( -cflags ${BUILD_CFLAGS[@]} -- )
     fi
     
     if [ -z $BUILD_MODE ] ; then BUILD_MODE=ReleaseSmall ; fi
