@@ -267,13 +267,14 @@ pub export fn main() void {
     const gsize = gwidth * gwidth;
 
     const puzzles = [_][]const u8{ "013500420087004000004079603062040508000050102038091000000900800700815009891007250", "002490000590100700700500200003040100000900500005000342001004900049062050006000073", "800000000003600000070090200050007000000045700000100030001000068008500010090000400" };
-    for (puzzles) |puzzle, index| {
+    var first = true;
+    for (puzzles) |puzzle| {
         var pzl: [gsize]u8 = undefined;
         std.mem.copy(u8, pzl[0..], puzzle);
         if (solver.solve(&pzl) catch false) {
-            if (index > 0) {
+            if (!first) {
                 print("----------------------------------------\n", .{});
-            }
+            } else first = false;
             outputPuzzle(sqsize, pzl[0..]);
         }
     }
