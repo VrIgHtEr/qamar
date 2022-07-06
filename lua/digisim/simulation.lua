@@ -536,20 +536,6 @@ function simulation:step()
 					inputs[i] = nil
 				end
 
-				---@param output pin
-				local function handle_output_value(value, output)
-					if output.value ~= value then
-						output.value = value
-						for _, x in ipairs(output.net.trace_ports) do
-							trace_ports[x] = true
-						end
-						for _, x in ipairs(output.net.sensitivity_list) do
-							if x ~= output then
-								nextdirty[x.name] = x
-							end
-						end
-					end
-				end
 				local numoutputs = #outputs - 1
 				local sleep = outputs[numoutputs + 1]
 				if sleep > 0 then
@@ -559,16 +545,34 @@ function simulation:step()
 					local value = outputs[i]
 					local output = c.outports[i]
 					if output.bits == 1 then
-						handle_output_value(value, output.pins[1])
+						local o = output.pins[1]
+						if o.value ~= value then
+							o.value = value
+							nextdirty[o.net] = true
+						end
 					else
 						if DEBUG_MODE and #value ~= output.bits then
 							error(c.name .. ": " .. output.bits .. " " .. #value)
 						end
 						for j, x in ipairs(output.pins) do
-							handle_output_value(value[j], x)
+							local v = value[j]
+							if x.value ~= v then
+								x.value = v
+								nextdirty[x.net] = true
+							end
 						end
 					end
 				end
+			end
+		end
+
+		dirty = {}
+		for net in pairs(nextdirty) do
+			for _, x in ipairs(net.trace_ports) do
+				trace_ports[x] = true
+			end
+			for _, x in ipairs(net.sensitivity_list) do
+				dirty[x.name] = x
 			end
 		end
 
@@ -595,7 +599,7 @@ function simulation:step()
 			error("circuit failed to stabilize")
 		end
 		ticks = ticks + 1
-		dirty = nextdirty
+
 	until next(dirty) == nil
 	return self, ticks
 end

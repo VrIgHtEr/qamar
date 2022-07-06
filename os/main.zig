@@ -30,7 +30,7 @@ fn SolverType(comptime square: usize) type {
 
     const N = NarrowType(num_nodes + 1);
     const C = NarrowType(num_cells + 1);
-    const V = NarrowType(num_values + 1);
+    const V = NarrowType(num_values + 2);
 
     const Node = packed struct { top: N, up: N, down: N, left: N, right: N, cell: C, value: V, _reserved: u32 };
 
@@ -171,11 +171,15 @@ fn SolverType(comptime square: usize) type {
         pub fn select_node(self: *@This()) ?N {
             var n = self.nodes[0].right;
             var ret: ?N = null;
+            var bval: V = std.math.maxInt(V);
             while (n != 0) : (n = self.nodes[n].right) {
-                if (self.nodes[n].value == 0) return n;
+                const vn = self.nodes[n].value;
+                if (vn == 0) return n;
                 if (ret) |r| {
-                    if (self.nodes[n].value < self.nodes[r].value)
-                        ret = n;
+                    if (vn < bval) {
+                        bval = self.nodes[r].value;
+                        ret = r;
+                    }
                 } else {
                     ret = n;
                 }
