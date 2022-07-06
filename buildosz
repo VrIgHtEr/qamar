@@ -13,7 +13,7 @@ BUILD_SINGLE_THREADED=1
 BUILD_PIE=
 BUILD_PIC=
 BUILD_LTO=1
-BUILD_CFLAGS=( -mno-unaligned-access )
+BUILD_CFLAGS=( -mno-unaligned-access -mstrict-align )
 
 LINK_NOSTDLIB=
 
