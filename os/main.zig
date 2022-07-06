@@ -248,11 +248,10 @@ var out: u8 = undefined;
 var h_out: *volatile u8 = &out;
 
 pub fn outputPuzzle(sqr: usize, grid: []u8) void {
-    const swidth = sqr * sqr;
     const numvals = sqr * sqr;
     for (grid) |item, index| {
         const col = index % numvals;
-        if (col > 0 and col % swidth == 0) print(" ", .{});
+        if (col > 0 and col % sqr == 0) print(" ", .{});
         if (index > 0) {
             if (col == 0) print("\n", .{});
             if (index % (sqr * numvals) == 0) print("\n", .{});
@@ -269,8 +268,8 @@ pub export fn main() void {
 
     var pzl: [gsize]u8 = undefined;
     std.mem.copy(u8, pzl[0..], "013500420087004000004079603062040508000050102038091000000900800700815009891007250");
-    //    //@memcpy(&pzl, "800000000003600000070090200050007000000045700000100030001000068008500010090000400", gsize);
-    //    //@memcpy(&pzl, "002490000590100700700500200003040100000900500005000342001004900049062050006000073", gsize);
+    std.mem.copy(u8, pzl[0..], "002490000590100700700500200003040100000900500005000342001004900049062050006000073");
+    std.mem.copy(u8, pzl[0..], "800000000003600000070090200050007000000045700000100030001000068008500010090000400");
 
     if (solver.solve(&pzl) catch false) {
         outputPuzzle(sqsize, pzl[0..]);
