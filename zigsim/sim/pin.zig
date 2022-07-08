@@ -17,5 +17,3 @@ pub const Pin = struct {
         _ = self;
     }
 };
-
-pub const PinHash = t.HashMap(t.Id, Pin);

@@ -1,16 +1,16 @@
 const t = @import("../types.zig");
-const port = @import("port.zig");
+const Port = @import("port.zig").Port;
 const Digisim = @import("../digisim.zig").Digisim;
 
 pub const Component = struct {
     id: t.Id,
-    ports: port.PortHash,
+    ports: t.HashMap(t.Id, Port),
     name: []const u8,
 
     pub fn init(digisim: *Digisim, name: []const u8) !@This() {
         var self: @This() = undefined;
         self.id = digisim.nextId();
-        self.ports = port.PortHash.init(digisim.allocator);
+        self.ports = t.HashMap(t.Id, Port).init(digisim.allocator);
         errdefer self.ports.deinit();
         self.name = name;
         return self;
@@ -28,11 +28,9 @@ pub const Component = struct {
     pub fn addPort(self: *@This(), digisim: *Digisim, name: []const u8) !t.Id {
         const interned_name = digisim.strings.ref(name);
         errdefer digisim.strings.unref(interned_name);
-        var p = port.Port.init(digisim, interned_name);
+        var p = Port.init(digisim, interned_name);
         errdefer p.deinit();
         try self.ports.put(p.id, p);
         return p.id;
     }
 };
-
-pub const ComponentHash = t.HashMap(t.Id, Component);

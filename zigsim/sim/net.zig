@@ -14,5 +14,3 @@ pub const Net = struct {
         _ = self;
     }
 };
-
-pub const NetHash = t.HashMap(t.Id, Net);
