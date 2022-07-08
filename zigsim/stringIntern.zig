@@ -31,6 +31,7 @@ pub const StringIntern = struct {
         if (self.strings.getPtr(value)) |e| {
             return e.value.items;
         }
+        return null;
     }
 
     pub fn ref(self: *@This(), value: []const u8) ![]const u8 {
