@@ -11,5 +11,18 @@ pub fn main() !u8 {
     const x = t.Signal.uninitialized;
     const y = x.resolve(t.Signal.z);
     _ = y;
+
+    var ref = try sim.strings.ref("Hello");
+    std.debug.print("{any} - {any}\n", .{ ref.len, @ptrToInt(ref.ptr) });
+    ref = try sim.strings.ref("World");
+    std.debug.print("{any} - {any}\n", .{ ref.len, @ptrToInt(ref.ptr) });
+    ref = try sim.strings.ref("Hello");
+    std.debug.print("{any} - {any}\n", .{ ref.len, @ptrToInt(ref.ptr) });
+
+    sim.strings.unref("Hello");
+    sim.strings.unref("World");
+    sim.strings.unref("Hello");
+
+    _ = try sim.addComponent("core");
     return 0;
 }
