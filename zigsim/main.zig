@@ -5,25 +5,16 @@ const t = @import("types.zig");
 pub fn main() !u8 {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
-    var sim = digisim.Digisim.init(allocator);
+    var sim = try digisim.Digisim.init(allocator);
     defer sim.deinit();
 
-    const x = t.Signal.uninitialized;
-    const y = x.resolve(t.Signal.z);
-    _ = y;
-
-    var ref = try sim.strings.ref("Hello");
-    std.debug.print("{any} - {any}\n", .{ ref.len, @ptrToInt(ref.ptr) });
-    ref = try sim.strings.ref("World");
-    std.debug.print("{any} - {any}\n", .{ ref.len, @ptrToInt(ref.ptr) });
-    ref = try sim.strings.ref("Hello");
-    std.debug.print("{any} - {any}\n", .{ ref.len, @ptrToInt(ref.ptr) });
-
-    sim.strings.unref("Hello");
-    sim.strings.unref("World");
-    sim.strings.unref("Hello");
-
     _ = try sim.addComponent("core");
-    _ = try sim.getPort("core.input");
-    return 0;
+    const comp = try sim.getComponent("core");
+    if (comp) |c| {
+        _ = try c.addPort(&sim, "input", true, 0, 1);
+        std.debug.print("\n{any}\n", .{try sim.getComponent("core")});
+        std.debug.print("\n{any}\n", .{try sim.getPort("core.input")});
+        return 0;
+    }
+    return 1;
 }
