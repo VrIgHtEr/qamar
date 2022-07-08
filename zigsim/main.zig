@@ -24,5 +24,6 @@ pub fn main() !u8 {
     sim.strings.unref("Hello");
 
     _ = try sim.addComponent("core");
+    _ = try sim.getPort("core.input");
     return 0;
 }

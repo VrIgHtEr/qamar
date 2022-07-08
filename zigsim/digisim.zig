@@ -36,9 +36,9 @@ pub const Digisim = struct {
         return self.components.getPtr(id);
     }
 
-    pub fn findComponentByName(self: *@This(), digisim: Digisim, name: []const u8) ?*Component {
+    pub fn findComponentByName(self: *@This(), digisim: *Digisim, name: []const u8) ?*Component {
         if (digisim.strings.get(name)) |interned_name| {
-            var i = self.ports.iterator();
+            var i = self.components.iterator();
             while (i.next()) |entry| {
                 if (entry.value_ptr.name.ptr == interned_name.ptr) return entry.value_ptr;
             }
@@ -65,11 +65,14 @@ pub const Digisim = struct {
 
     pub fn getPort(self: *@This(), name: []const u8) !?*Port {
         if (std.mem.lastIndexOf(u8, name, ".")) |index| {
-            const port_name = name[index + 1 ..];
+            var port_name = name[index + 1 ..];
             if (port_name.len == 0) return error.DigisimInvalidPortName;
+            if (self.strings.get(port_name)) |n| {
+                port_name = n;
+            } else return null;
 
+            var comp: ?*Component = null;
             var name_chain = name[0..index];
-            if (name_chain.len == 0) return error.DigisimInvalidComponentName;
             while (name_chain.len > 0) {
                 var pname: []const u8 = undefined;
                 if (std.mem.indexOf(u8, name_chain, ".")) |idx| {
@@ -82,8 +85,22 @@ pub const Digisim = struct {
                 if (pname.len == 0) return error.DigisimInvalidComponentName;
                 if (self.strings.get(pname)) |n| {
                     pname = n;
+                } else return null;
+                if (comp) |c| {
+                    if (c.findComponentByName(self, pname)) |x| {
+                        comp = x;
+                    } else return null;
+                } else {
+                    if (self.findComponentByName(self, pname)) |c| {
+                        comp = c;
+                    } else return null;
                 }
             }
+            if (comp) |c| {
+                if (c.findPortByName(self, port_name)) |p| {
+                    return p;
+                } else return null;
+            } else return null;
         } else return null;
     }
 };
