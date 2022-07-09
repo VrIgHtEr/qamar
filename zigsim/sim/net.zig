@@ -1,16 +1,21 @@
 const t = @import("../types.zig");
+const std = @import("std");
+const Digisim = @import("../digisim.zig").Digisim;
+const Pin = @import("pin.zig").Pin;
+const ArrayList = std.ArrayList;
 
 pub const Net = struct {
     id: t.Id,
+    pins: ArrayList(Pin),
 
-    pub fn init(allocator: t.Allocator, id: t.Id) @This() {
-        _ = allocator;
+    pub fn init(digisim: *Digisim) !@This() {
         var self: @This() = undefined;
-        self.id = id;
+        self.id = digisim.nextId();
+        self.pins = ArrayList(Pin).init(digisim.allocator);
         return self;
     }
 
     pub fn deinit(self: *@This()) void {
-        _ = self;
+        self.pins.deinit();
     }
 };

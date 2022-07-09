@@ -1,8 +1,10 @@
 const t = @import("types.zig");
 const Component = @import("sim/component.zig").Component;
 const Port = @import("sim/port.zig").Port;
-const stringIntern = @import("stringIntern.zig");
+const Net = @import("sim/net.zig").Net;
 const std = @import("std");
+const ArrayList = std.ArrayList;
+const stringIntern = @import("stringIntern.zig");
 const root_name: []const u8 = "__ROOT__";
 
 pub const Error = error{
@@ -49,4 +51,6 @@ pub const Digisim = struct {
     pub fn getPort(self: *@This(), name: []const u8) !?*Port {
         return self.root.getPort(self, name);
     }
+
+    pub fn createNet() void {}
 };

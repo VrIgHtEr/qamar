@@ -1,14 +1,12 @@
 const t = @import("../types.zig");
+const Digisim = @import("../digisim.zig").Digisim;
 
 pub const Pin = struct {
     id: t.Id,
-    input: bool,
 
-    pub fn init(allocator: t.Allocator, id: t.Id, input: bool) @This() {
-        _ = allocator;
+    pub fn init(digisim: *Digisim) !@This() {
         var self: @This() = .{
-            .id = id,
-            .input = input,
+            .id = digisim.nextId(),
         };
         return self;
     }
