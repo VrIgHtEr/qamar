@@ -44,6 +44,7 @@ pub const Port = struct {
         for (self.pins.items) |_, index| {
             self.pins.items[index].deinit();
         }
+        _ = digisim.ports.swapRemove(self.id);
     }
 
     pub fn width(self: *@This()) usize {
