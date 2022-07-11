@@ -1,6 +1,7 @@
 const t = @import("types.zig");
 const Component = @import("sim/component.zig").Component;
 const Port = @import("sim/port.zig").Port;
+const Pin = @import("sim/pin.zig").Pin;
 const Net = @import("sim/net.zig").Net;
 const std = @import("std");
 const ArrayList = std.ArrayList;
@@ -20,18 +21,34 @@ pub const Digisim = struct {
     id: t.Id = 0,
     root: Component,
     strings: stringIntern.StringIntern,
+    components: t.HashMap(t.Id, Component),
+    ports: t.HashMap(t.Id, Port),
+    pins: t.HashMap(t.Id, Pin),
+    nets: t.HashMap(t.Id, Net),
     pub fn init(allocator: t.Allocator) !@This() {
         var self: @This() = undefined;
         self.allocator = allocator;
         self.id = 0;
         self.strings = stringIntern.StringIntern.init(allocator);
         errdefer self.strings.deinit();
+        self.components = t.HashMap(t.Id, Component).init(allocator);
+        errdefer self.components.deinit();
+        self.ports = t.HashMap(t.Id, Port).init(allocator);
+        errdefer self.ports.deinit();
+        self.pins = t.HashMap(t.Id, Pin).init(allocator);
+        errdefer self.pins.deinit();
+        self.nets = t.HashMap(t.Id, Net).init(allocator);
+        errdefer self.nets.deinit();
         self.root = try Component.init(&self, try self.strings.ref(root_name));
         return self;
     }
 
     pub fn deinit(self: *@This()) void {
         self.root.deinit(self);
+        self.nets.deinit();
+        self.pins.deinit();
+        self.ports.deinit();
+        self.components.deinit();
         self.strings.deinit();
     }
 
@@ -51,6 +68,4 @@ pub const Digisim = struct {
     pub fn getPort(self: *@This(), name: []const u8) !?*Port {
         return self.root.getPort(self, name);
     }
-
-    pub fn createNet() void {}
 };
