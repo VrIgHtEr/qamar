@@ -21,3 +21,4 @@ display.gtkw
 os/zig-cache/
 zigsim/zig-cache/
 zig-cache/
+zig-libc
