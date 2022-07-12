@@ -26,7 +26,6 @@ pub const Net = struct {
         const id = self.id;
         self.deinit();
         _ = digisim.nets.swapRemove(id);
-        std.debug.print("MERGED NET: {d} - {d} with {d} - {d}\n", .{ self.id, @ptrToInt(self), other.id, @ptrToInt(other) });
     }
 
     pub fn deinit(self: *@This()) void {
