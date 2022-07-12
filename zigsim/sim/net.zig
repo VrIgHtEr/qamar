@@ -16,7 +16,6 @@ pub const Net = struct {
     }
 
     pub fn merge(self: *@This(), digisim: *Digisim, other: *@This()) !void {
-        std.debug.print("MERGE NET: {d} - {d} with {d} - {d}\n", .{ self.id, @ptrToInt(self), other.id, @ptrToInt(other) });
         var i = self.pins.iterator();
         while (i.next()) |entry| {
             entry.value_ptr.*.net = other.id;
@@ -29,7 +28,6 @@ pub const Net = struct {
     }
 
     pub fn deinit(self: *@This()) void {
-        std.debug.print("DESTROY NET: {d} - {d}\n", .{ self.id, @ptrToInt(self) });
         self.pins.deinit();
     }
 };

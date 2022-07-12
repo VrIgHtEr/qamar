@@ -42,7 +42,6 @@ pub const Digisim = struct {
         try self.nets.ensureTotalCapacity(16);
         self.root = try Component.init(&self, try self.strings.ref(root_name));
         errdefer self.root.deinit(&self);
-        std.debug.print("CREATE COMPONENT: {d} - {d}\n", .{ self.root.id, @ptrToInt(&self.root) });
         return self;
     }
 

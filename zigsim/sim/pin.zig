@@ -14,7 +14,6 @@ pub const Pin = struct {
     pub fn deinit(self: *@This(), digisim: *Digisim) void {
         if (self.net != 0) {
             const net = digisim.nets.getPtr(self.net) orelse unreachable;
-            std.debug.print("DESTROY PIN: {d} - {d} WITH NET {d}\n", .{ self.id, @ptrToInt(self), net.id });
             _ = net.pins.swapRemove(self.id);
             if (net.pins.count() == 0) {
                 const id = net.id;

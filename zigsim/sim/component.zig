@@ -34,7 +34,6 @@ pub const Component = struct {
     }
 
     pub fn deinit(self: *@This(), digisim: *Digisim) void {
-        std.debug.print("DESTROY COMPONENT: {d} - {d}\n", .{ self.id, @ptrToInt(self) });
         var j = self.components.iterator();
         while (j.next()) |e| {
             const entry = digisim.components.getPtr(e.key_ptr.*) orelse unreachable;
@@ -132,7 +131,6 @@ pub const Component = struct {
             }
         }
         const ret = .{ .port = port, .start = start, .end = end };
-        std.debug.print("RANGE: {s}: {any}\n", .{ p, ret });
         return ret;
     }
 
@@ -170,7 +168,6 @@ pub const Component = struct {
         try self.ports.put(p.id, {});
         errdefer _ = self.ports.swapRemove(p.id);
         try digisim.ports.put(p.id, p);
-        std.debug.print("CREATE PORT: {d} - {d}\n", .{ p.id, @ptrToInt(digisim.ports.getPtr(p.id) orelse unreachable) });
         return p.id;
     }
 
@@ -191,7 +188,6 @@ pub const Component = struct {
         try self.components.put(comp.id, {});
         errdefer _ = self.components.swapRemove(comp.id);
         try digisim.components.put(comp.id, comp);
-        std.debug.print("CREATE COMPONENT: {d} - {d}\n", .{ comp.id, @ptrToInt(digisim.components.getPtr(comp.id) orelse unreachable) });
 
         return comp.id;
     }
