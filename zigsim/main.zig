@@ -5,7 +5,8 @@ const t = @import("types.zig");
 pub fn main() !u8 {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
-    var sim = try digisim.Digisim.init(allocator);
+    _ = allocator;
+    var sim = try digisim.Digisim.init(std.heap.c_allocator);
     defer sim.deinit();
 
     _ = try sim.addComponent("core");
