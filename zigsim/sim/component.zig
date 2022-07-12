@@ -62,6 +62,47 @@ pub const Component = struct {
         return null;
     }
 
+    fn parsePortRange(self: *@This(), digisim: *Digisim, p: []const u8) !struct {
+        port: *Port,
+        start: usize,
+        end: usize,
+        pub fn width(s: *const @This()) usize {
+            return s.end - s.start + 1;
+        }
+    } {
+        var port_name: []const u8 = undefined;
+        var range: []const u8 = undefined;
+        if (std.mem.lastIndexOf(u8, p, "[")) |index| {
+            port_name = p[0..index];
+            range = p[index..];
+        } else {
+            port_name = p;
+            range = p[0..0];
+        }
+        const port = (try self.getPort(digisim, port_name)) orelse return Err.PortNotFound;
+        const ret = .{ .port = port, .start = port.start, .end = port.end };
+        return ret;
+    }
+
+    pub fn connect(self: *@This(), digisim: *Digisim, a: []const u8, b: []const u8) !void {
+        _ = self;
+        const pa = try self.parsePortRange(digisim, a);
+        const pb = try self.parsePortRange(digisim, b);
+
+        const w = pa.width();
+        if (w != pb.width()) return Err.MismatchingPortWidths;
+        var i: usize = 0;
+        while (i < w) : (i += 1) {
+            const p1 = &pa.port.pins[pa.start + i];
+            const p2 = &pb.port.pins[pb.start + i];
+            if (p1.net != p2.net) {
+                const net1 = digisim.nets.getPtr(p1.net) orelse unreachable;
+                const net2 = digisim.nets.getPtr(p2.net) orelse unreachable;
+                try net1.merge(digisim, net2);
+            }
+        }
+    }
+
     pub fn addPort(self: *@This(), digisim: *Digisim, name: []const u8, input: bool, start: usize, end: usize) !t.Id {
         if (name.len == 0) return Err.InvalidPortName;
         if (std.mem.indexOf(u8, name, ".")) |_| return Err.InvalidPortName;

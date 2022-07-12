@@ -14,6 +14,8 @@ pub const Error = error{
     DuplicatePortName,
     InvalidPortName,
     InvalidPortSize,
+    MismatchingPortWidths,
+    PortNotFound,
 };
 
 pub const Digisim = struct {
@@ -23,7 +25,6 @@ pub const Digisim = struct {
     strings: stringIntern.StringIntern,
     components: t.HashMap(t.Id, Component),
     ports: t.HashMap(t.Id, Port),
-    pins: t.HashMap(t.Id, Pin),
     nets: t.HashMap(t.Id, Net),
     pub fn init(allocator: t.Allocator) !@This() {
         var self: @This() = undefined;
@@ -35,8 +36,6 @@ pub const Digisim = struct {
         errdefer self.components.deinit();
         self.ports = t.HashMap(t.Id, Port).init(allocator);
         errdefer self.ports.deinit();
-        self.pins = t.HashMap(t.Id, Pin).init(allocator);
-        errdefer self.pins.deinit();
         self.nets = t.HashMap(t.Id, Net).init(allocator);
         errdefer self.nets.deinit();
         self.root = try Component.init(&self, try self.strings.ref(root_name));
@@ -46,7 +45,6 @@ pub const Digisim = struct {
     pub fn deinit(self: *@This()) void {
         self.root.deinit(self);
         self.nets.deinit();
-        self.pins.deinit();
         self.ports.deinit();
         self.components.deinit();
         self.strings.deinit();

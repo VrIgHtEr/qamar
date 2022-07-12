@@ -6,13 +6,23 @@ const ArrayList = std.ArrayList;
 
 pub const Net = struct {
     id: t.Id,
-    pins: ArrayList(Pin),
+    pins: t.HashMap(t.Id, *Pin),
 
     pub fn init(digisim: *Digisim) !@This() {
         var self: @This() = undefined;
         self.id = digisim.nextId();
-        self.pins = ArrayList(Pin).init(digisim.allocator);
+        self.pins = t.HashMap(t.Id, *Pin).init(digisim.allocator);
         return self;
+    }
+
+    pub fn merge(self: *@This(), digisim: *Digisim, other: *@This()) !void {
+        var i = self.pins.iterator();
+        while (i.next()) |entry| {
+            entry.value_ptr.*.net = other.id;
+            try other.pins.put(entry.key_ptr.*, entry.value_ptr.*);
+        }
+        _ = digisim.nets.swapRemove(self.id);
+        self.deinit();
     }
 
     pub fn deinit(self: *@This()) void {

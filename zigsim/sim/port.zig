@@ -2,11 +2,12 @@ const t = @import("../types.zig");
 const std = @import("std");
 const Pin = @import("pin.zig").Pin;
 const Digisim = @import("../digisim.zig").Digisim;
+const Net = @import("net.zig").Net;
 const Err = @import("../digisim.zig").Error;
 
 pub const Port = struct {
     id: t.Id,
-    pins: std.ArrayList(Pin),
+    pins: []Pin,
     name: []const u8,
     input: bool,
     start: usize,
@@ -20,29 +21,33 @@ pub const Port = struct {
         self.start = start;
         self.end = end;
         self.name = name;
-        self.pins = std.ArrayList(Pin).init(digisim.allocator);
-        errdefer self.pins.deinit();
-        try self.pins.ensureTotalCapacityPrecise(self.width());
         const w = self.width();
+        self.pins = try digisim.allocator.alloc(Pin, w);
+        errdefer digisim.allocator.free(self.pins);
         var i: usize = 0;
         errdefer ({
             while (i > 0) {
                 i -= 1;
-                self.pins.items[i].deinit();
+                self.pins[i].deinit(digisim);
             }
         });
         while (i < w) : (i += 1) {
-            var pin = try Pin.init(digisim);
-            errdefer pin.deinit();
-            try self.pins.append(pin);
+            self.pins[i] = try Pin.init(digisim);
+            errdefer self.pins[i].deinit(digisim);
+            var net = try Net.init(digisim);
+            errdefer net.deinit();
+            try net.pins.put(self.pins[i].id, &self.pins[i]);
+            errdefer _ = net.pins.swapRemove(self.pins[i].id);
+            try digisim.nets.put(net.id, net);
+            self.pins[i].net = net.id;
         }
         return self;
     }
 
     pub fn deinit(self: *@This(), digisim: *Digisim) void {
         digisim.strings.unref(self.name);
-        for (self.pins.items) |_, index| {
-            self.pins.items[index].deinit();
+        for (self.pins) |_, index| {
+            self.pins[index].deinit(digisim);
         }
         _ = digisim.ports.swapRemove(self.id);
     }
