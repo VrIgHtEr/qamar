@@ -35,6 +35,7 @@ pub const StringIntern = struct {
     }
 
     pub fn ref(self: *@This(), value: []const u8) ![]const u8 {
+        std.debug.print("REF: {s}\n", .{value});
         var entry: *Entry = undefined;
         if (self.strings.getPtr(value)) |e| {
             entry = e;
@@ -49,6 +50,7 @@ pub const StringIntern = struct {
     }
 
     pub fn unref(self: *@This(), value: []const u8) void {
+        std.debug.print("UNREF: {s}\n", .{value});
         if (self.strings.getPtr(value)) |e| {
             e.refcount -= 1;
             if (e.refcount == 0) {

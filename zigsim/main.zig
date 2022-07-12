@@ -14,7 +14,6 @@ pub fn main() !u8 {
         _ = try c.addPort(&sim, "input", true, 0, 1);
         try c.connect(&sim, "input[0]", "input[1]");
         std.debug.print("\n{any}\n", .{try sim.getComponent("core")});
-        std.debug.print("\n{any}\n", .{try sim.getPort("core.input")});
         return 0;
     }
     return 1;

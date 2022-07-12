@@ -34,6 +34,7 @@ pub const Component = struct {
     }
 
     pub fn deinit(self: *@This(), digisim: *Digisim) void {
+        std.debug.print("DESTROY COMPONENT: {d} - {d}\n", .{ self.id, @ptrToInt(self) });
         var j = self.components.iterator();
         while (j.next()) |e| {
             const entry = digisim.components.getPtr(e.key_ptr.*) orelse unreachable;
@@ -62,6 +63,39 @@ pub const Component = struct {
         return null;
     }
 
+    fn charToDigit(c: u8) u8 {
+        return switch (c) {
+            '0'...'9' => c - '0',
+            'A'...'Z' => c - 'A' + 10,
+            'a'...'z' => c - 'a' + 10,
+            else => std.math.maxInt(u8),
+        };
+    }
+
+    fn parseUsize(buf: []const u8, radix: u8) !usize {
+        var x: u64 = 0;
+
+        for (buf) |c| {
+            const digit = charToDigit(c);
+
+            if (digit >= radix) {
+                return error.InvalidChar;
+            }
+
+            // x *= radix
+            if (@mulWithOverflow(u64, x, radix, &x)) {
+                return error.Overflow;
+            }
+
+            // x += digit
+            if (@addWithOverflow(u64, x, digit, &x)) {
+                return error.Overflow;
+            }
+        }
+
+        return x;
+    }
+
     fn parsePortRange(self: *@This(), digisim: *Digisim, p: []const u8) !struct {
         port: *Port,
         start: usize,
@@ -80,7 +114,25 @@ pub const Component = struct {
             range = p[0..0];
         }
         const port = (try self.getPort(digisim, port_name)) orelse return Err.PortNotFound;
-        const ret = .{ .port = port, .start = port.start, .end = port.end };
+        var start: usize = undefined;
+        var end: usize = undefined;
+        if (range.len == 0) {
+            start = port.start;
+            end = port.end;
+        } else {
+            if (range[0] != '[' or range[range.len - 1] != ']') return Err.InvalidPortReference;
+            range = range[1 .. range.len - 1];
+            if (range.len == 0) return Err.InvalidPortReference;
+            if (std.mem.indexOf(u8, range, "-")) |dashindex| {
+                start = try parseUsize(range[0..dashindex], 10);
+                end = try parseUsize(range[dashindex + 1 ..], 10);
+            } else {
+                start = try parseUsize(range, 10);
+                end = start;
+            }
+        }
+        const ret = .{ .port = port, .start = start, .end = end };
+        std.debug.print("RANGE: {s}: {any}\n", .{ p, ret });
         return ret;
     }
 
@@ -118,6 +170,7 @@ pub const Component = struct {
         try self.ports.put(p.id, {});
         errdefer _ = self.ports.swapRemove(p.id);
         try digisim.ports.put(p.id, p);
+        std.debug.print("CREATE PORT: {d} - {d}\n", .{ p.id, @ptrToInt(digisim.ports.getPtr(p.id) orelse unreachable) });
         return p.id;
     }
 
@@ -138,6 +191,8 @@ pub const Component = struct {
         try self.components.put(comp.id, {});
         errdefer _ = self.components.swapRemove(comp.id);
         try digisim.components.put(comp.id, comp);
+        std.debug.print("CREATE COMPONENT: {d} - {d}\n", .{ comp.id, @ptrToInt(digisim.components.getPtr(comp.id) orelse unreachable) });
+
         return comp.id;
     }
 

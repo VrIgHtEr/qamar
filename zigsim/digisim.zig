@@ -16,6 +16,7 @@ pub const Error = error{
     InvalidPortSize,
     MismatchingPortWidths,
     PortNotFound,
+    InvalidPortReference,
 };
 
 pub const Digisim = struct {
@@ -38,7 +39,10 @@ pub const Digisim = struct {
         errdefer self.ports.deinit();
         self.nets = t.HashMap(t.Id, Net).init(allocator);
         errdefer self.nets.deinit();
+        try self.nets.ensureTotalCapacity(16);
         self.root = try Component.init(&self, try self.strings.ref(root_name));
+        errdefer self.root.deinit(&self);
+        std.debug.print("CREATE COMPONENT: {d} - {d}\n", .{ self.root.id, @ptrToInt(&self.root) });
         return self;
     }
 
