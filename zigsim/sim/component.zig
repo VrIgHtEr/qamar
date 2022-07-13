@@ -173,6 +173,7 @@ pub const Component = struct {
             if (range.len == 0) return Err.InvalidPortReference;
             if (std.mem.indexOf(u8, range, "-")) |dashindex| {
                 if (dashindex == 0) {
+                    if (range.len == 1) return Err.InvalidPortReference;
                     start = port.start;
                 } else {
                     start = try parseUsize(range[0..dashindex], 10);
@@ -187,6 +188,9 @@ pub const Component = struct {
                 end = start;
             }
         }
+        if (end < start) return Err.InvalidPortReference;
+        if (start < port.start) return Err.PortReferenceOutOfRange;
+        if (end > port.end) return Err.PortReferenceOutOfRange;
         const ret = .{ .port = port, .start = start, .end = end };
         return ret;
     }

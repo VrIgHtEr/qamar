@@ -21,7 +21,6 @@ pub fn main() !u8 {
         try cmp.setHandler(components.nand_h);
         _ = try cmp.addPort(&sim, "input", true, 0, 1);
         try cmp.connect(&sim, "input[0]", "input[1]");
-        std.debug.print("{any}\n", .{sim.countPins()});
         return 0;
     }
     return 1;

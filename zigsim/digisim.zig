@@ -23,6 +23,7 @@ pub const Error = error{
     PortNotFound,
     InvalidPortReference,
     HandlerAlreadySet,
+    PortReferenceOutOfRange,
 };
 
 pub const Digisim = struct {
@@ -76,7 +77,7 @@ pub const Digisim = struct {
         return self.root.getPort(self, name);
     }
 
-    pub fn countPins(self: *@This()) usize {
+    fn countPins(self: *@This()) usize {
         var i = self.ports.iterator();
         var ret: usize = 0;
         while (i.next()) |e| {
