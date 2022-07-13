@@ -22,6 +22,7 @@ pub const Error = error{
     MismatchingPortWidths,
     PortNotFound,
     InvalidPortReference,
+    HandlerAlreadySet,
 };
 
 pub const Digisim = struct {
@@ -75,7 +76,12 @@ pub const Digisim = struct {
         return self.root.getPort(self, name);
     }
 
-    fn countPins(self: *@This()) usize {
-        _ = self;
+    pub fn countPins(self: *@This()) usize {
+        var i = self.ports.iterator();
+        var ret: usize = 0;
+        while (i.next()) |e| {
+            ret += e.value_ptr.pins.len;
+        }
+        return ret;
     }
 };

@@ -1,16 +1,58 @@
 const std = @import("std");
 const t = @import("../types.zig");
 const Port = @import("port.zig").Port;
+const Net = @import("net.zig").Net;
 const digi = @import("../digisim.zig");
 const HashMap = std.AutoArrayHashMap(t.Id, void);
 const Digisim = digi.Digisim;
 const Err = digi.Error;
+const Signal = t.Signal;
+
+pub const components = struct {
+    pub fn nand_h(input: []Signal, output: []Signal) anyerror!void {
+        for (input) |x| {
+            if (x != Signal.high) {
+                output[0] = Signal.high;
+                return;
+            }
+        }
+        output[0] = Signal.low;
+    }
+    pub fn and_h(input: []Signal, output: []Signal) anyerror!void {
+        for (input) |x| {
+            if (x != Signal.high) {
+                output[0] = Signal.low;
+                return;
+            }
+        }
+        output[0] = Signal.high;
+    }
+    pub fn nor_h(input: []Signal, output: []Signal) anyerror!void {
+        for (input) |x| {
+            if (x == Signal.high) {
+                output[0] = Signal.high;
+                return;
+            }
+        }
+        output[0] = Signal.low;
+    }
+    pub fn or_h(input: []Signal, output: []Signal) anyerror!void {
+        for (input) |x| {
+            if (x == Signal.high) {
+                output[0] = Signal.low;
+                return;
+            }
+        }
+        output[0] = Signal.high;
+    }
+};
 
 pub const Component = struct {
     id: t.Id,
     ports: HashMap,
     components: HashMap,
     name: []const u8,
+    handler: ?fn ([]Signal, []Signal) anyerror!void,
 
     pub fn init(digisim: *Digisim, name: []const u8) !@This() {
         var self: @This() = undefined;
@@ -18,7 +60,13 @@ pub const Component = struct {
         self.ports = HashMap.init(digisim.allocator);
         self.components = HashMap.init(digisim.allocator);
         self.name = name;
+        self.handler = null;
         return self;
+    }
+
+    pub fn setHandler(self: *@This(), handler: fn ([]Signal, []Signal) anyerror!void) Err!void {
+        if (self.handler != null) return Err.HandlerAlreadySet;
+        self.handler = handler;
     }
 
     pub fn findComponent(self: *@This(), id: t.Id) ?*Component {
@@ -124,8 +172,16 @@ pub const Component = struct {
             range = range[1 .. range.len - 1];
             if (range.len == 0) return Err.InvalidPortReference;
             if (std.mem.indexOf(u8, range, "-")) |dashindex| {
-                start = try parseUsize(range[0..dashindex], 10);
-                end = try parseUsize(range[dashindex + 1 ..], 10);
+                if (dashindex == 0) {
+                    start = port.start;
+                } else {
+                    start = try parseUsize(range[0..dashindex], 10);
+                }
+                if (dashindex == range.len - 1) {
+                    end = port.end;
+                } else {
+                    end = try parseUsize(range[dashindex + 1 ..], 10);
+                }
             } else {
                 start = try parseUsize(range, 10);
                 end = start;
