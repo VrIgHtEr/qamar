@@ -2,20 +2,21 @@ const std = @import("std");
 const t = @import("../types.zig");
 const Port = @import("port.zig").Port;
 const digi = @import("../digisim.zig");
+const HashMap = std.AutoArrayHashMap(t.Id, void);
 const Digisim = digi.Digisim;
 const Err = digi.Error;
 
 pub const Component = struct {
     id: t.Id,
-    ports: t.HashMap(t.Id, void),
-    components: t.HashMap(t.Id, void),
+    ports: HashMap,
+    components: HashMap,
     name: []const u8,
 
     pub fn init(digisim: *Digisim, name: []const u8) !@This() {
         var self: @This() = undefined;
         self.id = digisim.nextId();
-        self.ports = t.HashMap(t.Id, void).init(digisim.allocator);
-        self.components = t.HashMap(t.Id, void).init(digisim.allocator);
+        self.ports = HashMap.init(digisim.allocator);
+        self.components = HashMap.init(digisim.allocator);
         self.name = name;
         return self;
     }

@@ -3,15 +3,16 @@ const std = @import("std");
 const Digisim = @import("../digisim.zig").Digisim;
 const Pin = @import("pin.zig").Pin;
 const ArrayList = std.ArrayList;
+const HashMap = std.AutoArrayHashMap(t.Id, *Pin);
 
 pub const Net = struct {
     id: t.Id,
-    pins: t.HashMap(t.Id, *Pin),
+    pins: HashMap,
 
     pub fn init(digisim: *Digisim) !@This() {
         var self: @This() = undefined;
         self.id = digisim.nextId();
-        self.pins = t.HashMap(t.Id, *Pin).init(digisim.allocator);
+        self.pins = HashMap.init(digisim.allocator);
         return self;
     }
 

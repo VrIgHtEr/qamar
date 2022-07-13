@@ -1,9 +1,6 @@
 const std = @import("std");
 
 pub const Id = usize;
-pub const Allocator = std.mem.Allocator;
-pub const ArrayList = std.ArrayList;
-pub const HashMap = std.AutoArrayHashMap;
 
 pub const Signal = enum(u8) {
     uninitialized = 0,

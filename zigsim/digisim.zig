@@ -5,8 +5,13 @@ const Pin = @import("sim/pin.zig").Pin;
 const Net = @import("sim/net.zig").Net;
 const std = @import("std");
 const ArrayList = std.ArrayList;
+const Allocator = std.mem.Allocator;
 const stringIntern = @import("stringIntern.zig");
 const root_name: []const u8 = "__ROOT__";
+
+fn HashMap(comptime T: type) type {
+    return std.AutoArrayHashMap(t.Id, T);
+}
 
 pub const Error = error{
     DuplicateComponentName,
@@ -20,24 +25,24 @@ pub const Error = error{
 };
 
 pub const Digisim = struct {
-    allocator: t.Allocator,
+    allocator: Allocator,
     id: t.Id = 0,
     root: Component,
     strings: stringIntern.StringIntern,
-    components: t.HashMap(t.Id, Component),
-    ports: t.HashMap(t.Id, Port),
-    nets: t.HashMap(t.Id, Net),
-    pub fn init(allocator: t.Allocator) !@This() {
+    components: HashMap(Component),
+    ports: HashMap(Port),
+    nets: HashMap(Net),
+    pub fn init(allocator: Allocator) !@This() {
         var self: @This() = undefined;
         self.allocator = allocator;
         self.id = 0;
         self.strings = stringIntern.StringIntern.init(allocator);
         errdefer self.strings.deinit();
-        self.components = t.HashMap(t.Id, Component).init(allocator);
+        self.components = HashMap(Component).init(allocator);
         errdefer self.components.deinit();
-        self.ports = t.HashMap(t.Id, Port).init(allocator);
+        self.ports = HashMap(Port).init(allocator);
         errdefer self.ports.deinit();
-        self.nets = t.HashMap(t.Id, Net).init(allocator);
+        self.nets = HashMap(Net).init(allocator);
         errdefer self.nets.deinit();
         try self.nets.ensureTotalCapacity(16);
         self.root = try Component.init(&self, try self.strings.ref(root_name));
@@ -68,5 +73,9 @@ pub const Digisim = struct {
 
     pub fn getPort(self: *@This(), name: []const u8) !?*Port {
         return self.root.getPort(self, name);
+    }
+
+    fn countPins(self: *@This()) usize {
+        _ = self;
     }
 };
