@@ -28,6 +28,15 @@ pub const Net = struct {
         _ = digisim.nets.swapRemove(id);
     }
 
+    pub fn isDriven(self: *@This()) bool {
+        var i = self.pins.iterator();
+        while (i.next()) |e| {
+            if (!e.value_ptr.*.input)
+                return true;
+        }
+        return false;
+    }
+
     pub fn deinit(self: *@This()) void {
         self.pins.deinit();
     }

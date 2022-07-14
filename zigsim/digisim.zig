@@ -24,6 +24,7 @@ pub const Error = error{
     InvalidPortReference,
     HandlerAlreadySet,
     PortReferenceOutOfRange,
+    UnconnectedInput,
 };
 
 pub const Digisim = struct {
@@ -86,7 +87,25 @@ pub const Digisim = struct {
         return ret;
     }
 
-    pub fn pruneInactive(self: *@This()) !void {
+    pub fn checkUnconnectedInputs(self: *@This()) !void {
+        var i = self.components.iterator();
+        while (i.next()) |e| {
+            var j = e.value_ptr.ports.iterator();
+            while (j.next()) |p| {
+                var port = self.ports.getPtr(p.key_ptr.*) orelse unreachable;
+                if (port.input) {
+                    for (port.pins) |*pin| {
+                        const net = self.nets.getPtr(pin.net) orelse unreachable;
+                        if (!net.isDriven()) {
+                            return Error.UnconnectedInput;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    pub fn pruneInactivePorts(self: *@This()) !void {
         var i = self.components.iterator();
         while (i.next()) |e| {
             if (!e.value_ptr.active(self)) {
@@ -144,7 +163,8 @@ pub const Digisim = struct {
     };
 
     pub fn compile(self: *@This()) !void {
-        try self.pruneInactive();
+        try self.checkUnconnectedInputs();
+        try self.pruneInactivePorts();
         var netmap = std.AutoHashMap(t.Id, *CompiledNet).init(self.allocator);
         defer netmap.deinit();
         var sim = Simulation.init(self.allocator);

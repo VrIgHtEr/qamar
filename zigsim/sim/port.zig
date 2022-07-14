@@ -34,7 +34,7 @@ pub const Port = struct {
             }
         });
         while (i < w) : (i += 1) {
-            self.pins[i] = try Pin.init(digisim);
+            self.pins[i] = try Pin.init(digisim, input);
             errdefer self.pins[i].deinit(digisim);
             var net = try Net.init(digisim);
             errdefer net.deinit();

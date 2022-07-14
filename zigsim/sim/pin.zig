@@ -5,9 +5,10 @@ const Digisim = @import("../digisim.zig").Digisim;
 pub const Pin = struct {
     id: t.Id,
     net: t.Id,
+    input: bool,
 
-    pub fn init(digisim: *Digisim) !@This() {
-        var self: @This() = .{ .id = digisim.nextId(), .net = 0 };
+    pub fn init(digisim: *Digisim, input: bool) !@This() {
+        var self: @This() = .{ .id = digisim.nextId(), .net = 0, .input = input };
         return self;
     }
 
