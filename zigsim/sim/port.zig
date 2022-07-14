@@ -12,8 +12,9 @@ pub const Port = struct {
     input: bool,
     start: usize,
     end: usize,
+    trace: bool,
 
-    pub fn init(digisim: *Digisim, name: []const u8, input: bool, start: usize, end: usize) !@This() {
+    pub fn init(digisim: *Digisim, name: []const u8, input: bool, start: usize, end: usize, trace: bool) !@This() {
         var self: @This() = undefined;
         if (end < start) return Err.InvalidPortSize;
         self.id = digisim.nextId();
@@ -23,6 +24,7 @@ pub const Port = struct {
         self.name = name;
         const w = self.width();
         self.pins = try digisim.allocator.alloc(Pin, w);
+        self.trace = trace;
         errdefer digisim.allocator.free(self.pins);
         var i: usize = 0;
         errdefer ({

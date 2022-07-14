@@ -85,4 +85,68 @@ pub const Digisim = struct {
         }
         return ret;
     }
+
+    pub fn pruneInactive(self: *@This()) !void {
+        var inactive = std.ArrayList(t.Id).init(self.allocator);
+        defer inactive.deinit();
+        var i = self.components.iterator();
+        while (i.next()) |e| {
+            if (!e.value_ptr.active(self)) {
+                try inactive.append(e.key_ptr.*);
+            }
+        }
+        for (inactive.items) |e| {
+            const comp = self.components.getPtr(e) orelse unreachable;
+            comp.deinit(self);
+        }
+    }
+
+    const CompiledPin = struct { net: *CompiledNet };
+
+    const CompiledPort = struct {
+        pins: []CompiledPin,
+    };
+
+    const CompiledComponent = struct {
+        ports: []*CompiledPort,
+    };
+
+    const CompiledNet = struct {
+        sensitivitylist: []*CompiledComponent,
+        tracelist: []*CompiledPort,
+    };
+
+    pub const Simulation = struct {
+        allocator: Allocator,
+        nets: []CompiledNet,
+        components: []CompiledComponent,
+        ports: []CompiledPort,
+        dirty: std.AutoHashMap(*CompiledComponent, void),
+
+        pub fn init(allocator: Allocator) @This() {
+            var self: @This() = undefined;
+            self.allocator = allocator;
+            self.dirty = @TypeOf(self.dirty).init(allocator);
+            return self;
+        }
+
+        pub fn deinit(self: *@This()) void {
+            self.dirty.deinit();
+        }
+
+        pub fn step(self: *@This()) bool {
+            var iter = self.dirty.iterator();
+            while (iter.next()) |e| {
+                const component = e.key_ptr;
+                _ = component;
+            }
+            return self.dirty.count() == 0;
+        }
+    };
+
+    pub fn compile(self: *@This()) !void {
+        var sim = Simulation.init(self.allocator);
+        defer sim.deinit();
+        _ = sim.step();
+    }
 };

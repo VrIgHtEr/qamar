@@ -214,7 +214,7 @@ pub const Component = struct {
         }
     }
 
-    pub fn addPort(self: *@This(), digisim: *Digisim, name: []const u8, input: bool, start: usize, end: usize) !t.Id {
+    pub fn addPort(self: *@This(), digisim: *Digisim, name: []const u8, input: bool, start: usize, end: usize, trace: bool) !t.Id {
         if (name.len == 0) return Err.InvalidPortName;
         if (std.mem.indexOf(u8, name, ".")) |_| return Err.InvalidPortName;
         const interned_name = try digisim.strings.ref(name);
@@ -224,7 +224,7 @@ pub const Component = struct {
             const entry = digisim.ports.getPtr(e.key_ptr.*) orelse unreachable;
             if (entry.name.ptr == interned_name.ptr) return Err.DuplicatePortName;
         }
-        var p = try Port.init(digisim, interned_name, input, start, end);
+        var p = try Port.init(digisim, interned_name, input, start, end, trace);
         errdefer p.deinit(digisim);
         try self.ports.put(p.id, {});
         errdefer _ = self.ports.swapRemove(p.id);
@@ -302,5 +302,20 @@ pub const Component = struct {
         }
 
         return null;
+    }
+
+    fn traces(self: *@This(), digisim: *Digisim) bool {
+        var i = self.ports.iterator();
+        while (i.next()) |e| {
+            const port = digisim.ports.getPtr(e.key_ptr.*) orelse unreachable;
+            if (port.trace) return true;
+        }
+        return false;
+    }
+
+    pub fn active(self: *@This(), digisim: *Digisim) bool {
+        if (self.handler) |_| {
+            return true;
+        } else return self.traces(digisim);
     }
 };
