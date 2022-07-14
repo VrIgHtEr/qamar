@@ -87,17 +87,16 @@ pub const Digisim = struct {
     }
 
     pub fn pruneInactive(self: *@This()) !void {
-        var inactive = std.ArrayList(t.Id).init(self.allocator);
-        defer inactive.deinit();
         var i = self.components.iterator();
         while (i.next()) |e| {
             if (!e.value_ptr.active(self)) {
-                try inactive.append(e.key_ptr.*);
+                var j = e.value_ptr.ports.iterator();
+                while (j.next()) |p| {
+                    var port = self.ports.getPtr(p.key_ptr.*) orelse unreachable;
+                    port.deinit(self);
+                }
+                e.value_ptr.ports.clearAndFree();
             }
-        }
-        for (inactive.items) |e| {
-            const comp = self.components.getPtr(e) orelse unreachable;
-            comp.deinit(self);
         }
     }
 
@@ -145,6 +144,9 @@ pub const Digisim = struct {
     };
 
     pub fn compile(self: *@This()) !void {
+        try self.pruneInactive();
+        var netmap = std.AutoHashMap(t.Id, *CompiledNet).init(self.allocator);
+        defer netmap.deinit();
         var sim = Simulation.init(self.allocator);
         defer sim.deinit();
         _ = sim.step();
