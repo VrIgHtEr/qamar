@@ -304,18 +304,8 @@ pub const Component = struct {
         return null;
     }
 
-    fn traces(self: *@This(), digisim: *Digisim) bool {
-        var i = self.ports.iterator();
-        while (i.next()) |e| {
-            const port = digisim.ports.getPtr(e.key_ptr.*) orelse unreachable;
-            if (port.trace) return true;
-        }
+    pub fn isLeaf(self: *const @This()) bool {
+        if (self.handler) |_| return true;
         return false;
-    }
-
-    pub fn active(self: *@This(), digisim: *Digisim) bool {
-        if (self.handler) |_| {
-            return true;
-        } else return self.traces(digisim);
     }
 };

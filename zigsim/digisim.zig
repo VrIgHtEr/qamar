@@ -25,6 +25,8 @@ pub const Error = error{
     HandlerAlreadySet,
     PortReferenceOutOfRange,
     UnconnectedInput,
+    MalformedLeafNode,
+    EmptySimulation,
 };
 
 pub const Digisim = struct {
@@ -87,7 +89,22 @@ pub const Digisim = struct {
         return ret;
     }
 
+    pub fn checkLeafNodes(self: *@This()) !void {
+        std.debug.print("checkLeafNodes start\n", .{});
+        defer std.debug.print("checkLeafNodes end\n", .{});
+        var i = self.components.iterator();
+        while (i.next()) |e| {
+            if (e.value_ptr.isLeaf()) {
+                if (e.value_ptr.components.count() != 0) return Error.MalformedLeafNode;
+            } else {
+                if (e.value_ptr.components.count() == 0) return Error.MalformedLeafNode;
+            }
+        }
+    }
+
     pub fn checkUnconnectedInputs(self: *@This()) !void {
+        std.debug.print("checkUnconnectedInputs start\n", .{});
+        defer std.debug.print("checkUnconnectedInputs end\n", .{});
         var i = self.components.iterator();
         while (i.next()) |e| {
             var j = e.value_ptr.ports.iterator();
@@ -105,17 +122,32 @@ pub const Digisim = struct {
         }
     }
 
-    pub fn pruneInactivePorts(self: *@This()) !void {
+    pub fn assignNames(self: *@This()) !void {
+        std.debug.print("assignNames start\n", .{});
+        defer std.debug.print("assignNames end\n", .{});
+        _ = self;
+    }
+
+    pub fn flatten(self: *@This()) !void {
+        std.debug.print("flatten start\n", .{});
+        defer std.debug.print("flatten end\n", .{});
+        _ = self;
+    }
+
+    pub fn pruneBranchNodes(self: *@This()) !void {
+        std.debug.print("pruneBranchNodes start\n", .{});
+        defer std.debug.print("pruneBranchNodes end\n", .{});
+        var inactive = std.ArrayList(t.Id).init(self.allocator);
+        defer inactive.deinit();
         var i = self.components.iterator();
         while (i.next()) |e| {
-            if (!e.value_ptr.active(self)) {
-                var j = e.value_ptr.ports.iterator();
-                while (j.next()) |p| {
-                    var port = self.ports.getPtr(p.key_ptr.*) orelse unreachable;
-                    port.deinit(self);
-                }
-                e.value_ptr.ports.clearAndFree();
+            if (!e.value_ptr.isLeaf()) {
+                try inactive.append(e.value_ptr.id);
             }
+        }
+        for (inactive.items) |id| {
+            (self.components.getPtr(id) orelse unreachable).deinit(self);
+            _ = self.components.swapRemove(id);
         }
     }
 
@@ -123,6 +155,11 @@ pub const Digisim = struct {
 
     const CompiledPort = struct {
         pins: []CompiledPin,
+
+        fn deinit(self: *@This(), allocator: Allocator) void {
+            _ = self;
+            _ = allocator;
+        }
     };
 
     const CompiledComponent = struct {
@@ -141,15 +178,25 @@ pub const Digisim = struct {
         ports: []CompiledPort,
         dirty: std.AutoHashMap(*CompiledComponent, void),
 
-        pub fn init(allocator: Allocator) @This() {
+        pub fn init(allocator: Allocator, numNets: usize, numComponents: usize, numPorts: usize) !@This() {
             var self: @This() = undefined;
             self.allocator = allocator;
+            self.nets = try allocator.alloc(CompiledNet, numNets);
+            errdefer allocator.free(self.nets);
+            self.components = try allocator.alloc(CompiledComponent, numComponents);
+            errdefer allocator.free(self.components);
+            self.ports = try allocator.alloc(CompiledPort, numPorts);
+            errdefer allocator.free(self.ports);
             self.dirty = @TypeOf(self.dirty).init(allocator);
             return self;
         }
 
         pub fn deinit(self: *@This()) void {
             self.dirty.deinit();
+            self.allocator.free(self.components);
+            self.allocator.free(self.nets);
+            for (self.ports) |*p| p.deinit(self.allocator);
+            self.allocator.free(self.ports);
         }
 
         pub fn step(self: *@This()) bool {
@@ -163,11 +210,17 @@ pub const Digisim = struct {
     };
 
     pub fn compile(self: *@This()) !void {
+        if (self.components.count() == 0) return Error.EmptySimulation;
+        try self.checkLeafNodes();
         try self.checkUnconnectedInputs();
-        try self.pruneInactivePorts();
+
+        try self.assignNames();
+        try self.flatten();
+        try self.pruneBranchNodes();
+
         var netmap = std.AutoHashMap(t.Id, *CompiledNet).init(self.allocator);
         defer netmap.deinit();
-        var sim = Simulation.init(self.allocator);
+        var sim = try Simulation.init(self.allocator, self.nets.count(), self.components.count(), self.ports.count());
         defer sim.deinit();
         _ = sim.step();
     }
