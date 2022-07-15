@@ -9,6 +9,7 @@ pub const Port = struct {
     id: t.Id,
     pins: []Pin,
     name: []const u8,
+    alias: ?[]const u8,
     input: bool,
     start: usize,
     end: usize,
@@ -22,6 +23,7 @@ pub const Port = struct {
         self.start = start;
         self.end = end;
         self.name = name;
+        self.alias = null;
         const w = self.width();
         self.pins = try digisim.allocator.alloc(Pin, w);
         self.trace = trace;
@@ -52,6 +54,7 @@ pub const Port = struct {
         }
         digisim.allocator.free(self.pins);
         digisim.strings.unref(self.name);
+        if (self.alias) |a| digisim.strings.unref(a);
         _ = digisim.ports.swapRemove(self.id);
     }
 

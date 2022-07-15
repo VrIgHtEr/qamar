@@ -1,4 +1,5 @@
 const t = @import("types.zig");
+const IdGen = @import("idgen.zig").IdGen;
 const Component = @import("sim/component.zig").Component;
 const Port = @import("sim/port.zig").Port;
 const Pin = @import("sim/pin.zig").Pin;
@@ -28,6 +29,7 @@ pub const Error = error{
     MalformedLeafNode,
     EmptySimulation,
     ComponentNotFound,
+    OutOfMemory,
 };
 
 pub const Digisim = struct {
@@ -38,6 +40,7 @@ pub const Digisim = struct {
     components: HashMap(Component),
     ports: HashMap(Port),
     nets: HashMap(Net),
+    idgen: IdGen,
     pub fn init(allocator: Allocator) !@This() {
         var self: @This() = undefined;
         self.allocator = allocator;
@@ -53,6 +56,8 @@ pub const Digisim = struct {
         try self.nets.ensureTotalCapacity(16);
         self.root = try Component.init(&self, try self.strings.ref(root_name));
         errdefer self.root.deinit(&self);
+        self.idgen = try IdGen.init(allocator);
+        errdefer self.idgen.deinit();
         return self;
     }
 
@@ -62,6 +67,7 @@ pub const Digisim = struct {
         self.ports.deinit();
         self.components.deinit();
         self.strings.deinit();
+        self.idgen.deinit();
     }
 
     pub fn nextId(self: *@This()) t.Id {
@@ -121,7 +127,7 @@ pub const Digisim = struct {
 
     pub fn assignNames(self: *@This()) !void {
         std.debug.print("$timescale 1ps $end\n", .{});
-        self.root.assignNames(self);
+        try self.root.assignNames(self);
         std.debug.print("$enddefinitions $end\n", .{});
     }
 

@@ -20,10 +20,10 @@ const Entry = struct {
 
 pub const StringIntern = struct {
     allocator: Allocator,
-    strings: std.StringArrayHashMap(Entry),
+    strings: std.StringHashMap(Entry),
 
     pub fn init(allocator: Allocator) @This() {
-        var ret: @This() = .{ .allocator = allocator, .strings = std.StringArrayHashMap(Entry).init(allocator) };
+        var ret: @This() = .{ .allocator = allocator, .strings = std.StringHashMap(Entry).init(allocator) };
         return ret;
     }
 
@@ -35,6 +35,8 @@ pub const StringIntern = struct {
     }
 
     pub fn ref(self: *@This(), value: []const u8) ![]const u8 {
+        std.debug.print("  REF: {s}", .{value});
+        errdefer std.debug.print("\n", .{});
         var entry: *Entry = undefined;
         if (self.strings.getPtr(value)) |e| {
             entry = e;
@@ -45,14 +47,18 @@ pub const StringIntern = struct {
             entry = self.strings.getPtr(value) orelse unreachable;
         }
         entry.refcount += 1;
+        std.debug.print(" : {s} : {}\n", .{ entry.value.items, entry.refcount });
         return entry.value.items;
     }
 
     pub fn unref(self: *@This(), value: []const u8) void {
+        std.debug.print("UNREF: {s}", .{value});
+        errdefer std.debug.print("\n", .{});
         if (self.strings.getPtr(value)) |e| {
             e.refcount -= 1;
+            std.debug.print(" : {}\n", .{e.refcount});
             if (e.refcount == 0) {
-                _ = self.strings.swapRemove(value);
+                _ = self.strings.remove(value);
             }
         } else unreachable;
     }

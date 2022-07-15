@@ -318,13 +318,14 @@ pub const Component = struct {
         return false;
     }
 
-    pub fn assignNames(self: *@This(), digisim: *Digisim) void {
+    pub fn assignNames(self: *@This(), digisim: *Digisim) Err!void {
         if (self.isLeaf()) {
             var i = self.ports.iterator();
             while (i.next()) |p| {
                 const port = digisim.ports.getPtr(p.key_ptr.*) orelse unreachable;
                 if (port.trace) {
-                    std.debug.print("$var wire {d} {s} {s} $end\n", .{ port.width(), port.name, port.name });
+                    port.alias = try digisim.idgen.refNewId(digisim);
+                    std.debug.print("$var wire {d} {s} {s} $end\n", .{ port.width(), port.alias orelse unreachable, port.name });
                 }
             }
         } else {
@@ -332,7 +333,7 @@ pub const Component = struct {
             while (i.next()) |c| {
                 const comp = digisim.components.getPtr(c.key_ptr.*) orelse unreachable;
                 std.debug.print("$scope module {s} $end\n", .{comp.name});
-                comp.assignNames(digisim);
+                try comp.assignNames(digisim);
                 std.debug.print("$upscope $end\n", .{});
             }
         }
