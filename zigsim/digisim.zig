@@ -27,6 +27,7 @@ pub const Error = error{
     UnconnectedInput,
     MalformedLeafNode,
     EmptySimulation,
+    ComponentNotFound,
 };
 
 pub const Digisim = struct {
@@ -134,23 +135,6 @@ pub const Digisim = struct {
         _ = self;
     }
 
-    pub fn pruneBranchNodes(self: *@This()) !void {
-        std.debug.print("pruneBranchNodes start\n", .{});
-        defer std.debug.print("pruneBranchNodes end\n", .{});
-        var inactive = std.ArrayList(t.Id).init(self.allocator);
-        defer inactive.deinit();
-        var i = self.components.iterator();
-        while (i.next()) |e| {
-            if (!e.value_ptr.isLeaf()) {
-                try inactive.append(e.value_ptr.id);
-            }
-        }
-        for (inactive.items) |id| {
-            (self.components.getPtr(id) orelse unreachable).deinit(self);
-            _ = self.components.swapRemove(id);
-        }
-    }
-
     const CompiledPin = struct { net: *CompiledNet };
 
     const CompiledPort = struct {
@@ -164,11 +148,21 @@ pub const Digisim = struct {
 
     const CompiledComponent = struct {
         ports: []*CompiledPort,
+
+        fn deinit(self: *@This(), allocator: Allocator) void {
+            _ = self;
+            _ = allocator;
+        }
     };
 
     const CompiledNet = struct {
         sensitivitylist: []*CompiledComponent,
         tracelist: []*CompiledPort,
+
+        fn deinit(self: *@This(), allocator: Allocator) void {
+            _ = self;
+            _ = allocator;
+        }
     };
 
     pub const Simulation = struct {
@@ -193,7 +187,9 @@ pub const Digisim = struct {
 
         pub fn deinit(self: *@This()) void {
             self.dirty.deinit();
+            for (self.components) |*p| p.deinit(self.allocator);
             self.allocator.free(self.components);
+            for (self.nets) |*p| p.deinit(self.allocator);
             self.allocator.free(self.nets);
             for (self.ports) |*p| p.deinit(self.allocator);
             self.allocator.free(self.ports);
@@ -216,7 +212,6 @@ pub const Digisim = struct {
 
         try self.assignNames();
         try self.flatten();
-        try self.pruneBranchNodes();
 
         var netmap = std.AutoHashMap(t.Id, *CompiledNet).init(self.allocator);
         defer netmap.deinit();

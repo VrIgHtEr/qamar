@@ -161,7 +161,17 @@ pub const Component = struct {
             port_name = p;
             range = p[0..0];
         }
-        const port = (try self.getPort(digisim, port_name)) orelse return Err.PortNotFound;
+        var comp = self;
+        while (std.mem.indexOf(u8, port_name, ".")) |i| {
+            const compName = port_name[0..i];
+            port_name = port_name[i + 1 ..];
+            if (digisim.strings.get(compName)) |icompName| {
+                if (comp.findComponentByName(digisim, icompName)) |foundComponent| {
+                    comp = foundComponent;
+                } else return Err.ComponentNotFound;
+            } else return Err.ComponentNotFound;
+        }
+        const port = (try comp.getPort(digisim, port_name)) orelse return Err.PortNotFound;
         var start: usize = undefined;
         var end: usize = undefined;
         if (range.len == 0) {
@@ -176,15 +186,15 @@ pub const Component = struct {
                     if (range.len == 1) return Err.InvalidPortReference;
                     start = port.start;
                 } else {
-                    start = try parseUsize(range[0..dashindex], 10);
+                    start = parseUsize(range[0..dashindex], 10) catch return Err.InvalidPortReference;
                 }
                 if (dashindex == range.len - 1) {
                     end = port.end;
                 } else {
-                    end = try parseUsize(range[dashindex + 1 ..], 10);
+                    end = parseUsize(range[dashindex + 1 ..], 10) catch return Err.InvalidPortReference;
                 }
             } else {
-                start = try parseUsize(range, 10);
+                start = parseUsize(range, 10) catch return Err.InvalidPortReference;
                 end = start;
             }
         }
@@ -196,7 +206,6 @@ pub const Component = struct {
     }
 
     pub fn connect(self: *@This(), digisim: *Digisim, a: []const u8, b: []const u8) !void {
-        _ = self;
         const pa = try self.parsePortRange(digisim, a);
         const pb = try self.parsePortRange(digisim, b);
 
