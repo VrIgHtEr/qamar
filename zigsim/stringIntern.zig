@@ -3,18 +3,10 @@ const Allocator = std.mem.Allocator;
 
 const Entry = struct {
     refcount: usize = 0,
-    value: std.ArrayList(u8),
+    value: []const u8,
 
-    pub fn init(allocator: Allocator, value: []const u8) !@This() {
-        var ret = .{ .value = std.ArrayList(u8).init(allocator) };
-        errdefer ret.value.deinit();
-        try ret.value.ensureTotalCapacityPrecise(value.len);
-        try ret.value.appendSlice(value);
-        return ret;
-    }
-
-    pub fn deinit(self: *@This()) void {
-        self.value.deinit();
+    pub fn init(value: []const u8) @This() {
+        return @This(){ .value = value };
     }
 };
 
@@ -29,36 +21,33 @@ pub const StringIntern = struct {
 
     pub fn get(self: *@This(), value: []const u8) ?[]const u8 {
         if (self.strings.getPtr(value)) |e| {
-            return e.value.items;
+            return e.value;
         }
         return null;
     }
 
     pub fn ref(self: *@This(), value: []const u8) ![]const u8 {
-        std.debug.print("  REF: {s}", .{value});
-        errdefer std.debug.print("\n", .{});
         var entry: *Entry = undefined;
         if (self.strings.getPtr(value)) |e| {
             entry = e;
         } else {
-            var t = try Entry.init(self.allocator, value);
-            errdefer t.deinit();
-            try self.strings.put(value, t);
+            var key = try self.allocator.alloc(u8, value.len);
+            std.mem.copy(u8, key, value);
+            var t = Entry.init(key);
+            try self.strings.put(key, t);
             entry = self.strings.getPtr(value) orelse unreachable;
         }
         entry.refcount += 1;
-        std.debug.print(" : {s} : {}\n", .{ entry.value.items, entry.refcount });
-        return entry.value.items;
+        return entry.value;
     }
 
     pub fn unref(self: *@This(), value: []const u8) void {
-        std.debug.print("UNREF: {s}", .{value});
-        errdefer std.debug.print("\n", .{});
         if (self.strings.getPtr(value)) |e| {
             e.refcount -= 1;
-            std.debug.print(" : {}\n", .{e.refcount});
             if (e.refcount == 0) {
-                _ = self.strings.remove(value);
+                const key = e.value;
+                _ = self.strings.remove(key);
+                self.allocator.free(key);
             }
         } else unreachable;
     }
@@ -66,7 +55,7 @@ pub const StringIntern = struct {
     pub fn deinit(self: *@This()) void {
         var i = self.strings.iterator();
         while (i.next()) |entry| {
-            entry.value_ptr.deinit();
+            self.allocator.free(entry.key_ptr.*);
         }
         self.strings.deinit();
     }
