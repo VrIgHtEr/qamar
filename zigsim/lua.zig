@@ -3,9 +3,9 @@ const c = @cImport({
     // See https://github.com/ziglang/zig/issues/515
     @cDefine("_NO_CRT_STDIO_INLINE", "1");
     @cDefine("NULL", "(0)");
-    @cInclude("luajit-2.1/lua.h");
-    @cInclude("luajit-2.1/lauxlib.h");
-    @cInclude("luajit-2.1/lualib.h");
+    @cInclude("lua.h");
+    @cInclude("lauxlib.h");
+    @cInclude("lualib.h");
 });
 
 pub const State = *c.lua_State;
