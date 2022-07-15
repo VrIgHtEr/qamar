@@ -1,3 +1,0 @@
-#!/bin/bash
-zig libc > zig-libc && zig build-exe --libc zig-libc --library c --library luajit-5.1 zigsim/main.zig && ./main
-
