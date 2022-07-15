@@ -317,4 +317,24 @@ pub const Component = struct {
         if (self.handler) |_| return true;
         return false;
     }
+
+    pub fn assignNames(self: *@This(), digisim: *Digisim) void {
+        if (self.isLeaf()) {
+            var i = self.ports.iterator();
+            while (i.next()) |p| {
+                const port = digisim.ports.getPtr(p.key_ptr.*) orelse unreachable;
+                if (port.trace) {
+                    std.debug.print("$var wire {d} {s} {s} $end\n", .{ port.width(), port.name, port.name });
+                }
+            }
+        } else {
+            var i = self.components.iterator();
+            while (i.next()) |c| {
+                const comp = digisim.components.getPtr(c.key_ptr.*) orelse unreachable;
+                std.debug.print("$scope module {s} $end\n", .{comp.name});
+                comp.assignNames(digisim);
+                std.debug.print("$upscope $end\n", .{});
+            }
+        }
+    }
 };

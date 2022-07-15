@@ -91,8 +91,6 @@ pub const Digisim = struct {
     }
 
     pub fn checkLeafNodes(self: *@This()) !void {
-        std.debug.print("checkLeafNodes start\n", .{});
-        defer std.debug.print("checkLeafNodes end\n", .{});
         var i = self.components.iterator();
         while (i.next()) |e| {
             if (e.value_ptr.isLeaf()) {
@@ -104,8 +102,6 @@ pub const Digisim = struct {
     }
 
     pub fn checkUnconnectedInputs(self: *@This()) !void {
-        std.debug.print("checkUnconnectedInputs start\n", .{});
-        defer std.debug.print("checkUnconnectedInputs end\n", .{});
         var i = self.components.iterator();
         while (i.next()) |e| {
             var j = e.value_ptr.ports.iterator();
@@ -124,14 +120,12 @@ pub const Digisim = struct {
     }
 
     pub fn assignNames(self: *@This()) !void {
-        std.debug.print("assignNames start\n", .{});
-        defer std.debug.print("assignNames end\n", .{});
-        _ = self;
+        std.debug.print("$timescale 1ps $end\n", .{});
+        self.root.assignNames(self);
+        std.debug.print("$enddefinitions $end\n", .{});
     }
 
     pub fn flatten(self: *@This()) !void {
-        std.debug.print("flatten start\n", .{});
-        defer std.debug.print("flatten end\n", .{});
         _ = self;
     }
 
