@@ -54,7 +54,6 @@ pub const Digisim = struct {
         errdefer self.ports.deinit();
         self.nets = HashMap(Net).init(allocator);
         errdefer self.nets.deinit();
-        try self.nets.ensureTotalCapacity(16);
         self.root = try Component.init(self, try self.strings.ref(root_name));
         errdefer self.root.deinit();
         self.idgen = try IdGen.init(allocator);
@@ -73,8 +72,9 @@ pub const Digisim = struct {
     }
 
     pub fn nextId(self: *@This()) t.Id {
+        const ret = self.id;
         self.id += 1;
-        return self.id;
+        return ret;
     }
 
     pub fn addComponent(self: *@This(), name: []const u8) !t.Id {
@@ -134,7 +134,28 @@ pub const Digisim = struct {
     }
 
     pub fn flatten(self: *@This()) !void {
-        _ = self;
+        var leaves = std.ArrayList(t.Id).init(self.allocator);
+        defer leaves.deinit();
+        var branches = std.ArrayList(t.Id).init(self.allocator);
+        defer branches.deinit();
+        var i = self.components.iterator();
+        while (i.next()) |e| {
+            if (e.value_ptr.isLeaf()) {
+                try leaves.append(e.key_ptr.*);
+            } else {
+                try branches.append(e.key_ptr.*);
+            }
+        }
+
+        for (leaves.items) |id| {
+            try self.root.components.put(id, .{});
+        }
+        for (branches.items) |id| {
+            var branch = self.components.getPtr(id) orelse unreachable;
+            branch.components.clearAndFree();
+            _ = self.root.components.swapRemove(id);
+            branch.deinit();
+        }
     }
 
     const CompiledPin = struct { net: *CompiledNet };
