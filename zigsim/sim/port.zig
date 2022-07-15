@@ -6,6 +6,7 @@ const Net = @import("net.zig").Net;
 const Err = @import("../digisim.zig").Error;
 
 pub const Port = struct {
+    digisim: *Digisim,
     id: t.Id,
     pins: []Pin,
     name: []const u8,
@@ -17,6 +18,7 @@ pub const Port = struct {
 
     pub fn init(digisim: *Digisim, name: []const u8, input: bool, start: usize, end: usize, trace: bool) !@This() {
         var self: @This() = undefined;
+        self.digisim = digisim;
         if (end < start) return Err.InvalidPortSize;
         self.id = digisim.nextId();
         self.input = input;
@@ -32,12 +34,12 @@ pub const Port = struct {
         errdefer ({
             while (i > 0) {
                 i -= 1;
-                self.pins[i].deinit(digisim);
+                self.pins[i].deinit();
             }
         });
         while (i < w) : (i += 1) {
             self.pins[i] = try Pin.init(digisim, input);
-            errdefer self.pins[i].deinit(digisim);
+            errdefer self.pins[i].deinit();
             var net = try Net.init(digisim);
             errdefer net.deinit();
             try net.pins.put(self.pins[i].id, &self.pins[i]);
@@ -48,14 +50,14 @@ pub const Port = struct {
         return self;
     }
 
-    pub fn deinit(self: *@This(), digisim: *Digisim) void {
+    pub fn deinit(self: *@This()) void {
         for (self.pins) |_, index| {
-            self.pins[index].deinit(digisim);
+            self.pins[index].deinit();
         }
-        digisim.allocator.free(self.pins);
-        digisim.strings.unref(self.name);
-        if (self.alias) |a| digisim.strings.unref(a);
-        _ = digisim.ports.swapRemove(self.id);
+        self.digisim.allocator.free(self.pins);
+        self.digisim.strings.unref(self.name);
+        if (self.alias) |a| self.digisim.strings.unref(a);
+        _ = self.digisim.ports.swapRemove(self.id);
     }
 
     pub fn width(self: *@This()) usize {

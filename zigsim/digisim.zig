@@ -41,8 +41,9 @@ pub const Digisim = struct {
     ports: HashMap(Port),
     nets: HashMap(Net),
     idgen: IdGen,
-    pub fn init(allocator: Allocator) !@This() {
-        var self: @This() = undefined;
+    pub fn init(allocator: Allocator) !*@This() {
+        var self: *@This() = try allocator.create(@This());
+        errdefer allocator.destroy(self);
         self.allocator = allocator;
         self.id = 0;
         self.strings = stringIntern.StringIntern.init(allocator);
@@ -54,20 +55,21 @@ pub const Digisim = struct {
         self.nets = HashMap(Net).init(allocator);
         errdefer self.nets.deinit();
         try self.nets.ensureTotalCapacity(16);
-        self.root = try Component.init(&self, try self.strings.ref(root_name));
-        errdefer self.root.deinit(&self);
+        self.root = try Component.init(self, try self.strings.ref(root_name));
+        errdefer self.root.deinit();
         self.idgen = try IdGen.init(allocator);
         errdefer self.idgen.deinit();
         return self;
     }
 
     pub fn deinit(self: *@This()) void {
-        self.root.deinit(self);
+        self.root.deinit();
         self.nets.deinit();
         self.ports.deinit();
         self.components.deinit();
         self.strings.deinit();
         self.idgen.deinit();
+        self.allocator.destroy(self);
     }
 
     pub fn nextId(self: *@This()) t.Id {
@@ -76,11 +78,11 @@ pub const Digisim = struct {
     }
 
     pub fn addComponent(self: *@This(), name: []const u8) !t.Id {
-        return self.root.addComponent(self, name);
+        return self.root.addComponent(name);
     }
 
     pub fn getComponent(self: *@This(), name: []const u8) !?*Component {
-        return self.root.getComponent(self, name);
+        return self.root.getComponent(name);
     }
 
     pub fn getPort(self: *@This(), name: []const u8) !?*Port {
@@ -127,7 +129,7 @@ pub const Digisim = struct {
 
     pub fn assignNames(self: *@This()) !void {
         std.debug.print("$timescale 1ps $end\n", .{});
-        try self.root.assignNames(self);
+        try self.root.assignNames();
         std.debug.print("$enddefinitions $end\n", .{});
     }
 

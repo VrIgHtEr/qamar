@@ -19,9 +19,9 @@ pub fn main() !u8 {
     const comp = try sim.getComponent("core");
     if (comp) |cmp| {
         try cmp.setHandler(components.nand_h);
-        _ = try cmp.addPort(&sim, "input", true, 0, 1, true);
-        _ = try cmp.addPort(&sim, "output", false, 0, 1, true);
-        try cmp.connect(&sim, "output", "input");
+        _ = try cmp.addPort("input", true, 0, 1, true);
+        _ = try cmp.addPort("output", false, 0, 1, true);
+        try cmp.connect("output", "input");
         try sim.compile();
         return 0;
     }

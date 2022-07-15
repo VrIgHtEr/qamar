@@ -48,6 +48,7 @@ pub const components = struct {
 };
 
 pub const Component = struct {
+    digisim: *Digisim,
     id: t.Id,
     ports: HashMap,
     components: HashMap,
@@ -56,6 +57,7 @@ pub const Component = struct {
 
     pub fn init(digisim: *Digisim, name: []const u8) !@This() {
         var self: @This() = undefined;
+        self.digisim = digisim;
         self.id = digisim.nextId();
         self.ports = HashMap.init(digisim.allocator);
         self.components = HashMap.init(digisim.allocator);
@@ -73,39 +75,39 @@ pub const Component = struct {
         return self.components.getPtr(id);
     }
 
-    fn findComponentByName(self: *@This(), digisim: *Digisim, name: []const u8) ?*Component {
+    fn findComponentByName(self: *@This(), name: []const u8) ?*Component {
         var i = self.components.iterator();
         while (i.next()) |e| {
-            const entry = digisim.components.getPtr(e.key_ptr.*) orelse unreachable;
+            const entry = self.digisim.components.getPtr(e.key_ptr.*) orelse unreachable;
             if (entry.name.ptr == name.ptr) return entry;
         }
         return null;
     }
 
-    pub fn deinit(self: *@This(), digisim: *Digisim) void {
+    pub fn deinit(self: *@This()) void {
         var j = self.components.iterator();
         while (j.next()) |e| {
-            const entry = digisim.components.getPtr(e.key_ptr.*) orelse unreachable;
-            entry.deinit(digisim);
+            const entry = self.digisim.components.getPtr(e.key_ptr.*) orelse unreachable;
+            entry.deinit();
         }
         var i = self.ports.iterator();
         while (i.next()) |e| {
-            const entry = digisim.ports.getPtr(e.key_ptr.*) orelse unreachable;
-            entry.deinit(digisim);
+            const entry = self.digisim.ports.getPtr(e.key_ptr.*) orelse unreachable;
+            entry.deinit();
         }
         self.ports.deinit();
-        digisim.strings.unref(self.name);
-        _ = digisim.components.swapRemove(self.id);
+        self.digisim.strings.unref(self.name);
+        _ = self.digisim.components.swapRemove(self.id);
     }
 
     pub fn findPort(self: *@This(), id: t.Id) ?*Port {
         return self.ports.getPtr(id);
     }
 
-    fn findPortByName(self: *@This(), digisim: *Digisim, name: []const u8) ?*Port {
+    fn findPortByName(self: *@This(), name: []const u8) ?*Port {
         var i = self.ports.iterator();
         while (i.next()) |e| {
-            const entry = digisim.ports.getPtr(e.key_ptr.*) orelse unreachable;
+            const entry = self.digisim.ports.getPtr(e.key_ptr.*) orelse unreachable;
             if (entry.name.ptr == name.ptr) return entry;
         }
         return null;
@@ -144,7 +146,7 @@ pub const Component = struct {
         return x;
     }
 
-    fn parsePortRange(self: *@This(), digisim: *Digisim, p: []const u8) !struct {
+    fn parsePortRange(self: *@This(), p: []const u8) !struct {
         port: *Port,
         start: usize,
         end: usize,
@@ -165,13 +167,13 @@ pub const Component = struct {
         while (std.mem.indexOf(u8, port_name, ".")) |i| {
             const compName = port_name[0..i];
             port_name = port_name[i + 1 ..];
-            if (digisim.strings.get(compName)) |icompName| {
-                if (comp.findComponentByName(digisim, icompName)) |foundComponent| {
+            if (self.digisim.strings.get(compName)) |icompName| {
+                if (comp.findComponentByName(icompName)) |foundComponent| {
                     comp = foundComponent;
                 } else return Err.ComponentNotFound;
             } else return Err.ComponentNotFound;
         }
-        const port = (try comp.getPort(digisim, port_name)) orelse return Err.PortNotFound;
+        const port = (try comp.getPort(port_name)) orelse return Err.PortNotFound;
         var start: usize = undefined;
         var end: usize = undefined;
         if (range.len == 0) {
@@ -205,9 +207,9 @@ pub const Component = struct {
         return ret;
     }
 
-    pub fn connect(self: *@This(), digisim: *Digisim, a: []const u8, b: []const u8) !void {
-        const pa = try self.parsePortRange(digisim, a);
-        const pb = try self.parsePortRange(digisim, b);
+    pub fn connect(self: *@This(), a: []const u8, b: []const u8) !void {
+        const pa = try self.parsePortRange(a);
+        const pb = try self.parsePortRange(b);
 
         const w = pa.width();
         if (w != pb.width()) return Err.MismatchingPortWidths;
@@ -216,53 +218,53 @@ pub const Component = struct {
             const p1 = &pa.port.pins[pa.start + i];
             const p2 = &pb.port.pins[pb.start + i];
             if (p1.net != p2.net) {
-                const net1 = digisim.nets.getPtr(p1.net) orelse unreachable;
-                const net2 = digisim.nets.getPtr(p2.net) orelse unreachable;
-                try net1.merge(digisim, net2);
+                const net1 = self.digisim.nets.getPtr(p1.net) orelse unreachable;
+                const net2 = self.digisim.nets.getPtr(p2.net) orelse unreachable;
+                try net1.merge(self.digisim, net2);
             }
         }
     }
 
-    pub fn addPort(self: *@This(), digisim: *Digisim, name: []const u8, input: bool, start: usize, end: usize, trace: bool) !t.Id {
+    pub fn addPort(self: *@This(), name: []const u8, input: bool, start: usize, end: usize, trace: bool) !t.Id {
         if (name.len == 0) return Err.InvalidPortName;
         if (std.mem.indexOf(u8, name, ".")) |_| return Err.InvalidPortName;
-        const interned_name = try digisim.strings.ref(name);
-        errdefer digisim.strings.unref(interned_name);
+        const interned_name = try self.digisim.strings.ref(name);
+        errdefer self.digisim.strings.unref(interned_name);
         var i = self.ports.iterator();
         while (i.next()) |e| {
-            const entry = digisim.ports.getPtr(e.key_ptr.*) orelse unreachable;
+            const entry = self.digisim.ports.getPtr(e.key_ptr.*) orelse unreachable;
             if (entry.name.ptr == interned_name.ptr) return Err.DuplicatePortName;
         }
-        var p = try Port.init(digisim, interned_name, input, start, end, trace);
-        errdefer p.deinit(digisim);
+        var p = try Port.init(self.digisim, interned_name, input, start, end, trace);
+        errdefer p.deinit();
         try self.ports.put(p.id, {});
         errdefer _ = self.ports.swapRemove(p.id);
-        try digisim.ports.put(p.id, p);
+        try self.digisim.ports.put(p.id, p);
         return p.id;
     }
 
-    pub fn addComponent(self: *@This(), digisim: *Digisim, name: []const u8) !t.Id {
+    pub fn addComponent(self: *@This(), name: []const u8) !t.Id {
         if (name.len == 0) return Err.InvalidComponentName;
         if (std.mem.indexOf(u8, name, ".")) |_| return Err.InvalidComponentName;
-        const interned_name = try digisim.strings.ref(name);
-        errdefer digisim.strings.unref(interned_name);
+        const interned_name = try self.digisim.strings.ref(name);
+        errdefer self.digisim.strings.unref(interned_name);
         var i = self.components.iterator();
         while (i.next()) |e| {
-            const entry = digisim.components.getPtr(e.key_ptr.*) orelse unreachable;
+            const entry = self.digisim.components.getPtr(e.key_ptr.*) orelse unreachable;
             if (entry.name.ptr == interned_name.ptr) {
                 return Err.DuplicateComponentName;
             }
         }
-        var comp = try Component.init(digisim, interned_name);
-        errdefer comp.deinit(digisim);
+        var comp = try Component.init(self.digisim, interned_name);
+        errdefer comp.deinit();
         try self.components.put(comp.id, {});
         errdefer _ = self.components.swapRemove(comp.id);
-        try digisim.components.put(comp.id, comp);
+        try self.digisim.components.put(comp.id, comp);
 
         return comp.id;
     }
 
-    pub fn getComponent(self: *@This(), digisim: *Digisim, name: []const u8) Err!?*Component {
+    pub fn getComponent(self: *@This(), name: []const u8) Err!?*Component {
         var name_chain = name;
         var comp: ?*Component = null;
         if (name_chain.len == 0) return Err.InvalidComponentName;
@@ -276,15 +278,15 @@ pub const Component = struct {
                 name_chain = name_chain[0..0];
             }
             if (pname.len == 0) return Err.InvalidComponentName;
-            if (digisim.strings.get(pname)) |n| {
+            if (self.digisim.strings.get(pname)) |n| {
                 pname = n;
             } else return null;
             if (comp) |c| {
-                if (c.findComponentByName(digisim, pname)) |x| {
+                if (c.findComponentByName(pname)) |x| {
                     comp = x;
                 } else return null;
             } else {
-                if (self.findComponentByName(digisim, pname)) |c| {
+                if (self.findComponentByName(pname)) |c| {
                     comp = c;
                 } else return null;
             }
@@ -292,21 +294,21 @@ pub const Component = struct {
         return comp;
     }
 
-    pub fn getPort(self: *@This(), digisim: *Digisim, name: []const u8) Err!?*Port {
+    pub fn getPort(self: *@This(), name: []const u8) Err!?*Port {
         if (std.mem.lastIndexOf(u8, name, ".")) |index| {
             const port_name = name[index + 1 ..];
             if (port_name.len == 0) return Err.InvalidPortName;
-            if (digisim.strings.get(port_name)) |n| {
-                if (try self.getComponent(digisim, name[0..index])) |c| {
-                    if (c.findPortByName(digisim, n)) |p| {
+            if (self.digisim.strings.get(port_name)) |n| {
+                if (try self.getComponent(name[0..index])) |c| {
+                    if (c.findPortByName(n)) |p| {
                         return p;
                     }
                 }
             }
         } else {
             if (name.len == 0) return Err.InvalidPortName;
-            if (digisim.strings.get(name)) |n| {
-                return self.findPortByName(digisim, n);
+            if (self.digisim.strings.get(name)) |n| {
+                return self.findPortByName(n);
             }
         }
 
@@ -318,22 +320,22 @@ pub const Component = struct {
         return false;
     }
 
-    pub fn assignNames(self: *@This(), digisim: *Digisim) Err!void {
+    pub fn assignNames(self: *@This()) Err!void {
         if (self.isLeaf()) {
             var i = self.ports.iterator();
             while (i.next()) |p| {
-                const port = digisim.ports.getPtr(p.key_ptr.*) orelse unreachable;
+                const port = self.digisim.ports.getPtr(p.key_ptr.*) orelse unreachable;
                 if (port.trace) {
-                    port.alias = try digisim.idgen.refNewId(digisim);
+                    port.alias = try self.digisim.idgen.refNewId(self.digisim);
                     std.debug.print("$var wire {d} {s} {s} $end\n", .{ port.width(), port.alias orelse unreachable, port.name });
                 }
             }
         } else {
             var i = self.components.iterator();
             while (i.next()) |c| {
-                const comp = digisim.components.getPtr(c.key_ptr.*) orelse unreachable;
+                const comp = self.digisim.components.getPtr(c.key_ptr.*) orelse unreachable;
                 std.debug.print("$scope module {s} $end\n", .{comp.name});
-                try comp.assignNames(digisim);
+                try comp.assignNames();
                 std.debug.print("$upscope $end\n", .{});
             }
         }
