@@ -216,8 +216,7 @@ pub const Digisim = struct {
         pins: []CompiledPin,
 
         fn deinit(self: *@This(), allocator: Allocator) void {
-            _ = self;
-            _ = allocator;
+            allocator.free(self.pins);
         }
     };
 
@@ -249,18 +248,19 @@ pub const Digisim = struct {
         return ret;
     }
 
-    fn populateComponents(self: *@This(), components: []CompiledComponent) !void {
+    fn populateComponents(self: *@This(), components: []CompiledComponent, map: *std.AutoHashMap(t.Id, *CompiledComponent)) !void {
         var ret: usize = 0;
-        errdefer ({
-            while (ret > 0) {
-                ret -= 1;
-                components[ret].deinit(self.allocator);
-            }
-        });
+        errdefer while (ret > 0) {
+            ret -= 1;
+            components[ret].deinit(self.allocator);
+        };
+
         var i = self.components.iterator();
         while (i.next()) |v| {
             if (v.value_ptr.isLeaf()) {
                 components[ret].ports = try self.allocator.alloc(*CompiledPort, v.value_ptr.ports.count());
+                errdefer components[ret].deinit(self.allocator);
+                try map.put(v.value_ptr.id, &components[ret]);
                 ret += 1;
             }
         }
@@ -281,6 +281,42 @@ pub const Digisim = struct {
             }
         }
         return ret;
+    }
+
+    fn populatePorts(self: *@This(), ports: []CompiledPort, map: *std.AutoHashMap(t.Id, *CompiledPort), cmap: *std.AutoHashMap(t.Id, *CompiledComponent)) !void {
+        var ret: usize = 0;
+        errdefer while (ret > 0) {
+            ret -= 1;
+            ports[ret].deinit(self.allocator);
+        };
+        var i = self.components.iterator();
+        while (i.next()) |v| {
+            if (v.value_ptr.isLeaf()) {
+                var j = v.value_ptr.ports.iterator();
+                var idx: usize = 0;
+                const cports = (cmap.get(v.key_ptr.*) orelse unreachable).ports;
+                while (j.next()) |e| {
+                    const port = self.ports.getPtr(e.key_ptr.*) orelse unreachable;
+                    ports[ret].pins = try self.allocator.alloc(CompiledPin, port.pins.len);
+                    errdefer self.allocator.free(ports[ret].pins);
+                    try map.put(port.id, &ports[ret]);
+                    cports[idx] = &ports[ret];
+                    idx += 1;
+                    ret += 1;
+                }
+            } else {
+                var j = v.value_ptr.ports.iterator();
+                while (j.next()) |je| {
+                    const port = self.ports.getPtr(je.key_ptr.*) orelse unreachable;
+                    if (port.trace) {
+                        ports[ret].pins = try self.allocator.alloc(CompiledPin, port.pins.len);
+                        errdefer self.allocator.free(ports[ret].pins);
+                        try map.put(port.id, &ports[ret]);
+                        ret += 1;
+                    }
+                }
+            }
+        }
     }
 
     fn countNetsToCompile(self: *@This()) !usize {
@@ -309,6 +345,41 @@ pub const Digisim = struct {
         return nets.count();
     }
 
+    fn populateNets(self: *@This(), cnets: []CompiledNet, map: *std.AutoHashMap(t.Id, *CompiledNet)) !void {
+        var nets = std.AutoHashMap(t.Id, void).init(self.allocator);
+        defer nets.deinit();
+        var i = self.components.iterator();
+        while (i.next()) |v| {
+            if (v.value_ptr.isLeaf()) {
+                var j = v.value_ptr.ports.iterator();
+                while (j.next()) |je| {
+                    const port = self.ports.getPtr(je.key_ptr.*) orelse unreachable;
+                    for (port.pins) |*pin| {
+                        try nets.put(pin.net, .{});
+                    }
+                }
+            } else {
+                var j = v.value_ptr.ports.iterator();
+                while (j.next()) |je| {
+                    const port = self.ports.getPtr(je.key_ptr.*) orelse unreachable;
+                    for (port.pins) |*pin| {
+                        try nets.put(pin.net, .{});
+                    }
+                }
+            }
+        }
+        var ret: usize = 0;
+        errdefer while (ret > 0) {
+            ret -= 1;
+            cnets[ret].deinit(self.allocator);
+        };
+        var j = nets.iterator();
+        while (j.next()) |e| {
+            try map.put(e.key_ptr.*, &cnets[ret]);
+            ret += 1;
+        }
+    }
+
     pub fn compile(self: *@This()) !*Simulation {
         if (self.components.count() == 0) return Error.EmptySimulation;
         try self.checkLeafNodes();
@@ -319,16 +390,24 @@ pub const Digisim = struct {
 
         var components = try self.allocator.alloc(CompiledComponent, self.countComponentsToCompile());
         errdefer self.allocator.free(components);
-        try self.populateComponents(components);
+        var componentMap = std.AutoHashMap(t.Id, *CompiledComponent).init(self.allocator);
+        defer componentMap.deinit();
+        try self.populateComponents(components, &componentMap);
+        errdefer for (components) |*e| e.deinit(self.allocator);
 
-        errdefer ({
-            for (components) |*e| e.deinit(self.allocator);
-        });
         var ports = try self.allocator.alloc(CompiledPort, self.countPortsToCompile());
         errdefer self.allocator.free(ports);
+        var portMap = std.AutoHashMap(t.Id, *CompiledPort).init(self.allocator);
+        defer portMap.deinit();
+        try self.populatePorts(ports, &portMap, &componentMap);
+        errdefer for (ports) |*e| e.deinit(self.allocator);
 
         var nets = try self.allocator.alloc(CompiledNet, try self.countNetsToCompile());
         errdefer self.allocator.free(nets);
+        var netMap = std.AutoHashMap(t.Id, *CompiledNet).init(self.allocator);
+        defer netMap.deinit();
+        try self.populateNets(nets, &netMap);
+        errdefer for (nets) |*e| e.deinit(self.allocator);
 
         try self.purgeBranches();
         var sim = try Simulation.init(self.allocator, nets, components, ports);
