@@ -22,7 +22,8 @@ pub fn main() !u8 {
         _ = try cmp.addPort("input", true, 0, 1, true);
         _ = try cmp.addPort("output", false, 0, 1, true);
         try cmp.connect("output", "input");
-        try sim.compile();
+        var compiled = try sim.compile();
+        defer compiled.deinit();
         return 0;
     }
     return 1;
