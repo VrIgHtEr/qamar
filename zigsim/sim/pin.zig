@@ -5,11 +5,12 @@ const Digisim = @import("../digisim.zig").Digisim;
 pub const Pin = struct {
     digisim: *Digisim,
     id: t.Id,
+    portid: t.Id,
     net: t.Id,
     input: bool,
 
-    pub fn init(digisim: *Digisim, input: bool) !@This() {
-        var self: @This() = .{ .digisim = digisim, .id = digisim.nextId(), .net = 0, .input = input };
+    pub fn init(digisim: *Digisim, input: bool, portid: t.Id) !@This() {
+        var self: @This() = .{ .digisim = digisim, .id = digisim.nextId(), .net = 0, .input = input, .portid = portid };
         return self;
     }
 
