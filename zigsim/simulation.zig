@@ -31,9 +31,17 @@ pub const Simulation = struct {
         self.nextdirty = @TypeOf(self.nextdirty).init(digisim.allocator);
         errdefer self.nextdirty.deinit();
         for (numComponents) |*c| try self.dirty.put(c, .{});
-        self.inputs = try digisim.allocator.alloc(Signal, 1);
+
+        var maxinputs: usize = 1;
+        var maxoutputs: usize = 1;
+        for (numComponents) |*c| {
+            if (c.numInputs > maxinputs) maxinputs = c.numInputs;
+            if (c.numOutputs > maxoutputs) maxoutputs = c.numOutputs;
+        }
+
+        self.inputs = try digisim.allocator.alloc(Signal, maxinputs);
         errdefer digisim.allocator.free(self.inputs);
-        self.outputs = try digisim.allocator.alloc(Signal, 1);
+        self.outputs = try digisim.allocator.alloc(Signal, maxoutputs);
         errdefer digisim.allocator.free(self.outputs);
         self.dirtyNets = std.AutoHashMap(*Net, void).init(digisim.allocator);
         errdefer self.outputs.deinit();
@@ -60,14 +68,11 @@ pub const Simulation = struct {
         self.dirtyNets.clearRetainingCapacity();
         while (iter.next()) |e| {
             const component = e.key_ptr.*;
-            if (self.inputs.len < component.numInputs)
-                self.inputs = try self.digisim.allocator.realloc(self.inputs, component.numInputs);
-            if (self.outputs.len < component.numOutputs)
-                self.outputs = try self.digisim.allocator.realloc(self.outputs, component.numOutputs);
             //generate inputs
             //run handler
             //for each output pin
             //    if output has changed mark net as dirty
+            _ = component;
         }
         //mark all components in the sensitivity lists of dirty nets as dirty
         //resolve all dirty nets
