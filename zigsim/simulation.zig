@@ -112,15 +112,15 @@ pub const Simulation = struct {
                 for (net.driverlist orelse unreachable) |d| {
                     value = Signal.resolve(value, d.value);
                 }
+                if (Signal.tovcd(value) != Signal.tovcd(net.value)) {
+                    for (net.tracelist orelse unreachable) |t| {
+                        try self.traceports.put(t, .{});
+                    }
+                }
                 if (value != net.value) {
                     net.value = value;
                     for (net.sensitivitylist orelse unreachable) |c| {
                         try self.nextdirty.put(c, .{});
-                    }
-                }
-                if (Signal.tovcd(value) != Signal.tovcd(net.value)) {
-                    for (net.tracelist orelse unreachable) |t| {
-                        try self.traceports.put(t, .{});
                     }
                 }
             }

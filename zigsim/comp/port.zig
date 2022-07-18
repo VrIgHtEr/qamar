@@ -13,7 +13,24 @@ pub const Port = struct {
     }
 
     pub fn trace(self: *@This()) void {
-        if (self.pins.len > 1) {} else {
+        if (self.pins.len > 1) {
+            std.debug.print("b", .{});
+            var i = self.pins.len;
+            while (i > 0) {
+                i -= 1;
+                const value = Signal.tovcd(self.pins[0].net.value);
+                if (value == Signal.z) {
+                    std.debug.print("z", .{});
+                } else if (value == Signal.unknown) {
+                    std.debug.print("x", .{});
+                } else if (value == Signal.low) {
+                    std.debug.print("0", .{});
+                } else {
+                    std.debug.print("1", .{});
+                }
+            }
+            std.debug.print(" {s}\n", .{self.alias orelse unreachable});
+        } else {
             const value = Signal.tovcd(self.pins[0].net.value);
             if (value == Signal.z) {
                 std.debug.print("z{s}\n", .{self.alias orelse unreachable});

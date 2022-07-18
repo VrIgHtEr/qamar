@@ -26,6 +26,8 @@ pub fn main() !u8 {
         try cmp.connect("output", "input[0]");
         try cmp.connect("output", "input[1]");
         _ = try sim.step();
+        _ = try sim.step();
+        _ = try sim.step();
         return 0;
     }
     return 1;
