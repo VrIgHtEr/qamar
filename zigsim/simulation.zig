@@ -5,6 +5,7 @@ const Port = @import("comp/port.zig").Port;
 const Pin = @import("comp/pin.zig").Pin;
 const Net = @import("comp/net.zig").Net;
 const Digisim = @import("digisim.zig").Digisim;
+const Signal = @import("signal.zig").Signal;
 
 pub const Simulation = struct {
     digisim: *Digisim,
@@ -14,6 +15,8 @@ pub const Simulation = struct {
     ports: []Port,
     dirty: std.AutoHashMap(*Component, void),
     nextdirty: std.AutoHashMap(*Component, void),
+    inputs: std.ArrayList(Signal),
+    outputs: std.ArrayList(Signal),
 
     pub fn init(digisim: *Digisim, numNets: []Net, numComponents: []Component, numPorts: []Port) !*@This() {
         const self = try digisim.allocator.create(@This());
@@ -23,12 +26,20 @@ pub const Simulation = struct {
         self.components = numComponents;
         self.ports = numPorts;
         self.dirty = @TypeOf(self.dirty).init(digisim.allocator);
+        errdefer self.nextdirty.deinit();
         self.nextdirty = @TypeOf(self.nextdirty).init(digisim.allocator);
+        errdefer self.nextdirty.deinit();
         for (numComponents) |*c| try self.dirty.put(c, .{});
+        self.inputs = std.ArrayList(Signal).init(digisim.allocator);
+        errdefer self.inputs.deinit();
+        self.outputs = std.ArrayList(Signal).init(digisim.allocator);
+        errdefer self.outputs.deinit();
         return self;
     }
 
     pub fn deinit(self: *@This()) void {
+        self.inputs.deinit();
+        self.outputs.deinit();
         self.nextdirty.deinit();
         self.dirty.deinit();
         for (self.components) |*p| p.deinit(self.digisim.allocator);
@@ -44,6 +55,8 @@ pub const Simulation = struct {
         var iter = self.dirty.iterator();
         while (iter.next()) |e| {
             const component = e.key_ptr;
+            self.inputs.clearRetainingCapacity();
+            self.outputs.clearRetainingCapacity();
             //generate inputs
             //run handler
             //for each output pin
