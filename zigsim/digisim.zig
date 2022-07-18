@@ -420,9 +420,45 @@ pub const Digisim = struct {
     }
 
     fn buildTraceLists(self: *@This(), pmap: *PortMap, nmap: *NetMap) !void {
-        _ = self;
-        _ = pmap;
-        _ = nmap;
+        var traceLists = std.AutoHashMap(t.Id, std.AutoHashMap(*CompiledPort, void)).init(self.allocator);
+        defer ({
+            var i = traceLists.iterator();
+            while (i.next()) |a| a.value_ptr.deinit();
+            traceLists.deinit();
+        });
+        {
+            var i = self.ports.iterator();
+            while (i.next()) |e| {
+                if (e.value_ptr.trace) {
+                    const cport = pmap.get(e.key_ptr.*) orelse unreachable;
+                    for (e.value_ptr.pins) |*pin| {
+                        var map: *std.AutoHashMap(*CompiledPort, void) = undefined;
+                        if (traceLists.getPtr(pin.net)) |p| {
+                            map = p;
+                        } else {
+                            try traceLists.put(pin.net, std.AutoHashMap(*CompiledPort, void).init(self.allocator));
+                            map = traceLists.getPtr(pin.net) orelse unreachable;
+                        }
+                        try map.put(cport, .{});
+                    }
+                }
+            }
+        }
+        {
+            var i = traceLists.iterator();
+            while (i.next()) |e| {
+                const cnet = nmap.get(e.key_ptr.*) orelse unreachable;
+                const list = try self.allocator.alloc(*CompiledPort, e.value_ptr.count());
+                errdefer self.allocator.free(list);
+                var idx: usize = 0;
+                var j = e.value_ptr.iterator();
+                while (j.next()) |f| {
+                    list[idx] = f.key_ptr.*;
+                    idx += 1;
+                }
+                cnet.tracelist = list;
+            }
+        }
     }
 
     fn buildDriverLists(self: *@This(), pmap: *PortMap, nmap: *NetMap) !void {
