@@ -1,17 +1,20 @@
 const Lua = @import("lua.zig").Lua;
 
 const std = @import("std");
-const digisim = @import("digisim.zig");
+const Digisim = @import("digisim.zig").Digisim;
 const components = @import("./tree/component.zig").components;
 
 pub fn main() !u8 {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+
     var lua = try Lua.init();
     defer lua.deinit();
     lua.openlibs();
 
     try lua.execute(@embedFile("main.lua"));
 
-    var sim = try digisim.Digisim.init(std.heap.c_allocator);
+    var sim = try Digisim.init(allocator);
     defer sim.deinit();
 
     _ = try sim.addComponent("core");
