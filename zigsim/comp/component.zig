@@ -3,11 +3,13 @@ const Allocator = std.mem.Allocator;
 const Port = @import("port.zig").Port;
 
 pub const Component = struct {
-    ports: []*Port,
+    inports: []*Port,
+    outports: []*Port,
     numInputs: usize,
     numOutputs: usize,
 
     pub fn deinit(self: *@This(), allocator: Allocator) void {
-        allocator.free(self.ports);
+        allocator.free(self.inports);
+        allocator.free(self.outports);
     }
 };

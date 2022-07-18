@@ -225,8 +225,28 @@ pub const Digisim = struct {
         var i = self.components.iterator();
         while (i.next()) |v| {
             if (v.value_ptr.isLeaf()) {
-                components[ret].ports = try self.allocator.alloc(*CompiledPort, v.value_ptr.ports.count());
-                errdefer components[ret].deinit(self.allocator);
+                var numinports: usize = 0;
+                var numoutports: usize = 0;
+                components[ret].numInputs = 0;
+                components[ret].numOutputs = 0;
+                {
+                    var j = v.value_ptr.ports.iterator();
+                    while (j.next()) |p| {
+                        var port = self.ports.getPtr(p.key_ptr.*) orelse unreachable;
+                        if (port.input) {
+                            numinports += 1;
+                            components[ret].numInputs += port.width();
+                        } else {
+                            numoutports += 1;
+                            components[ret].numOutputs += port.width();
+                        }
+                    }
+                }
+
+                components[ret].inports = try self.allocator.alloc(*CompiledPort, numinports);
+                errdefer self.allocator.free(components[ret].inports);
+                components[ret].outports = try self.allocator.alloc(*CompiledPort, numoutports);
+                errdefer self.allocator.free(components[ret].outports);
                 try map.put(v.value_ptr.id, &components[ret]);
                 ret += 1;
             }
@@ -260,18 +280,11 @@ pub const Digisim = struct {
         while (i.next()) |v| {
             if (v.value_ptr.isLeaf()) {
                 var j = v.value_ptr.ports.iterator();
-                var idx: usize = 0;
+                var inidx: usize = 0;
+                var outidx: usize = 0;
                 const ccomp = cmap.get(v.key_ptr.*) orelse unreachable;
-                ccomp.numInputs = 0;
-                ccomp.numOutputs = 0;
-                const cports = ccomp.ports;
                 while (j.next()) |e| {
                     const port = self.ports.getPtr(e.key_ptr.*) orelse unreachable;
-                    if (port.input) {
-                        ccomp.numInputs += port.pins.len;
-                    } else {
-                        ccomp.numOutputs += port.pins.len;
-                    }
                     ports[ret].pins = try self.allocator.alloc(CompiledPin, port.pins.len);
                     errdefer self.allocator.free(ports[ret].pins);
                     ports[ret].alias = port.alias;
@@ -281,8 +294,13 @@ pub const Digisim = struct {
                         ports[ret].alias = null;
                     });
                     try map.put(port.id, &ports[ret]);
-                    cports[idx] = &ports[ret];
-                    idx += 1;
+                    if (port.input) {
+                        ccomp.inports[inidx] = &ports[ret];
+                        inidx += 1;
+                    } else {
+                        ccomp.outports[outidx] = &ports[ret];
+                        outidx += 1;
+                    }
                     ret += 1;
                 }
             } else {
