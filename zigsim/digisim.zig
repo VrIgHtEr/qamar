@@ -32,6 +32,7 @@ pub const Error = error{
     OutOfMemory,
     FaultedState,
     SimulationLocked,
+    InvalidRootNode,
 };
 
 pub const Digisim = struct {
@@ -524,7 +525,12 @@ pub const Digisim = struct {
     }
 
     fn compile(self: *@This()) !void {
+        if (self.locked) {
+            if (self.compiled == null) return Error.FaultedState;
+            return;
+        }
         if (self.components.count() == 0) return Error.EmptySimulation;
+        if (self.root.isLeaf()) return Error.InvalidRootNode;
         try self.checkLeafNodes();
         try self.checkUnconnectedInputs();
         self.locked = true;
