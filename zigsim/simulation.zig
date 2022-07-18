@@ -13,6 +13,7 @@ pub const Simulation = struct {
     components: []Component,
     ports: []Port,
     dirty: std.AutoHashMap(*Component, void),
+    nextdirty: std.AutoHashMap(*Component, void),
 
     pub fn init(digisim: *Digisim, numNets: []Net, numComponents: []Component, numPorts: []Port) !*@This() {
         const self = try digisim.allocator.create(@This());
@@ -22,10 +23,13 @@ pub const Simulation = struct {
         self.components = numComponents;
         self.ports = numPorts;
         self.dirty = @TypeOf(self.dirty).init(digisim.allocator);
+        self.nextdirty = @TypeOf(self.nextdirty).init(digisim.allocator);
+        for (numComponents) |*c| try self.dirty.put(c, .{});
         return self;
     }
 
     pub fn deinit(self: *@This()) void {
+        self.nextdirty.deinit();
         self.dirty.deinit();
         for (self.components) |*p| p.deinit(self.digisim.allocator);
         self.digisim.allocator.free(self.components);
@@ -42,6 +46,10 @@ pub const Simulation = struct {
             const component = e.key_ptr;
             _ = component;
         }
+        const t = self.dirty;
+        self.dirty = self.nextdirty;
+        self.nextdirty = t;
+        self.nextdirty.clearRetainingCapacity();
         return self.dirty.count() == 0;
     }
 };
