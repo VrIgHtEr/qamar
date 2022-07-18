@@ -76,9 +76,9 @@ pub const Simulation = struct {
     }
 
     pub fn step(self: *@This()) !bool {
-        var iter = self.dirty.iterator();
+        var iter = self.dirty.keyIterator();
         while (iter.next()) |e| {
-            const component = e.key_ptr.*;
+            const component = e.*;
             var idx: usize = 0;
             const inputs = self.inputs[0..component.numInputs];
             for (component.inports) |port| {
@@ -105,32 +105,30 @@ pub const Simulation = struct {
             }
         }
 
-        {
-            var i = self.dirtynets.iterator();
-            while (i.next()) |e| {
-                const net = e.key_ptr.*;
-                var value = Signal.z;
-                for (net.driverlist orelse unreachable) |d| {
-                    value = Signal.resolve(value, d.value);
+        var i = self.dirtynets.keyIterator();
+        while (i.next()) |e| {
+            const net = e.*;
+            var value = Signal.z;
+            for (net.driverlist orelse unreachable) |d| {
+                value = Signal.resolve(value, d.value);
+            }
+            if (Signal.tovcd(value) != Signal.tovcd(net.value)) {
+                for (net.tracelist orelse unreachable) |t| {
+                    try self.traceports.put(t, .{});
                 }
-                if (Signal.tovcd(value) != Signal.tovcd(net.value)) {
-                    for (net.tracelist orelse unreachable) |t| {
-                        try self.traceports.put(t, .{});
-                    }
-                }
-                if (value != net.value) {
-                    net.value = value;
-                    for (net.sensitivitylist orelse unreachable) |c| {
-                        try self.nextdirty.put(c, .{});
-                    }
+            }
+            if (value != net.value) {
+                net.value = value;
+                for (net.sensitivitylist orelse unreachable) |c| {
+                    try self.nextdirty.put(c, .{});
                 }
             }
         }
 
         if (self.traceports.count() > 0) {
             stdout.print("#{d}\n", .{self.timestamp}) catch ({});
-            var i = self.traceports.keyIterator();
-            while (i.next()) |p| {
+            var j = self.traceports.keyIterator();
+            while (j.next()) |p| {
                 p.*.trace();
             }
         }
