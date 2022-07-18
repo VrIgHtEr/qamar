@@ -30,6 +30,7 @@ pub const Error = error{
     EmptySimulation,
     ComponentNotFound,
     OutOfMemory,
+    FaultedState,
 };
 
 pub const Digisim = struct {
@@ -41,11 +42,16 @@ pub const Digisim = struct {
     ports: HashMap(Port),
     nets: HashMap(Net),
     idgen: IdGen,
+    locked: bool,
+    compiled: ?*Simulation,
+
     pub fn init(allocator: Allocator) !*@This() {
         var self: *@This() = try allocator.create(@This());
         errdefer allocator.destroy(self);
         self.allocator = allocator;
         self.id = 0;
+        self.locked = false;
+        self.compiled = null;
         self.strings = stringIntern.StringIntern.init(allocator);
         errdefer self.strings.deinit();
         self.components = HashMap(Component).init(allocator);
@@ -75,6 +81,13 @@ pub const Digisim = struct {
         const ret = self.id;
         self.id += 1;
         return ret;
+    }
+
+    pub fn step(self: *@This()) !bool {
+        if (self.locked) {
+            if (self.compiled == null) return Error.FaultedState;
+        } else try self.compile();
+        return (self.compiled orelse unreachable).step();
     }
 
     pub fn addComponent(self: *@This(), name: []const u8) !t.Id {
@@ -502,10 +515,11 @@ pub const Digisim = struct {
         }
     }
 
-    pub fn compile(self: *@This()) !*Simulation {
+    fn compile(self: *@This()) !void {
         if (self.components.count() == 0) return Error.EmptySimulation;
         try self.checkLeafNodes();
         try self.checkUnconnectedInputs();
+        self.locked = true;
 
         self.checkTraces();
         try self.assignNames();
@@ -537,6 +551,6 @@ pub const Digisim = struct {
         try self.buildTraceLists(&portMap, &netMap);
         try self.buildDriverLists(&portMap, &netMap);
 
-        return try Simulation.init(self, nets, components, ports);
+        self.compiled = try Simulation.init(self, nets, components, ports);
     }
 };
