@@ -242,7 +242,7 @@ pub const Digisim = struct {
                         }
                     }
                 }
-
+                components[ret].handler = v.value_ptr.handler orelse unreachable;
                 components[ret].inports = try self.allocator.alloc(*CompiledPort, numinports);
                 errdefer self.allocator.free(components[ret].inports);
                 components[ret].outports = try self.allocator.alloc(*CompiledPort, numoutports);

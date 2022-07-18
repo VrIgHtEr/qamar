@@ -6,43 +6,52 @@ const HashMap = std.AutoArrayHashMap(usize, void);
 const Digisim = digi.Digisim;
 const Err = digi.Error;
 const Signal = @import("../signal.zig").Signal;
+const Handler = @import("../simulation.zig").Handler;
 
 pub const components = struct {
-    pub fn nand_h(input: []Signal, output: []Signal) anyerror!void {
+    pub fn nand_h(timestamp: usize, input: []Signal, output: []Signal) usize {
         for (input) |x| {
             if (x != Signal.high) {
                 output[0] = Signal.high;
-                return;
+                return 0;
             }
         }
         output[0] = Signal.low;
+        _ = timestamp;
+        return 0;
     }
-    pub fn and_h(input: []Signal, output: []Signal) anyerror!void {
+    pub fn and_h(timestamp: usize, input: []Signal, output: []Signal) usize {
         for (input) |x| {
             if (x != Signal.high) {
                 output[0] = Signal.low;
-                return;
+                return 0;
             }
         }
         output[0] = Signal.high;
+        _ = timestamp;
+        return 0;
     }
-    pub fn nor_h(input: []Signal, output: []Signal) anyerror!void {
+    pub fn nor_h(timestamp: usize, input: []Signal, output: []Signal) usize {
         for (input) |x| {
             if (x == Signal.high) {
                 output[0] = Signal.high;
-                return;
+                return 0;
             }
         }
         output[0] = Signal.low;
+        _ = timestamp;
+        return 0;
     }
-    pub fn or_h(input: []Signal, output: []Signal) anyerror!void {
+    pub fn or_h(timestamp: usize, input: []Signal, output: []Signal) usize {
         for (input) |x| {
             if (x == Signal.high) {
                 output[0] = Signal.low;
-                return;
+                return 0;
             }
         }
         output[0] = Signal.high;
+        _ = timestamp;
+        return 0;
     }
 };
 
@@ -52,7 +61,7 @@ pub const Component = struct {
     ports: HashMap,
     components: HashMap,
     name: []const u8,
-    handler: ?fn ([]Signal, []Signal) anyerror!void,
+    handler: ?Handler,
     childTraces: bool,
 
     pub fn init(digisim: *Digisim, name: []const u8) !@This() {
@@ -66,7 +75,7 @@ pub const Component = struct {
         return self;
     }
 
-    pub fn setHandler(self: *@This(), handler: fn ([]Signal, []Signal) anyerror!void) Err!void {
+    pub fn setHandler(self: *@This(), handler: Handler) Err!void {
         if (self.digisim.locked) return Err.SimulationLocked;
         if (self.handler != null) return Err.HandlerAlreadySet;
         self.handler = handler;

@@ -7,6 +7,8 @@ const Net = @import("comp/net.zig").Net;
 const Digisim = @import("digisim.zig").Digisim;
 const Signal = @import("signal.zig").Signal;
 
+pub const Handler = fn (usize, []Signal, []Signal) usize;
+
 pub const Simulation = struct {
     digisim: *Digisim,
     allocator: Allocator,
