@@ -15,11 +15,13 @@ pub const Simulation = struct {
     nets: []Net,
     components: []Component,
     ports: []Port,
-    dirtyNets: std.AutoHashMap(*Net, void),
+    dirtynets: std.AutoHashMap(*Net, void),
     dirty: std.AutoHashMap(*Component, void),
     nextdirty: std.AutoHashMap(*Component, void),
+    traceports: std.AutoHashMap(*Port, void),
     inputs: []Signal,
     outputs: []Signal,
+    timestamp: usize,
 
     pub fn init(digisim: *Digisim, numNets: []Net, numComponents: []Component, numPorts: []Port) !*@This() {
         const self = try digisim.allocator.create(@This());
@@ -28,6 +30,7 @@ pub const Simulation = struct {
         self.nets = numNets;
         self.components = numComponents;
         self.ports = numPorts;
+        self.timestamp = 0;
         self.dirty = @TypeOf(self.dirty).init(digisim.allocator);
         errdefer self.nextdirty.deinit();
         self.nextdirty = @TypeOf(self.nextdirty).init(digisim.allocator);
@@ -45,13 +48,19 @@ pub const Simulation = struct {
         errdefer digisim.allocator.free(self.inputs);
         self.outputs = try digisim.allocator.alloc(Signal, maxoutputs);
         errdefer digisim.allocator.free(self.outputs);
-        self.dirtyNets = std.AutoHashMap(*Net, void).init(digisim.allocator);
-        errdefer self.outputs.deinit();
+        self.dirtynets = std.AutoHashMap(*Net, void).init(digisim.allocator);
+        errdefer self.dirtynets.deinit();
+        self.traceports = std.AutoHashMap(*Port, void).init(digisim.allocator);
+        errdefer self.traceports.deinit();
+        for (numComponents) |*c| {
+            try self.dirty.put(c, .{});
+        }
         return self;
     }
 
     pub fn deinit(self: *@This()) void {
-        self.dirtyNets.deinit();
+        self.traceports.deinit();
+        self.dirtynets.deinit();
         self.digisim.allocator.free(self.inputs);
         self.digisim.allocator.free(self.outputs);
         self.nextdirty.deinit();
@@ -67,22 +76,71 @@ pub const Simulation = struct {
 
     pub fn step(self: *@This()) !bool {
         var iter = self.dirty.iterator();
-        self.dirtyNets.clearRetainingCapacity();
         while (iter.next()) |e| {
             const component = e.key_ptr.*;
-            //generate inputs
-            //run handler
+            var idx: usize = 0;
+            const inputs = self.inputs[0..component.numInputs];
+            for (component.inports) |port| {
+                for (port.pins) |*pin| {
+                    inputs[idx] = Signal.collapse(pin.net.value);
+                    idx += 1;
+                }
+            }
+
+            const outputs = self.outputs[0..component.numOutputs];
+            const nextSchedule = component.handler(self.timestamp, inputs, outputs);
+            if (nextSchedule != 0) {}
             //for each output pin
-            //    if output has changed mark net as dirty
-            _ = component;
+            idx = 0;
+            for (component.outports) |port| {
+                for (port.pins) |*pin| {
+                    const value = outputs[idx];
+                    if (value != pin.value) {
+                        pin.value = value;
+                        try self.dirtynets.put(pin.net, .{});
+                    }
+                    idx += 1;
+                }
+            }
         }
-        //mark all components in the sensitivity lists of dirty nets as dirty
-        //resolve all dirty nets
-        //trace values
+
+        {
+            var i = self.dirtynets.iterator();
+            while (i.next()) |e| {
+                const net = e.key_ptr.*;
+                var value = Signal.z;
+                for (net.driverlist orelse unreachable) |d| {
+                    value = Signal.resolve(value, d.value);
+                }
+                if (value != net.value) {
+                    net.value = value;
+                    for (net.sensitivitylist orelse unreachable) |c| {
+                        try self.nextdirty.put(c, .{});
+                    }
+                }
+                if (Signal.tovcd(value) != Signal.tovcd(net.value)) {
+                    for (net.tracelist orelse unreachable) |t| {
+                        try self.traceports.put(t, .{});
+                    }
+                }
+            }
+        }
+
+        if (self.traceports.count() > 0) {
+            std.debug.print("#{d}\n", .{self.timestamp});
+            var i = self.traceports.keyIterator();
+            while (i.next()) |p| {
+                p.*.trace();
+            }
+        }
+
         const t = self.dirty;
         self.dirty = self.nextdirty;
         self.nextdirty = t;
         self.nextdirty.clearRetainingCapacity();
+        self.dirtynets.clearRetainingCapacity();
+        self.traceports.clearRetainingCapacity();
+        self.timestamp += 1;
         return self.dirty.count() == 0;
     }
 };

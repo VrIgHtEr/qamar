@@ -8,6 +8,7 @@ const ArrayList = std.ArrayList;
 const Allocator = std.mem.Allocator;
 const stringIntern = @import("stringIntern.zig");
 const root_name: []const u8 = "__ROOT__";
+const Signal = @import("signal.zig").Signal;
 
 fn HashMap(comptime T: type) type {
     return std.AutoArrayHashMap(usize, T);
@@ -388,6 +389,7 @@ pub const Digisim = struct {
             cnets[ret].tracelist = null;
             cnets[ret].sensitivitylist = null;
             cnets[ret].driverlist = null;
+            cnets[ret].value = Signal.z;
             ret += 1;
         }
     }
@@ -402,6 +404,7 @@ pub const Digisim = struct {
                     const cport = pmap.get(port.id) orelse unreachable;
                     for (port.pins) |*pin, idx| {
                         cport.pins[idx].net = nmap.get(pin.net) orelse unreachable;
+                        cport.pins[idx].value = Signal.z;
                     }
                 }
             } else {
@@ -412,6 +415,7 @@ pub const Digisim = struct {
                         const cport = pmap.get(port.id) orelse unreachable;
                         for (port.pins) |*pin, idx| {
                             cport.pins[idx].net = nmap.get(pin.net) orelse unreachable;
+                            cport.pins[idx].value = Signal.z;
                         }
                     }
                 }

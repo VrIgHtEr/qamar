@@ -1,2 +1,3 @@
 const Net = @import("net.zig").Net;
-pub const Pin = struct { net: *Net };
+const Signal = @import("../signal.zig").Signal;
+pub const Pin = struct { net: *Net, value: Signal };
