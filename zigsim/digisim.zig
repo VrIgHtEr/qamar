@@ -155,7 +155,8 @@ pub const Digisim = struct {
         defer ports.deinit();
         var i = self.components.iterator();
         while (i.next()) |e| {
-            try nodes.append(e.key_ptr.*);
+            if (!e.value_ptr.isLeaf())
+                try nodes.append(e.key_ptr.*);
         }
         for (nodes.items) |id| {
             _ = self.root.components.swapRemove(id);
@@ -340,8 +341,10 @@ pub const Digisim = struct {
                 var j = v.value_ptr.ports.iterator();
                 while (j.next()) |je| {
                     const port = self.ports.getPtr(je.key_ptr.*) orelse unreachable;
-                    for (port.pins) |*pin| {
-                        try nets.put(pin.net, .{});
+                    if (port.trace) {
+                        for (port.pins) |*pin| {
+                            try nets.put(pin.net, .{});
+                        }
                     }
                 }
             }
@@ -366,8 +369,10 @@ pub const Digisim = struct {
                 var j = v.value_ptr.ports.iterator();
                 while (j.next()) |je| {
                     const port = self.ports.getPtr(je.key_ptr.*) orelse unreachable;
-                    for (port.pins) |*pin| {
-                        try nets.put(pin.net, .{});
+                    if (port.trace) {
+                        for (port.pins) |*pin| {
+                            try nets.put(pin.net, .{});
+                        }
                     }
                 }
             }
