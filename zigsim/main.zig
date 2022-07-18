@@ -20,7 +20,7 @@ pub fn main() !u8 {
     _ = try sim.addComponent("core");
     const comp = try sim.getComponent("core");
     if (comp) |cmp| {
-        try cmp.setHandler(components.nand_h);
+        try cmp.setHandler(components.nor_h);
         _ = try cmp.addPort("input", true, 0, 1, true);
         _ = try cmp.addPort("output", false, 0, 0, true);
         try cmp.connect("output", "input[0]");

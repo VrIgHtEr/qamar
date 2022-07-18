@@ -32,7 +32,7 @@ pub const components = struct {
         _ = timestamp;
         return 0;
     }
-    pub fn nor_h(timestamp: usize, input: []Signal, output: []Signal) usize {
+    pub fn or_h(timestamp: usize, input: []Signal, output: []Signal) usize {
         for (input) |x| {
             if (x == Signal.high) {
                 output[0] = Signal.high;
@@ -43,7 +43,7 @@ pub const components = struct {
         _ = timestamp;
         return 0;
     }
-    pub fn or_h(timestamp: usize, input: []Signal, output: []Signal) usize {
+    pub fn nor_h(timestamp: usize, input: []Signal, output: []Signal) usize {
         for (input) |x| {
             if (x == Signal.high) {
                 output[0] = Signal.low;
