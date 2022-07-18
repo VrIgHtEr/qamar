@@ -233,7 +233,7 @@ pub const Digisim = struct {
         var ret: usize = 0;
         errdefer while (ret > 0) {
             ret -= 1;
-            ports[ret].deinit(self.allocator);
+            ports[ret].deinit(self);
         };
         var i = self.components.iterator();
         while (i.next()) |v| {
@@ -245,6 +245,12 @@ pub const Digisim = struct {
                     const port = self.ports.getPtr(e.key_ptr.*) orelse unreachable;
                     ports[ret].pins = try self.allocator.alloc(CompiledPin, port.pins.len);
                     errdefer self.allocator.free(ports[ret].pins);
+                    ports[ret].alias = port.alias;
+                    port.alias = null;
+                    errdefer ({
+                        port.alias = ports[ret].alias;
+                        ports[ret].alias = null;
+                    });
                     try map.put(port.id, &ports[ret]);
                     cports[idx] = &ports[ret];
                     idx += 1;
@@ -257,6 +263,12 @@ pub const Digisim = struct {
                     if (port.trace) {
                         ports[ret].pins = try self.allocator.alloc(CompiledPin, port.pins.len);
                         errdefer self.allocator.free(ports[ret].pins);
+                        ports[ret].alias = port.alias;
+                        port.alias = null;
+                        errdefer ({
+                            port.alias = ports[ret].alias;
+                            ports[ret].alias = null;
+                        });
                         try map.put(port.id, &ports[ret]);
                         ret += 1;
                     }
@@ -476,7 +488,7 @@ pub const Digisim = struct {
         var portMap = PortMap.init(self.allocator);
         defer portMap.deinit();
         try self.populatePorts(ports, &portMap, &componentMap);
-        errdefer for (ports) |*e| e.deinit(self.allocator);
+        errdefer for (ports) |*e| e.deinit(self);
 
         var nets = try self.allocator.alloc(CompiledNet, try self.countNetsToCompile());
         errdefer self.allocator.free(nets);
@@ -489,6 +501,6 @@ pub const Digisim = struct {
         try self.buildTraceLists(&portMap, &netMap);
         try self.buildDriverLists(&portMap, &netMap);
 
-        return try Simulation.init(self.allocator, nets, components, ports);
+        return try Simulation.init(self, nets, components, ports);
     }
 };
