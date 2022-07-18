@@ -1,10 +1,10 @@
 const std = @import("std");
 const Allocator = std.mem.Allocator;
-const Component = @import("component.zig").Component;
-const Port = @import("port.zig").Port;
-const Pin = @import("pin.zig").Pin;
-const Net = @import("net.zig").Net;
-const Digisim = @import("../digisim.zig").Digisim;
+const Component = @import("comp/component.zig").Component;
+const Port = @import("comp/port.zig").Port;
+const Pin = @import("comp/pin.zig").Pin;
+const Net = @import("comp/net.zig").Net;
+const Digisim = @import("digisim.zig").Digisim;
 
 pub const Simulation = struct {
     digisim: *Digisim,
