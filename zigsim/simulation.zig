@@ -16,8 +16,8 @@ pub const Simulation = struct {
     dirtyNets: std.AutoHashMap(*Net, void),
     dirty: std.AutoHashMap(*Component, void),
     nextdirty: std.AutoHashMap(*Component, void),
-    inputs: std.ArrayList(Signal),
-    outputs: std.ArrayList(Signal),
+    inputs: []Signal,
+    outputs: []Signal,
 
     pub fn init(digisim: *Digisim, numNets: []Net, numComponents: []Component, numPorts: []Port) !*@This() {
         const self = try digisim.allocator.create(@This());
@@ -31,10 +31,10 @@ pub const Simulation = struct {
         self.nextdirty = @TypeOf(self.nextdirty).init(digisim.allocator);
         errdefer self.nextdirty.deinit();
         for (numComponents) |*c| try self.dirty.put(c, .{});
-        self.inputs = std.ArrayList(Signal).init(digisim.allocator);
-        errdefer self.inputs.deinit();
-        self.outputs = std.ArrayList(Signal).init(digisim.allocator);
-        errdefer self.outputs.deinit();
+        self.inputs = try digisim.allocator.alloc(Signal, 1);
+        errdefer digisim.allocator.free(self.inputs);
+        self.outputs = try digisim.allocator.alloc(Signal, 1);
+        errdefer digisim.allocator.free(self.outputs);
         self.dirtyNets = std.AutoHashMap(*Net, void).init(digisim.allocator);
         errdefer self.outputs.deinit();
         return self;
@@ -42,8 +42,8 @@ pub const Simulation = struct {
 
     pub fn deinit(self: *@This()) void {
         self.dirtyNets.deinit();
-        self.inputs.deinit();
-        self.outputs.deinit();
+        self.digisim.allocator.free(self.inputs);
+        self.digisim.allocator.free(self.outputs);
         self.nextdirty.deinit();
         self.dirty.deinit();
         for (self.components) |*p| p.deinit(self.digisim.allocator);
@@ -55,18 +55,19 @@ pub const Simulation = struct {
         self.digisim.allocator.destroy(self);
     }
 
-    pub fn step(self: *@This()) bool {
+    pub fn step(self: *@This()) !bool {
         var iter = self.dirty.iterator();
         self.dirtyNets.clearRetainingCapacity();
         while (iter.next()) |e| {
             const component = e.key_ptr.*;
-            self.inputs.clearRetainingCapacity();
-            self.outputs.clearRetainingCapacity();
+            if (self.inputs.len < component.numInputs)
+                self.inputs = try self.digisim.allocator.realloc(self.inputs, component.numInputs);
+            if (self.outputs.len < component.numOutputs)
+                self.outputs = try self.digisim.allocator.realloc(self.outputs, component.numOutputs);
             //generate inputs
             //run handler
             //for each output pin
             //    if output has changed mark net as dirty
-            _ = component;
         }
         //mark all components in the sensitivity lists of dirty nets as dirty
         //resolve all dirty nets
