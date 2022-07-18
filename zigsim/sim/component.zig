@@ -54,6 +54,7 @@ pub const Component = struct {
     components: HashMap,
     name: []const u8,
     handler: ?fn ([]Signal, []Signal) anyerror!void,
+    childTraces: bool,
 
     pub fn init(digisim: *Digisim, name: []const u8) !@This() {
         var self: @This() = undefined;
@@ -320,23 +321,45 @@ pub const Component = struct {
         return false;
     }
 
-    pub fn assignNames(self: *@This()) Err!void {
-        if (self.isLeaf()) {
-            var i = self.ports.iterator();
-            while (i.next()) |p| {
-                const port = self.digisim.ports.getPtr(p.key_ptr.*) orelse unreachable;
+    pub fn checkTraces(self: *@This()) bool {
+        self.childTraces = false;
+        var ci = self.components.iterator();
+        while (ci.next()) |k| {
+            const comp = self.digisim.components.getPtr(k.key_ptr.*) orelse unreachable;
+            self.childTraces = self.childTraces or comp.checkTraces();
+        }
+        if (!self.childTraces) {
+            var pi = self.ports.iterator();
+            while (pi.next()) |k| {
+                const port = self.digisim.ports.getPtr(k.key_ptr.*) orelse unreachable;
                 if (port.trace) {
-                    port.alias = try self.digisim.idgen.refNewId(self.digisim);
-                    std.debug.print("$var wire {d} {s} {s} $end\n", .{ port.width(), port.alias orelse unreachable, port.name });
+                    self.childTraces = true;
+                    break;
                 }
             }
-        } else {
-            var i = self.components.iterator();
-            while (i.next()) |c| {
-                const comp = self.digisim.components.getPtr(c.key_ptr.*) orelse unreachable;
-                std.debug.print("$scope module {s} $end\n", .{comp.name});
-                try comp.assignNames();
-                std.debug.print("$upscope $end\n", .{});
+        }
+        return self.childTraces;
+    }
+
+    pub fn assignNames(self: *@This()) Err!void {
+        if (self.childTraces) {
+            if (self.isLeaf()) {
+                var i = self.ports.iterator();
+                while (i.next()) |p| {
+                    const port = self.digisim.ports.getPtr(p.key_ptr.*) orelse unreachable;
+                    if (port.trace) {
+                        port.alias = try self.digisim.idgen.refNewId(self.digisim);
+                        std.debug.print("$var wire {d} {s} {s} $end\n", .{ port.width(), port.alias orelse unreachable, port.name });
+                    }
+                }
+            } else {
+                var i = self.components.iterator();
+                while (i.next()) |c| {
+                    const comp = self.digisim.components.getPtr(c.key_ptr.*) orelse unreachable;
+                    std.debug.print("$scope module {s} $end\n", .{comp.name});
+                    try comp.assignNames();
+                    std.debug.print("$upscope $end\n", .{});
+                }
             }
         }
     }

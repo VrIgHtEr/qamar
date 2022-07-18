@@ -127,6 +127,10 @@ pub const Digisim = struct {
         }
     }
 
+    pub fn checkTraces(self: *@This()) void {
+        _ = self.root.checkTraces();
+    }
+
     pub fn assignNames(self: *@This()) !void {
         std.debug.print("$timescale 1ps $end\n", .{});
         try self.root.assignNames();
@@ -385,6 +389,7 @@ pub const Digisim = struct {
         try self.checkLeafNodes();
         try self.checkUnconnectedInputs();
 
+        self.checkTraces();
         try self.assignNames();
         try self.flatten();
 
