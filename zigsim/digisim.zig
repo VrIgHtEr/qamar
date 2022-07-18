@@ -31,6 +31,7 @@ pub const Error = error{
     ComponentNotFound,
     OutOfMemory,
     FaultedState,
+    SimulationLocked,
 };
 
 pub const Digisim = struct {
@@ -66,14 +67,21 @@ pub const Digisim = struct {
         errdefer self.idgen.deinit();
         return self;
     }
-
-    pub fn deinit(self: *@This()) void {
+    fn deinitRoot(self: *@This()) void {
         self.root.deinit();
         self.nets.deinit();
         self.ports.deinit();
         self.components.deinit();
-        self.strings.deinit();
         self.idgen.deinit();
+    }
+
+    pub fn deinit(self: *@This()) void {
+        if (self.compiled) |c| {
+            c.deinit();
+        } else {
+            self.deinitRoot();
+        }
+        self.strings.deinit();
         self.allocator.destroy(self);
     }
 
@@ -552,5 +560,6 @@ pub const Digisim = struct {
         try self.buildDriverLists(&portMap, &netMap);
 
         self.compiled = try Simulation.init(self, nets, components, ports);
+        self.deinitRoot();
     }
 };

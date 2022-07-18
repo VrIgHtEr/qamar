@@ -68,6 +68,7 @@ pub const Component = struct {
     }
 
     pub fn setHandler(self: *@This(), handler: fn ([]Signal, []Signal) anyerror!void) Err!void {
+        if (self.digisim.locked) return Err.SimulationLocked;
         if (self.handler != null) return Err.HandlerAlreadySet;
         self.handler = handler;
     }
@@ -209,6 +210,7 @@ pub const Component = struct {
     }
 
     pub fn connect(self: *@This(), a: []const u8, b: []const u8) !void {
+        if (self.digisim.locked) return Err.SimulationLocked;
         const pa = try self.parsePortRange(a);
         const pb = try self.parsePortRange(b);
 
@@ -227,6 +229,7 @@ pub const Component = struct {
     }
 
     pub fn addPort(self: *@This(), name: []const u8, input: bool, start: usize, end: usize, trace: bool) !t.Id {
+        if (self.digisim.locked) return Err.SimulationLocked;
         if (name.len == 0) return Err.InvalidPortName;
         if (std.mem.indexOf(u8, name, ".")) |_| return Err.InvalidPortName;
         const interned_name = try self.digisim.strings.ref(name);
@@ -245,6 +248,7 @@ pub const Component = struct {
     }
 
     pub fn addComponent(self: *@This(), name: []const u8) !t.Id {
+        if (self.digisim.locked) return Err.SimulationLocked;
         if (name.len == 0) return Err.InvalidComponentName;
         if (std.mem.indexOf(u8, name, ".")) |_| return Err.InvalidComponentName;
         const interned_name = try self.digisim.strings.ref(name);
