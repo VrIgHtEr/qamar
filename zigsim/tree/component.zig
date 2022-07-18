@@ -1,12 +1,11 @@
 const std = @import("std");
-const t = @import("../types.zig");
 const Port = @import("port.zig").Port;
 const Net = @import("net.zig").Net;
 const digi = @import("../digisim.zig");
-const HashMap = std.AutoArrayHashMap(t.Id, void);
+const HashMap = std.AutoArrayHashMap(usize, void);
 const Digisim = digi.Digisim;
 const Err = digi.Error;
-const Signal = t.Signal;
+const Signal = @import("../signal.zig").Signal;
 
 pub const components = struct {
     pub fn nand_h(input: []Signal, output: []Signal) anyerror!void {
@@ -49,7 +48,7 @@ pub const components = struct {
 
 pub const Component = struct {
     digisim: *Digisim,
-    id: t.Id,
+    id: usize,
     ports: HashMap,
     components: HashMap,
     name: []const u8,
@@ -73,7 +72,7 @@ pub const Component = struct {
         self.handler = handler;
     }
 
-    pub fn findComponent(self: *@This(), id: t.Id) ?*Component {
+    pub fn findComponent(self: *@This(), id: usize) ?*Component {
         return self.components.getPtr(id);
     }
 
@@ -102,7 +101,7 @@ pub const Component = struct {
         _ = self.digisim.components.swapRemove(self.id);
     }
 
-    pub fn findPort(self: *@This(), id: t.Id) ?*Port {
+    pub fn findPort(self: *@This(), id: usize) ?*Port {
         return self.ports.getPtr(id);
     }
 
@@ -228,7 +227,7 @@ pub const Component = struct {
         }
     }
 
-    pub fn addPort(self: *@This(), name: []const u8, input: bool, start: usize, end: usize, trace: bool) !t.Id {
+    pub fn addPort(self: *@This(), name: []const u8, input: bool, start: usize, end: usize, trace: bool) !usize {
         if (self.digisim.locked) return Err.SimulationLocked;
         if (name.len == 0) return Err.InvalidPortName;
         if (std.mem.indexOf(u8, name, ".")) |_| return Err.InvalidPortName;
@@ -247,7 +246,7 @@ pub const Component = struct {
         return p.id;
     }
 
-    pub fn addComponent(self: *@This(), name: []const u8) !t.Id {
+    pub fn addComponent(self: *@This(), name: []const u8) !usize {
         if (self.digisim.locked) return Err.SimulationLocked;
         if (name.len == 0) return Err.InvalidComponentName;
         if (std.mem.indexOf(u8, name, ".")) |_| return Err.InvalidComponentName;

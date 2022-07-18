@@ -1,4 +1,3 @@
-const t = @import("types.zig");
 const IdGen = @import("idgen.zig").IdGen;
 const Component = @import("tree/component.zig").Component;
 const Port = @import("tree/port.zig").Port;
@@ -11,7 +10,7 @@ const stringIntern = @import("stringIntern.zig");
 const root_name: []const u8 = "__ROOT__";
 
 fn HashMap(comptime T: type) type {
-    return std.AutoArrayHashMap(t.Id, T);
+    return std.AutoArrayHashMap(usize, T);
 }
 
 pub const Error = error{
@@ -37,7 +36,7 @@ pub const Error = error{
 
 pub const Digisim = struct {
     allocator: Allocator,
-    id: t.Id = 0,
+    id: usize = 0,
     root: Component,
     strings: stringIntern.StringIntern,
     components: HashMap(Component),
@@ -86,7 +85,7 @@ pub const Digisim = struct {
         self.allocator.destroy(self);
     }
 
-    pub fn nextId(self: *@This()) t.Id {
+    pub fn nextId(self: *@This()) usize {
         const ret = self.id;
         self.id += 1;
         return ret;
@@ -99,7 +98,7 @@ pub const Digisim = struct {
         return (self.compiled orelse unreachable).step();
     }
 
-    pub fn addComponent(self: *@This(), name: []const u8) !t.Id {
+    pub fn addComponent(self: *@This(), name: []const u8) !usize {
         return self.root.addComponent(name);
     }
 
@@ -171,9 +170,9 @@ pub const Digisim = struct {
     }
 
     pub fn purgeBranches(self: *@This()) !void {
-        var nodes = std.ArrayList(t.Id).init(self.allocator);
+        var nodes = std.ArrayList(usize).init(self.allocator);
         defer nodes.deinit();
-        var ports = std.ArrayList(t.Id).init(self.allocator);
+        var ports = std.ArrayList(usize).init(self.allocator);
         defer ports.deinit();
         var i = self.components.iterator();
         while (i.next()) |e| {
@@ -212,9 +211,9 @@ pub const Digisim = struct {
     const CompiledPin = @import("comp/pin.zig").Pin;
     const CompiledNet = @import("comp/net.zig").Net;
     const Simulation = @import("simulation.zig").Simulation;
-    const NetMap = std.AutoHashMap(t.Id, *CompiledNet);
-    const ComponentMap = std.AutoHashMap(t.Id, *CompiledComponent);
-    const PortMap = std.AutoHashMap(t.Id, *CompiledPort);
+    const NetMap = std.AutoHashMap(usize, *CompiledNet);
+    const ComponentMap = std.AutoHashMap(usize, *CompiledComponent);
+    const PortMap = std.AutoHashMap(usize, *CompiledPort);
 
     fn populateComponents(self: *@This(), components: []CompiledComponent, map: *ComponentMap) !void {
         var ret: usize = 0;
@@ -300,7 +299,7 @@ pub const Digisim = struct {
     }
 
     fn countNetsToCompile(self: *@This()) !usize {
-        var nets = std.AutoHashMap(t.Id, void).init(self.allocator);
+        var nets = std.AutoHashMap(usize, void).init(self.allocator);
         defer nets.deinit();
         var i = self.components.iterator();
         while (i.next()) |v| {
@@ -328,7 +327,7 @@ pub const Digisim = struct {
     }
 
     fn populateNets(self: *@This(), cnets: []CompiledNet, map: *NetMap) !void {
-        var nets = std.AutoHashMap(t.Id, void).init(self.allocator);
+        var nets = std.AutoHashMap(usize, void).init(self.allocator);
         defer nets.deinit();
         var i = self.components.iterator();
         while (i.next()) |v| {
@@ -395,7 +394,7 @@ pub const Digisim = struct {
     }
 
     fn buildSensitivityLists(self: *@This(), cmap: *ComponentMap, nmap: *NetMap) !void {
-        var sensitivityLists = std.AutoHashMap(t.Id, std.AutoHashMap(*CompiledComponent, void)).init(self.allocator);
+        var sensitivityLists = std.AutoHashMap(usize, std.AutoHashMap(*CompiledComponent, void)).init(self.allocator);
         defer ({
             var i = sensitivityLists.iterator();
             while (i.next()) |a| a.value_ptr.deinit();
@@ -442,7 +441,7 @@ pub const Digisim = struct {
     }
 
     fn buildTraceLists(self: *@This(), pmap: *PortMap, nmap: *NetMap) !void {
-        var traceLists = std.AutoHashMap(t.Id, std.AutoHashMap(*CompiledPort, void)).init(self.allocator);
+        var traceLists = std.AutoHashMap(usize, std.AutoHashMap(*CompiledPort, void)).init(self.allocator);
         defer ({
             var i = traceLists.iterator();
             while (i.next()) |a| a.value_ptr.deinit();
@@ -484,7 +483,7 @@ pub const Digisim = struct {
     }
 
     fn buildDriverLists(self: *@This(), pmap: *PortMap, nmap: *NetMap) !void {
-        var driverLists = std.AutoHashMap(t.Id, std.ArrayList(*CompiledPin)).init(self.allocator);
+        var driverLists = std.AutoHashMap(usize, std.ArrayList(*CompiledPin)).init(self.allocator);
         defer ({
             var i = driverLists.iterator();
             while (i.next()) |a| a.value_ptr.deinit();

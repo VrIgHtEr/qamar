@@ -1,12 +1,11 @@
-const t = @import("../types.zig");
 const std = @import("std");
 const Digisim = @import("../digisim.zig").Digisim;
 const Pin = @import("pin.zig").Pin;
 const ArrayList = std.ArrayList;
-const HashMap = std.AutoArrayHashMap(t.Id, *Pin);
+const HashMap = std.AutoArrayHashMap(usize, *Pin);
 
 pub const Net = struct {
-    id: t.Id,
+    id: usize,
     pins: HashMap,
 
     pub fn init(digisim: *Digisim) !@This() {

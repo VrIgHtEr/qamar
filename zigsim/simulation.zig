@@ -44,8 +44,15 @@ pub const Simulation = struct {
         var iter = self.dirty.iterator();
         while (iter.next()) |e| {
             const component = e.key_ptr;
+            //generate inputs
+            //run handler
+            //for each output pin
+            //    if output has changed mark net as dirty
             _ = component;
         }
+        //mark all components in the sensitivity lists of dirty nets as dirty
+        //resolve all dirty nets
+        //trace values
         const t = self.dirty;
         self.dirty = self.nextdirty;
         self.nextdirty = t;

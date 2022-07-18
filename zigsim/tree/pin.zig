@@ -1,15 +1,14 @@
 const std = @import("std");
-const t = @import("../types.zig");
 const Digisim = @import("../digisim.zig").Digisim;
 
 pub const Pin = struct {
     digisim: *Digisim,
-    id: t.Id,
-    portid: t.Id,
-    net: t.Id,
+    id: usize,
+    portid: usize,
+    net: usize,
     input: bool,
 
-    pub fn init(digisim: *Digisim, input: bool, portid: t.Id) !@This() {
+    pub fn init(digisim: *Digisim, input: bool, portid: usize) !@This() {
         var self: @This() = .{ .digisim = digisim, .id = digisim.nextId(), .net = 0, .input = input, .portid = portid };
         return self;
     }

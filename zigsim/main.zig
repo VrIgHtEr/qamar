@@ -2,7 +2,6 @@ const Lua = @import("lua.zig").Lua;
 
 const std = @import("std");
 const digisim = @import("digisim.zig");
-const t = @import("types.zig");
 const components = @import("./tree/component.zig").components;
 
 pub fn main() !u8 {

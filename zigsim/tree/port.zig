@@ -1,4 +1,3 @@
-const t = @import("../types.zig");
 const std = @import("std");
 const Pin = @import("pin.zig").Pin;
 const Digisim = @import("../digisim.zig").Digisim;
@@ -7,7 +6,7 @@ const Err = @import("../digisim.zig").Error;
 
 pub const Port = struct {
     digisim: *Digisim,
-    id: t.Id,
+    id: usize,
     pins: []Pin,
     name: []const u8,
     alias: ?[]const u8,
