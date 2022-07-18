@@ -9,6 +9,7 @@ const Allocator = std.mem.Allocator;
 const stringIntern = @import("stringIntern.zig");
 const root_name: []const u8 = "__ROOT__";
 const Signal = @import("signal.zig").Signal;
+const stdout = std.io.getStdOut().writer();
 
 fn HashMap(comptime T: type) type {
     return std.AutoArrayHashMap(usize, T);
@@ -154,9 +155,9 @@ pub const Digisim = struct {
     }
 
     pub fn assignNames(self: *@This()) !void {
-        std.debug.print("$timescale 1ps $end\n", .{});
+        stdout.print("$timescale 1ps $end\n", .{}) catch ({});
         try self.root.assignNames();
-        std.debug.print("$enddefinitions $end\n", .{});
+        stdout.print("$enddefinitions $end\n", .{}) catch ({});
     }
 
     pub fn flatten(self: *@This()) !void {

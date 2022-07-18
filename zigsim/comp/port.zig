@@ -2,6 +2,7 @@ const std = @import("std");
 const Pin = @import("pin.zig").Pin;
 const Digisim = @import("../digisim.zig").Digisim;
 const Signal = @import("../signal.zig").Signal;
+const stdout = std.io.getStdOut().writer();
 
 pub const Port = struct {
     pins: []Pin,
@@ -14,32 +15,32 @@ pub const Port = struct {
 
     pub fn trace(self: *@This()) void {
         if (self.pins.len > 1) {
-            std.debug.print("b", .{});
+            stdout.print("b", .{}) catch ({});
             var i = self.pins.len;
             while (i > 0) {
                 i -= 1;
                 const value = Signal.tovcd(self.pins[0].net.value);
                 if (value == Signal.z) {
-                    std.debug.print("z", .{});
+                    stdout.print("z", .{}) catch ({});
                 } else if (value == Signal.unknown) {
-                    std.debug.print("x", .{});
+                    stdout.print("x", .{}) catch ({});
                 } else if (value == Signal.low) {
-                    std.debug.print("0", .{});
+                    stdout.print("0", .{}) catch ({});
                 } else {
-                    std.debug.print("1", .{});
+                    stdout.print("1", .{}) catch ({});
                 }
             }
-            std.debug.print(" {s}\n", .{self.alias orelse unreachable});
+            stdout.print(" {s}\n", .{self.alias orelse unreachable}) catch ({});
         } else {
             const value = Signal.tovcd(self.pins[0].net.value);
             if (value == Signal.z) {
-                std.debug.print("z{s}\n", .{self.alias orelse unreachable});
+                stdout.print("z{s}\n", .{self.alias orelse unreachable}) catch ({});
             } else if (value == Signal.unknown) {
-                std.debug.print("x{s}\n", .{self.alias orelse unreachable});
+                stdout.print("x{s}\n", .{self.alias orelse unreachable}) catch ({});
             } else if (value == Signal.low) {
-                std.debug.print("0{s}\n", .{self.alias orelse unreachable});
+                stdout.print("0{s}\n", .{self.alias orelse unreachable}) catch ({});
             } else {
-                std.debug.print("1{s}\n", .{self.alias orelse unreachable});
+                stdout.print("1{s}\n", .{self.alias orelse unreachable}) catch ({});
             }
         }
     }

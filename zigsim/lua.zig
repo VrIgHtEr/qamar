@@ -1,4 +1,5 @@
 const std = @import("std");
+const stdout = std.io.getStdOut().writer();
 const c = @cImport({
     // See https://github.com/ziglang/zig/issues/515
     @cDefine("_NO_CRT_STDIO_INLINE", "1");
@@ -30,7 +31,7 @@ pub const Lua = struct {
     pub fn loadstring(self: *@This(), string: [:0]const u8) Error!void {
         var status = c.luaL_loadstring(self.L, string.ptr);
         if (status != 0) {
-            std.debug.print("Couldn't load string: {s}", .{c.lua_tostring(self.L, -1)});
+            stdout.print("Couldn't load string: {s}", .{c.lua_tostring(self.L, -1)}) catch ({});
             c.lua_pop(self.L, -1);
             return Error.loadStringFailed;
         }
@@ -41,7 +42,7 @@ pub const Lua = struct {
 
         var result = c.lua_pcall(self.L, 0, c.LUA_MULTRET, 0);
         if (result != 0) {
-            std.debug.print("Failed to run script: {s}", .{c.lua_tostring(self.L, -1)});
+            stdout.print("Failed to run script: {s}", .{c.lua_tostring(self.L, -1)}) catch ({});
             c.lua_pop(self.L, -1);
             return Error.scriptError;
         }

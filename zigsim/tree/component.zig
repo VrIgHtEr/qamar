@@ -1,4 +1,5 @@
 const std = @import("std");
+const stdout = std.io.getStdOut().writer();
 const Port = @import("port.zig").Port;
 const Net = @import("net.zig").Net;
 const digi = @import("../digisim.zig");
@@ -361,16 +362,16 @@ pub const Component = struct {
                     const port = self.digisim.ports.getPtr(p.key_ptr.*) orelse unreachable;
                     if (port.trace) {
                         port.alias = try self.digisim.idgen.refNewId(self.digisim);
-                        std.debug.print("$var wire {d} {s} {s} $end\n", .{ port.width(), port.alias orelse unreachable, port.name });
+                        stdout.print("$var wire {d} {s} {s} $end\n", .{ port.width(), port.alias orelse unreachable, port.name }) catch ({});
                     }
                 }
             } else {
                 var i = self.components.iterator();
                 while (i.next()) |c| {
                     const comp = self.digisim.components.getPtr(c.key_ptr.*) orelse unreachable;
-                    std.debug.print("$scope module {s} $end\n", .{comp.name});
+                    stdout.print("$scope module {s} $end\n", .{comp.name}) catch ({});
                     try comp.assignNames();
-                    std.debug.print("$upscope $end\n", .{});
+                    stdout.print("$upscope $end\n", .{}) catch ({});
                 }
             }
         }

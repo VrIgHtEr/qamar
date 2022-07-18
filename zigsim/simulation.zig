@@ -1,4 +1,5 @@
 const std = @import("std");
+const stdout = std.io.getStdOut().writer();
 const Allocator = std.mem.Allocator;
 const Component = @import("comp/component.zig").Component;
 const Port = @import("comp/port.zig").Port;
@@ -127,7 +128,7 @@ pub const Simulation = struct {
         }
 
         if (self.traceports.count() > 0) {
-            std.debug.print("#{d}\n", .{self.timestamp});
+            stdout.print("#{d}\n", .{self.timestamp}) catch ({});
             var i = self.traceports.keyIterator();
             while (i.next()) |p| {
                 p.*.trace();
