@@ -261,9 +261,17 @@ pub const Digisim = struct {
             if (v.value_ptr.isLeaf()) {
                 var j = v.value_ptr.ports.iterator();
                 var idx: usize = 0;
-                const cports = (cmap.get(v.key_ptr.*) orelse unreachable).ports;
+                const ccomp = cmap.get(v.key_ptr.*) orelse unreachable;
+                ccomp.numInputs = 0;
+                ccomp.numOutputs = 0;
+                const cports = ccomp.ports;
                 while (j.next()) |e| {
                     const port = self.ports.getPtr(e.key_ptr.*) orelse unreachable;
+                    if (port.input) {
+                        ccomp.numInputs += port.pins.len;
+                    } else {
+                        ccomp.numOutputs += port.pins.len;
+                    }
                     ports[ret].pins = try self.allocator.alloc(CompiledPin, port.pins.len);
                     errdefer self.allocator.free(ports[ret].pins);
                     ports[ret].alias = port.alias;

@@ -13,6 +13,7 @@ pub const Simulation = struct {
     nets: []Net,
     components: []Component,
     ports: []Port,
+    dirtyNets: std.AutoHashMap(*Net, void),
     dirty: std.AutoHashMap(*Component, void),
     nextdirty: std.AutoHashMap(*Component, void),
     inputs: std.ArrayList(Signal),
@@ -34,10 +35,13 @@ pub const Simulation = struct {
         errdefer self.inputs.deinit();
         self.outputs = std.ArrayList(Signal).init(digisim.allocator);
         errdefer self.outputs.deinit();
+        self.dirtyNets = std.AutoHashMap(*Net, void).init(digisim.allocator);
+        errdefer self.outputs.deinit();
         return self;
     }
 
     pub fn deinit(self: *@This()) void {
+        self.dirtyNets.deinit();
         self.inputs.deinit();
         self.outputs.deinit();
         self.nextdirty.deinit();
@@ -53,8 +57,9 @@ pub const Simulation = struct {
 
     pub fn step(self: *@This()) bool {
         var iter = self.dirty.iterator();
+        self.dirtyNets.clearRetainingCapacity();
         while (iter.next()) |e| {
-            const component = e.key_ptr;
+            const component = e.key_ptr.*;
             self.inputs.clearRetainingCapacity();
             self.outputs.clearRetainingCapacity();
             //generate inputs
