@@ -24,6 +24,7 @@ pub fn main() !u8 {
         try cmp.connect("output", "input");
         var compiled = try sim.compile();
         defer compiled.deinit();
+        _ = compiled.step();
         return 0;
     }
     return 1;

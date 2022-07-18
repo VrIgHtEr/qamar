@@ -328,6 +328,7 @@ pub const Digisim = struct {
             try map.put(e.key_ptr.*, &cnets[ret]);
             cnets[ret].tracelist = null;
             cnets[ret].sensitivitylist = null;
+            cnets[ret].driverlist = null;
             ret += 1;
         }
     }
@@ -359,10 +360,8 @@ pub const Digisim = struct {
         }
     }
 
-    const SensitivityListCollection = std.AutoHashMap(t.Id, std.AutoHashMap(*CompiledComponent, void));
-
     fn buildSensitivityLists(self: *@This(), cmap: *ComponentMap, nmap: *NetMap) !void {
-        var sensitivityLists = SensitivityListCollection.init(self.allocator);
+        var sensitivityLists = std.AutoHashMap(t.Id, std.AutoHashMap(*CompiledComponent, void)).init(self.allocator);
         defer ({
             var i = sensitivityLists.iterator();
             while (i.next()) |a| a.value_ptr.deinit();
@@ -375,15 +374,17 @@ pub const Digisim = struct {
                     var j = v.value_ptr.ports.iterator();
                     while (j.next()) |e| {
                         const port = self.ports.getPtr(e.key_ptr.*) orelse unreachable;
-                        for (port.pins) |*pin| {
-                            var map: *std.AutoHashMap(*CompiledComponent, void) = undefined;
-                            if (sensitivityLists.getPtr(pin.net)) |p| {
-                                map = p;
-                            } else {
-                                try sensitivityLists.put(pin.net, std.AutoHashMap(*CompiledComponent, void).init(self.allocator));
-                                map = sensitivityLists.getPtr(pin.net) orelse unreachable;
+                        if (port.input) {
+                            for (port.pins) |*pin| {
+                                var map: *std.AutoHashMap(*CompiledComponent, void) = undefined;
+                                if (sensitivityLists.getPtr(pin.net)) |p| {
+                                    map = p;
+                                } else {
+                                    try sensitivityLists.put(pin.net, std.AutoHashMap(*CompiledComponent, void).init(self.allocator));
+                                    map = sensitivityLists.getPtr(pin.net) orelse unreachable;
+                                }
+                                try map.put(cmap.get(v.value_ptr.id) orelse unreachable, .{});
                             }
-                            try map.put(cmap.get(v.value_ptr.id) orelse unreachable, .{});
                         }
                     }
                 }
@@ -402,6 +403,53 @@ pub const Digisim = struct {
                     idx += 1;
                 }
                 cnet.sensitivitylist = list;
+            }
+        }
+    }
+
+    fn buildTraceLists(self: *@This(), pmap: *PortMap, nmap: *NetMap) !void {
+        _ = self;
+        _ = pmap;
+        _ = nmap;
+    }
+
+    fn buildDriverLists(self: *@This(), pmap: *PortMap, nmap: *NetMap) !void {
+        var driverLists = std.AutoHashMap(t.Id, std.ArrayList(*CompiledPin)).init(self.allocator);
+        defer ({
+            var i = driverLists.iterator();
+            while (i.next()) |a| a.value_ptr.deinit();
+            driverLists.deinit();
+        });
+        {
+            var i = self.components.iterator();
+            while (i.next()) |v| {
+                if (v.value_ptr.isLeaf()) {
+                    var j = v.value_ptr.ports.iterator();
+                    while (j.next()) |e| {
+                        const port = self.ports.getPtr(e.key_ptr.*) orelse unreachable;
+                        if (!port.input) {
+                            const cport = pmap.get(port.id) orelse unreachable;
+                            for (port.pins) |*pin, idx| {
+                                var map: *std.ArrayList(*CompiledPin) = undefined;
+                                if (driverLists.getPtr(pin.net)) |p| {
+                                    map = p;
+                                } else {
+                                    try driverLists.put(pin.net, std.ArrayList(*CompiledPin).init(self.allocator));
+                                    map = driverLists.getPtr(pin.net) orelse unreachable;
+                                }
+                                try map.append(&cport.pins[idx]);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        {
+            var i = driverLists.iterator();
+            while (i.next()) |e| {
+                const cnet = nmap.get(e.key_ptr.*) orelse unreachable;
+                try e.value_ptr.ensureTotalCapacityPrecise(e.value_ptr.items.len);
+                cnet.driverlist = e.value_ptr.toOwnedSlice();
             }
         }
     }
@@ -436,13 +484,11 @@ pub const Digisim = struct {
         defer netMap.deinit();
         try self.populateNets(nets, &netMap);
         errdefer for (nets) |*e| e.deinit(self.allocator);
-
         self.populatePins(&portMap, &netMap);
-
         try self.buildSensitivityLists(&componentMap, &netMap);
+        try self.buildTraceLists(&portMap, &netMap);
+        try self.buildDriverLists(&portMap, &netMap);
 
-        var sim = try Simulation.init(self.allocator, nets, components, ports);
-        _ = sim.step();
-        return sim;
+        return try Simulation.init(self.allocator, nets, components, ports);
     }
 };
