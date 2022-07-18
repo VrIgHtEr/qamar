@@ -190,8 +190,11 @@ pub const Digisim = struct {
     const CompiledPin = @import("comp/pin.zig").Pin;
     const CompiledNet = @import("comp/net.zig").Net;
     const Simulation = @import("comp/simulation.zig").Simulation;
+    const NetMap = std.AutoHashMap(t.Id, *CompiledNet);
+    const ComponentMap = std.AutoHashMap(t.Id, *CompiledComponent);
+    const PortMap = std.AutoHashMap(t.Id, *CompiledPort);
 
-    fn populateComponents(self: *@This(), components: []CompiledComponent, map: *std.AutoHashMap(t.Id, *CompiledComponent)) !void {
+    fn populateComponents(self: *@This(), components: []CompiledComponent, map: *ComponentMap) !void {
         var ret: usize = 0;
         errdefer while (ret > 0) {
             ret -= 1;
@@ -226,7 +229,7 @@ pub const Digisim = struct {
         return ret;
     }
 
-    fn populatePorts(self: *@This(), ports: []CompiledPort, map: *std.AutoHashMap(t.Id, *CompiledPort), cmap: *std.AutoHashMap(t.Id, *CompiledComponent)) !void {
+    fn populatePorts(self: *@This(), ports: []CompiledPort, map: *PortMap, cmap: *ComponentMap) !void {
         var ret: usize = 0;
         errdefer while (ret > 0) {
             ret -= 1;
@@ -290,7 +293,7 @@ pub const Digisim = struct {
         return nets.count();
     }
 
-    fn populateNets(self: *@This(), cnets: []CompiledNet, map: *std.AutoHashMap(t.Id, *CompiledNet)) !void {
+    fn populateNets(self: *@This(), cnets: []CompiledNet, map: *NetMap) !void {
         var nets = std.AutoHashMap(t.Id, void).init(self.allocator);
         defer nets.deinit();
         var i = self.components.iterator();
@@ -323,11 +326,13 @@ pub const Digisim = struct {
         var j = nets.iterator();
         while (j.next()) |e| {
             try map.put(e.key_ptr.*, &cnets[ret]);
+            cnets[ret].tracelist = null;
+            cnets[ret].sensitivitylist = null;
             ret += 1;
         }
     }
 
-    fn populatePins(self: *@This(), pmap: *std.AutoHashMap(t.Id, *CompiledPort), nmap: *std.AutoHashMap(t.Id, *CompiledNet)) void {
+    fn populatePins(self: *@This(), pmap: *PortMap, nmap: *NetMap) void {
         var i = self.components.iterator();
         while (i.next()) |v| {
             if (v.value_ptr.isLeaf()) {
@@ -354,6 +359,53 @@ pub const Digisim = struct {
         }
     }
 
+    const SensitivityListCollection = std.AutoHashMap(t.Id, std.AutoHashMap(*CompiledComponent, void));
+
+    fn buildSensitivityLists(self: *@This(), cmap: *ComponentMap, nmap: *NetMap) !void {
+        var sensitivityLists = SensitivityListCollection.init(self.allocator);
+        defer ({
+            var i = sensitivityLists.iterator();
+            while (i.next()) |a| a.value_ptr.deinit();
+            sensitivityLists.deinit();
+        });
+        {
+            var i = self.components.iterator();
+            while (i.next()) |v| {
+                if (v.value_ptr.isLeaf()) {
+                    var j = v.value_ptr.ports.iterator();
+                    while (j.next()) |e| {
+                        const port = self.ports.getPtr(e.key_ptr.*) orelse unreachable;
+                        for (port.pins) |*pin| {
+                            var map: *std.AutoHashMap(*CompiledComponent, void) = undefined;
+                            if (sensitivityLists.getPtr(pin.net)) |p| {
+                                map = p;
+                            } else {
+                                try sensitivityLists.put(pin.net, std.AutoHashMap(*CompiledComponent, void).init(self.allocator));
+                                map = sensitivityLists.getPtr(pin.net) orelse unreachable;
+                            }
+                            try map.put(cmap.get(v.value_ptr.id) orelse unreachable, .{});
+                        }
+                    }
+                }
+            }
+        }
+        {
+            var i = sensitivityLists.iterator();
+            while (i.next()) |e| {
+                const cnet = nmap.get(e.key_ptr.*) orelse unreachable;
+                const list = try self.allocator.alloc(*CompiledComponent, e.value_ptr.count());
+                errdefer self.allocator.free(list);
+                var idx: usize = 0;
+                var j = e.value_ptr.iterator();
+                while (j.next()) |f| {
+                    list[idx] = f.key_ptr.*;
+                    idx += 1;
+                }
+                cnet.sensitivitylist = list;
+            }
+        }
+    }
+
     pub fn compile(self: *@This()) !*Simulation {
         if (self.components.count() == 0) return Error.EmptySimulation;
         try self.checkLeafNodes();
@@ -366,26 +418,28 @@ pub const Digisim = struct {
 
         var components = try self.allocator.alloc(CompiledComponent, self.countComponentsToCompile());
         errdefer self.allocator.free(components);
-        var componentMap = std.AutoHashMap(t.Id, *CompiledComponent).init(self.allocator);
+        var componentMap = ComponentMap.init(self.allocator);
         defer componentMap.deinit();
         try self.populateComponents(components, &componentMap);
         errdefer for (components) |*e| e.deinit(self.allocator);
 
         var ports = try self.allocator.alloc(CompiledPort, self.countPortsToCompile());
         errdefer self.allocator.free(ports);
-        var portMap = std.AutoHashMap(t.Id, *CompiledPort).init(self.allocator);
+        var portMap = PortMap.init(self.allocator);
         defer portMap.deinit();
         try self.populatePorts(ports, &portMap, &componentMap);
         errdefer for (ports) |*e| e.deinit(self.allocator);
 
         var nets = try self.allocator.alloc(CompiledNet, try self.countNetsToCompile());
         errdefer self.allocator.free(nets);
-        var netMap = std.AutoHashMap(t.Id, *CompiledNet).init(self.allocator);
+        var netMap = NetMap.init(self.allocator);
         defer netMap.deinit();
         try self.populateNets(nets, &netMap);
         errdefer for (nets) |*e| e.deinit(self.allocator);
 
         self.populatePins(&portMap, &netMap);
+
+        try self.buildSensitivityLists(&componentMap, &netMap);
 
         var sim = try Simulation.init(self.allocator, nets, components, ports);
         _ = sim.step();
