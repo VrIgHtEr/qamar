@@ -389,6 +389,33 @@ pub const Digisim = struct {
         }
     }
 
+    fn populatePins(self: *@This(), pmap: *std.AutoHashMap(t.Id, *CompiledPort), nmap: *std.AutoHashMap(t.Id, *CompiledNet)) void {
+        var i = self.components.iterator();
+        while (i.next()) |v| {
+            if (v.value_ptr.isLeaf()) {
+                var j = v.value_ptr.ports.iterator();
+                while (j.next()) |e| {
+                    const port = self.ports.getPtr(e.key_ptr.*) orelse unreachable;
+                    const cport = pmap.get(port.id) orelse unreachable;
+                    for (port.pins) |*pin, idx| {
+                        cport.pins[idx].net = nmap.get(pin.net) orelse unreachable;
+                    }
+                }
+            } else {
+                var j = v.value_ptr.ports.iterator();
+                while (j.next()) |je| {
+                    const port = self.ports.getPtr(je.key_ptr.*) orelse unreachable;
+                    if (port.trace) {
+                        const cport = pmap.get(port.id) orelse unreachable;
+                        for (port.pins) |*pin, idx| {
+                            cport.pins[idx].net = nmap.get(pin.net) orelse unreachable;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     pub fn compile(self: *@This()) !*Simulation {
         if (self.components.count() == 0) return Error.EmptySimulation;
         try self.checkLeafNodes();
@@ -397,6 +424,7 @@ pub const Digisim = struct {
         self.checkTraces();
         try self.assignNames();
         try self.flatten();
+        try self.purgeBranches();
 
         var components = try self.allocator.alloc(CompiledComponent, self.countComponentsToCompile());
         errdefer self.allocator.free(components);
@@ -419,7 +447,8 @@ pub const Digisim = struct {
         try self.populateNets(nets, &netMap);
         errdefer for (nets) |*e| e.deinit(self.allocator);
 
-        try self.purgeBranches();
+        self.populatePins(&portMap, &netMap);
+
         var sim = try Simulation.init(self.allocator, nets, components, ports);
         _ = sim.step();
         return sim;
