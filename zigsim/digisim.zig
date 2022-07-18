@@ -167,7 +167,6 @@ pub const Digisim = struct {
                 if (port.trace) try ports.append(port.id);
             }
             for (ports.items) |portid| {
-                (self.ports.getPtr(portid) orelse unreachable).phantom = true;
                 try self.root.ports.put(portid, .{});
                 _ = branch.ports.swapRemove(portid);
             }
@@ -175,73 +174,6 @@ pub const Digisim = struct {
             branch.deinit();
         }
     }
-
-    pub const Simulation = struct {
-        allocator: Allocator,
-        nets: []CompiledNet,
-        components: []CompiledComponent,
-        ports: []CompiledPort,
-        dirty: std.AutoHashMap(*CompiledComponent, void),
-
-        pub fn init(allocator: Allocator, numNets: []CompiledNet, numComponents: []CompiledComponent, numPorts: []CompiledPort) !*@This() {
-            const self = try allocator.create(@This());
-            errdefer allocator.destroy(self);
-            self.allocator = allocator;
-            self.nets = numNets;
-            self.components = numComponents;
-            self.ports = numPorts;
-            self.dirty = @TypeOf(self.dirty).init(allocator);
-            return self;
-        }
-
-        pub fn deinit(self: *@This()) void {
-            self.dirty.deinit();
-            for (self.components) |*p| p.deinit(self.allocator);
-            self.allocator.free(self.components);
-            for (self.nets) |*p| p.deinit(self.allocator);
-            self.allocator.free(self.nets);
-            for (self.ports) |*p| p.deinit(self.allocator);
-            self.allocator.free(self.ports);
-            self.allocator.destroy(self);
-        }
-
-        pub fn step(self: *@This()) bool {
-            var iter = self.dirty.iterator();
-            while (iter.next()) |e| {
-                const component = e.key_ptr;
-                _ = component;
-            }
-            return self.dirty.count() == 0;
-        }
-    };
-
-    const CompiledPin = struct { net: *CompiledNet };
-
-    const CompiledPort = struct {
-        pins: []CompiledPin,
-
-        fn deinit(self: *@This(), allocator: Allocator) void {
-            allocator.free(self.pins);
-        }
-    };
-
-    const CompiledComponent = struct {
-        ports: []*CompiledPort,
-
-        fn deinit(self: *@This(), allocator: Allocator) void {
-            allocator.free(self.ports);
-        }
-    };
-
-    const CompiledNet = struct {
-        sensitivitylist: []*CompiledComponent,
-        tracelist: []*CompiledPort,
-
-        fn deinit(self: *@This(), allocator: Allocator) void {
-            _ = self;
-            _ = allocator;
-        }
-    };
 
     fn countComponentsToCompile(self: *@This()) usize {
         var ret: usize = 0;
@@ -252,6 +184,12 @@ pub const Digisim = struct {
         }
         return ret;
     }
+
+    const CompiledComponent = @import("comp/component.zig").Component;
+    const CompiledPort = @import("comp/port.zig").Port;
+    const CompiledPin = @import("comp/pin.zig").Pin;
+    const CompiledNet = @import("comp/net.zig").Net;
+    const Simulation = @import("comp/simulation.zig").Simulation;
 
     fn populateComponents(self: *@This(), components: []CompiledComponent, map: *std.AutoHashMap(t.Id, *CompiledComponent)) !void {
         var ret: usize = 0;

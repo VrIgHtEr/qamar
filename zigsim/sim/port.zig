@@ -14,7 +14,6 @@ pub const Port = struct {
     input: bool,
     start: usize,
     end: usize,
-    phantom: bool,
     trace: bool,
 
     pub fn init(digisim: *Digisim, name: []const u8, input: bool, start: usize, end: usize, trace: bool) !@This() {
@@ -23,7 +22,6 @@ pub const Port = struct {
         if (end < start) return Err.InvalidPortSize;
         self.id = digisim.nextId();
         self.input = input;
-        self.phantom = false;
         self.start = start;
         self.end = end;
         self.name = name;
