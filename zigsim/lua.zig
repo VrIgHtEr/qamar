@@ -46,6 +46,84 @@ pub const Lua = struct {
             c.lua_pop(self.L, -1);
             return Error.scriptError;
         }
+        c.lua_pop(self.L, -1);
+    }
+
+    pub fn pushnil(self: *@This()) void {
+        c.lua_pushnil(self.L);
+    }
+
+    pub fn setglobal(self: *@This(), glob: [:0]const u8) void {
+        c.lua_setglobal(self.L, glob);
+    }
+
+    pub fn getglobal(self: *@This(), glob: [:0]const u8) void {
+        c.lua_getglobal(self.L, glob);
+    }
+
+    pub fn pushstring(self: *@This(), glob: [:0]const u8) void {
+        c.lua_pushstring(self.L, glob);
+    }
+
+    pub fn pushlstring(self: *@This(), glob: []const u8) void {
+        c.lua_pushlstring(self.L, glob.ptr, glob.len);
+    }
+
+    pub fn gettable(self: *@This(), pos: c_int) void {
+        c.lua_gettable(self.L, pos);
+    }
+
+    pub fn isstring(self: *@This(), pos: c_int) bool {
+        return c.lua_isstring(self.L, pos) != 0;
+    }
+
+    pub fn pop(self: *@This(), pos: c_int) void {
+        c.lua_pop(self.L, pos);
+    }
+
+    pub fn tolstring(self: *@This(), pos: c_int, len: *usize) [:0]const u8 {
+        return std.mem.span(c.lua_tolstring(self.L, pos, len));
+    }
+
+    pub fn rawset(self: *@This(), pos: c_int) void {
+        c.lua_rawset(self.L, pos);
+    }
+
+    fn prependLuaPath(self: *@This(), prefix: []const u8) !void {
+        self.getglobal("package");
+        self.pushstring("path");
+        self.gettable(-2);
+        if (self.isstring(-1)) {
+            var len: usize = undefined;
+            const path = self.tolstring(-1, &len);
+            const concatenated = try std.mem.concat(std.heap.c_allocator, u8, &[_][]const u8{ prefix, ";", path });
+            defer std.heap.c_allocator.free(concatenated);
+            std.debug.print("{s}\n", .{concatenated});
+            self.pop(1);
+            self.pushstring("path");
+            self.pushlstring(concatenated);
+            self.rawset(-3);
+            self.pop(1);
+        } else {
+            self.pop(2);
+        }
+    }
+    pub fn setupenv(self: *@This(), root: [:0]const u8) !void {
+        //prepend_lua_path(L, "./lua/?.lua;./lua/?/init.lua;");
+        {
+            const len = std.mem.len(root);
+            var str = try std.fs.path.join(std.heap.c_allocator, &[_][]const u8{ root[0..len], "?/init.lua" });
+            defer std.heap.c_allocator.free(str);
+            try self.prependLuaPath(str);
+        }
+        {
+            const len = std.mem.len(root);
+            var str = try std.fs.path.join(std.heap.c_allocator, &[_][]const u8{ root[0..len], "?.lua" });
+            defer std.heap.c_allocator.free(str);
+            try self.prependLuaPath(str);
+        }
+        self.pushnil();
+        self.setglobal("package");
     }
 
     pub fn createComponentContext() void {}

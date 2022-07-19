@@ -19,8 +19,7 @@ pub fn main() !u8 {
         _ = try cmp.addPort("output", false, 0, 0, true);
         try cmp.connect("output", "input[0]");
         try cmp.connect("output", "input[1]");
-        while (true)
-            _ = try sim.step();
+        _ = try sim.step();
         return 0;
     }
     return 1;

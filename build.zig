@@ -16,12 +16,11 @@ pub fn build(b: *std.build.Builder) void {
     if (b.args) |args| {
         run_cmd.addArgs(args);
     }
-    var opts = std.build.InstallDirectoryOptions{
+    b.installDirectory(.{
         .source_dir = "zigsim/lua",
         .install_dir = std.build.InstallDir{ .custom = "share" },
         .install_subdir = "digisim",
-    };
-    b.installDirectory(opts);
+    });
 
     const run_step = b.step("run", "Run the app");
     run_step.dependOn(&run_cmd.step);

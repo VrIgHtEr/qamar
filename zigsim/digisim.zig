@@ -11,6 +11,11 @@ const root_name: []const u8 = "__ROOT__";
 const Signal = @import("signal.zig").Signal;
 const stdout = std.io.getStdOut().writer();
 const Lua = @import("lua.zig").Lua;
+const stdlib = @cImport({
+    @cInclude("stdlib.h");
+});
+
+const relpath = "../share/digisim";
 
 fn HashMap(comptime T: type) type {
     return std.AutoArrayHashMap(usize, T);
@@ -35,6 +40,7 @@ pub const Error = error{
     FaultedState,
     SimulationLocked,
     InvalidRootNode,
+    InitializationFailed,
 };
 
 pub const Digisim = struct {
@@ -72,8 +78,23 @@ pub const Digisim = struct {
         self.lua = try Lua.init();
         errdefer self.lua.deinit();
         self.lua.openlibs();
+        const str = stdlib.realpath("/proc/self/exe", 0);
+        if (str) |s| {
+            defer stdlib.free(s);
+            const dirname = std.fs.path.dirname(std.mem.span(s));
+            if (dirname) |dname| {
+                const luapath = try std.fs.path.joinZ(allocator, &[_][]const u8{ dname, "/", relpath });
+                defer allocator.free(luapath);
+                const finalLuaPath = stdlib.realpath(luapath, 0);
+                if (finalLuaPath) |p| {
+                    defer stdlib.free(p);
+                    try self.lua.setupenv(std.mem.span(finalLuaPath));
+                }
+            }
+        } else return Error.InitializationFailed;
         return self;
     }
+
     fn deinitRoot(self: *@This()) void {
         self.root.deinit();
         self.nets.deinit();
