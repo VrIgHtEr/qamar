@@ -52,6 +52,7 @@ pub const Digisim = struct {
     ports: HashMap(Port),
     nets: HashMap(Net),
     idgen: IdGen,
+    faulted: bool,
     locked: bool,
     compiled: ?*Simulation,
     lua: Lua,
@@ -59,6 +60,7 @@ pub const Digisim = struct {
     pub fn init(allocator: Allocator) !*@This() {
         var self: *@This() = try allocator.create(@This());
         errdefer allocator.destroy(self);
+        self.faulted = false;
         self.allocator = allocator;
         self.id = 0;
         self.locked = false;
@@ -95,7 +97,14 @@ pub const Digisim = struct {
         return self;
     }
 
+    pub fn checkFaulted(self: *@This()) !void {
+        if (self.locked and self.compiled == null) self.faulted = true;
+        if (self.faulted) return Error.FaultedState;
+    }
+
     pub fn runLuaSetup(self: *@This()) !void {
+        errdefer self.faulted = true;
+        try self.checkFaulted();
         try self.lua.execute("require 'init'");
     }
 
@@ -125,13 +134,14 @@ pub const Digisim = struct {
     }
 
     pub fn step(self: *@This()) !bool {
-        if (self.locked) {
-            if (self.compiled == null) return Error.FaultedState;
-        } else try self.compile();
+        errdefer self.faulted = true;
+        try self.checkFaulted();
+        if (!self.locked) try self.compile();
         return (self.compiled orelse unreachable).step();
     }
 
     pub fn addComponent(self: *@This(), name: []const u8) !usize {
+        try self.checkFaulted();
         return self.root.addComponent(name);
     }
 
@@ -586,10 +596,8 @@ pub const Digisim = struct {
     }
 
     fn compile(self: *@This()) !void {
-        if (self.locked) {
-            if (self.compiled == null) return Error.FaultedState;
-            return;
-        }
+        try self.checkFaulted();
+        if (self.locked) return;
         if (self.components.count() == 0) return Error.EmptySimulation;
         if (self.root.isLeaf()) return Error.InvalidRootNode;
         try self.checkLeafNodes();
