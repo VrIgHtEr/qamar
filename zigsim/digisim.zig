@@ -75,7 +75,7 @@ pub const Digisim = struct {
         errdefer self.root.deinit();
         self.idgen = try IdGen.init(allocator);
         errdefer self.idgen.deinit();
-        self.lua = try Lua.init();
+        self.lua = try Lua.init(self);
         errdefer self.lua.deinit();
         self.lua.openlibs();
         const str = stdlib.realpath("/proc/self/exe", 0);
@@ -93,6 +93,10 @@ pub const Digisim = struct {
             }
         } else return Error.InitializationFailed;
         return self;
+    }
+
+    pub fn runLuaSetup(self: *@This()) !void {
+        try self.lua.execute("require 'init'");
     }
 
     fn deinitRoot(self: *@This()) void {

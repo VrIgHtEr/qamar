@@ -10,6 +10,7 @@ pub fn main() !u8 {
 
     var sim = try Digisim.init(allocator);
     defer sim.deinit();
+    try sim.runLuaSetup();
 
     _ = try sim.addComponent("core");
     const comp = try sim.getComponent("core");

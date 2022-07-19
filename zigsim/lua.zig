@@ -10,14 +10,27 @@ const c = @cImport({
 });
 
 pub const State = *c.lua_State;
-pub const Error = error{ cannotInitialize, loadStringFailed, scriptError };
+const LuaFunc = fn (?State) callconv(.C) c_int;
+const Digisim = @import("digisim.zig").Digisim;
+pub const Error = error{ CannotInitialize, LoadStringFailed, ScriptError };
 pub const Lua = struct {
+    digisim: *Digisim,
     L: State,
 
-    pub fn init() Error!Lua {
+    pub fn init(digisim: *Digisim) Error!Lua {
         var ret: @This() = undefined;
-        ret.L = c.luaL_newstate() orelse return Error.cannotInitialize;
+        ret.digisim = digisim;
+        ret.L = c.luaL_newstate() orelse return Error.CannotInitialize;
         return ret;
+    }
+
+    pub fn pushcfunction(self: *@This(), func: LuaFunc) void {
+        c.lua_pushcfunction(self.L, func);
+    }
+
+    pub fn pushglobalcfunction(self: *@This(), name: [:0]const u8, func: LuaFunc) void {
+        self.pushcfunction(func);
+        self.setglobal(name);
     }
 
     pub fn deinit(self: *@This()) void {
@@ -33,7 +46,7 @@ pub const Lua = struct {
         if (status != 0) {
             stdout.print("Couldn't load string: {s}", .{c.lua_tostring(self.L, -1)}) catch ({});
             c.lua_pop(self.L, -1);
-            return Error.loadStringFailed;
+            return Error.LoadStringFailed;
         }
     }
 
@@ -44,7 +57,7 @@ pub const Lua = struct {
         if (result != 0) {
             stdout.print("Failed to run script: {s}", .{c.lua_tostring(self.L, -1)}) catch ({});
             c.lua_pop(self.L, -1);
-            return Error.scriptError;
+            return Error.ScriptError;
         }
         c.lua_pop(self.L, -1);
     }
@@ -98,7 +111,6 @@ pub const Lua = struct {
             const path = self.tolstring(-1, &len);
             const concatenated = try std.mem.concat(std.heap.c_allocator, u8, &[_][]const u8{ prefix, ";", path });
             defer std.heap.c_allocator.free(concatenated);
-            std.debug.print("{s}\n", .{concatenated});
             self.pop(1);
             self.pushstring("path");
             self.pushlstring(concatenated);
@@ -109,7 +121,6 @@ pub const Lua = struct {
         }
     }
     pub fn setupenv(self: *@This(), root: [:0]const u8) !void {
-        //prepend_lua_path(L, "./lua/?.lua;./lua/?/init.lua;");
         {
             const len = std.mem.len(root);
             var str = try std.fs.path.join(std.heap.c_allocator, &[_][]const u8{ root[0..len], "?/init.lua" });
@@ -125,6 +136,4 @@ pub const Lua = struct {
         self.pushnil();
         self.setglobal("package");
     }
-
-    pub fn createComponentContext() void {}
 };
