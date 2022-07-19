@@ -18,7 +18,7 @@ pub fn build(b: *std.build.Builder) void {
     }
     var opts = std.build.InstallDirectoryOptions{
         .source_dir = "zigsim/lua",
-        .install_dir = std.build.InstallDir{ .custom = "share/local" },
+        .install_dir = std.build.InstallDir{ .custom = "share" },
         .install_subdir = "digisim",
     };
     b.installDirectory(opts);
