@@ -8,12 +8,6 @@ pub fn main() !u8 {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
 
-    var lua = try Lua.init();
-    defer lua.deinit();
-    lua.openlibs();
-
-    try lua.execute(@embedFile("main.lua"));
-
     var sim = try Digisim.init(allocator);
     defer sim.deinit();
 

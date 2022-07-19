@@ -47,4 +47,6 @@ pub const Lua = struct {
             return Error.scriptError;
         }
     }
+
+    pub fn createComponentContext() void {}
 };

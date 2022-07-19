@@ -10,6 +10,7 @@ const stringIntern = @import("stringIntern.zig");
 const root_name: []const u8 = "__ROOT__";
 const Signal = @import("signal.zig").Signal;
 const stdout = std.io.getStdOut().writer();
+const Lua = @import("lua.zig").Lua;
 
 fn HashMap(comptime T: type) type {
     return std.AutoArrayHashMap(usize, T);
@@ -47,6 +48,7 @@ pub const Digisim = struct {
     idgen: IdGen,
     locked: bool,
     compiled: ?*Simulation,
+    lua: Lua,
 
     pub fn init(allocator: Allocator) !*@This() {
         var self: *@This() = try allocator.create(@This());
@@ -67,6 +69,9 @@ pub const Digisim = struct {
         errdefer self.root.deinit();
         self.idgen = try IdGen.init(allocator);
         errdefer self.idgen.deinit();
+        self.lua = try Lua.init();
+        errdefer self.lua.deinit();
+        self.lua.openlibs();
         return self;
     }
     fn deinitRoot(self: *@This()) void {
@@ -84,6 +89,7 @@ pub const Digisim = struct {
             self.deinitRoot();
         }
         self.strings.deinit();
+        self.lua.deinit();
         self.allocator.destroy(self);
     }
 
