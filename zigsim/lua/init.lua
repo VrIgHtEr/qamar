@@ -14,7 +14,14 @@ function Component.new(id)
 	return setmetatable({ id = math.floor(id) }, Component_MT)
 end
 
-local base_env = { math = math, pairs = pairs, ipairs = ipairs, getfenv = getfenv, tostring = tostring, print = print }
+local base_env = {
+	math = math,
+	pairs = pairs,
+	ipairs = ipairs,
+	getfenv = getfenv,
+	tostring = tostring,
+	print = print,
+}
 local env_mt = { __index = base_env }
 
 local function create_env(id)
@@ -26,11 +33,16 @@ local function create_env(id)
 end
 
 function Component:construct(constructor, ...)
-	local c = function(...)
-		setfenv(constructor, create_env(self.id))
-		return constructor(...)
+	local old_env = getfenv(constructor)
+	setfenv(constructor, create_env(self.id))
+	local ret = { pcall(constructor, ...) }
+	setfenv(constructor, old_env)
+	if ret[1] then
+		table.remove(ret, 1)
+		return unpack(ret)
+	else
+		error(ret[2])
 	end
-	return c(...)
 end
 
 return Component

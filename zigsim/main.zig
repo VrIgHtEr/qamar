@@ -3,15 +3,19 @@ const Lua = @import("lua.zig").Lua;
 const std = @import("std");
 const Digisim = @import("digisim.zig").Digisim;
 const components = @import("./tree/component.zig").components;
+const process = std.process;
+const io = std.io;
 
 pub fn main() !u8 {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
+    defer _ = gpa.deinit();
 
+    var args = try process.argsWithAllocator(allocator);
+    defer args.deinit();
     var sim = try Digisim.init(allocator);
     defer sim.deinit();
     try sim.runLuaSetup();
-
     _ = try sim.addComponent("core");
     const comp = try sim.getComponent("core");
     if (comp) |cmp| {
@@ -24,4 +28,10 @@ pub fn main() !u8 {
         return 0;
     }
     return 1;
+}
+
+fn nextArg(args: [][]const u8, idx: *usize) ?[]const u8 {
+    if (idx.* >= args.len) return null;
+    defer idx.* += 1;
+    return args[idx.*];
 }

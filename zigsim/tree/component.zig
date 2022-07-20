@@ -106,6 +106,7 @@ pub const Component = struct {
             const entry = self.digisim.ports.getPtr(e.key_ptr.*) orelse unreachable;
             entry.deinit();
         }
+        self.components.deinit();
         self.ports.deinit();
         self.digisim.strings.unref(self.name);
         _ = self.digisim.components.swapRemove(self.id);
