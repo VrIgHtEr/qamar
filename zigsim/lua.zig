@@ -26,9 +26,31 @@ pub const Lua = struct {
         return @intToPtr(*Digisim, @ptrToInt(v));
     }
 
-    pub fn lua_version(L: ?State) callconv(.C) c_int {
+    fn lua_version(L: ?State) callconv(.C) c_int {
         const l = &getInstance(L).lua;
         l.pushlstring("0.1.0");
+        return 1;
+    }
+
+    fn lua_createcomponent(L: ?State) callconv(.C) c_int {
+        const digisim = getInstance(L);
+        const lua = &digisim.lua;
+        const args = lua.gettop();
+        if (args < 1) {
+            lua.pushlstring("invalid number of arguments passed to createcomponent");
+            lua.err();
+        }
+        if (!lua.isstring(-1)) {
+            lua.pushlstring("first argument to createcomponent was not a string");
+            lua.err();
+        }
+        const str = lua.tolstring(-1);
+        const id = digisim.addComponent(str) catch ({
+            lua.pushlstring("failed to create component");
+            lua.err();
+            return 0;
+        });
+        lua.pushnumber(@bitCast(f64, id));
         return 1;
     }
 
@@ -43,8 +65,20 @@ pub const Lua = struct {
         self.pushlightuserdata(digisim);
         self.pushcclosure(lua_version, 1);
         self.settable(-3);
+        self.pushlstring("createcomponent");
+        self.pushlightuserdata(digisim);
+        self.pushcclosure(lua_createcomponent, 1);
+        self.settable(-3);
         self.setglobal("digisim");
         return self;
+    }
+
+    pub fn err(self: *@This()) void {
+        _ = c.lua_error(self.L);
+    }
+
+    pub fn gettop(self: *@This()) c_int {
+        return c.lua_gettop(self.L);
     }
 
     pub fn settable(self: *@This(), index: c_int) void {
@@ -61,6 +95,10 @@ pub const Lua = struct {
 
     pub fn pushcclosure(self: *@This(), func: LuaFunc, vals: c_int) void {
         c.lua_pushcclosure(self.L, func, vals);
+    }
+
+    pub fn pushnumber(self: *@This(), num: f64) void {
+        c.lua_pushnumber(self.L, num);
     }
 
     pub fn pushcfunction(self: *@This(), func: LuaFunc) void {
@@ -124,8 +162,10 @@ pub const Lua = struct {
         c.lua_pop(self.L, pos);
     }
 
-    pub fn tolstring(self: *@This(), pos: c_int, len: *usize) [:0]const u8 {
-        return std.mem.span(c.lua_tolstring(self.L, pos, len));
+    pub fn tolstring(self: *@This(), pos: c_int) []const u8 {
+        var len: usize = 0;
+        const str = c.lua_tolstring(self.L, pos, &len);
+        return str[0..len];
     }
 
     pub fn rawset(self: *@This(), pos: c_int) void {
@@ -137,8 +177,7 @@ pub const Lua = struct {
         self.pushstring("path");
         self.gettable(-2);
         if (self.isstring(-1)) {
-            var len: usize = undefined;
-            const path = self.tolstring(-1, &len);
+            const path = self.tolstring(-1);
             const concatenated = try std.mem.concat(std.heap.c_allocator, u8, &[_][]const u8{ prefix, ";", path });
             defer std.heap.c_allocator.free(concatenated);
             self.pop(1);

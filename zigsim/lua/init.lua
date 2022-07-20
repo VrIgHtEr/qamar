@@ -46,4 +46,6 @@ function Component:construct(constructor, ...)
 	end
 end
 
+digisim.createcomponent("core")
+
 return Component
