@@ -27,8 +27,7 @@ pub const Lua = struct {
     }
 
     fn lua_version(L: ?State) callconv(.C) c_int {
-        const l = &getInstance(L).lua;
-        l.pushlstring("0.1.0");
+        getInstance(L).lua.pushlstring("0.1.0");
         return 1;
     }
 
