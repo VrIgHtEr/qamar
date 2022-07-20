@@ -79,7 +79,6 @@ pub const Digisim = struct {
         errdefer self.idgen.deinit();
         self.lua = try Lua.init(self);
         errdefer self.lua.deinit();
-        self.lua.openlibs();
         const str = stdlib.realpath("/proc/self/exe", 0);
         if (str) |s| {
             defer stdlib.free(s);

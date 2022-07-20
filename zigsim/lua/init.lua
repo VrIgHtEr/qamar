@@ -26,9 +26,10 @@ local env_mt = { __index = base_env }
 
 local function create_env(id)
 	local env = setmetatable({}, env_mt)
-	function env.printid()
-		print(id)
-	end
+	--pub fn init(digisim: *Digisim, name: []const u8, input: bool, start: usize, end: usize, trace: bool) !@This() {
+	function env.input(name, pin_start, pin_end, trace) end
+	function env.output(name, pin_start, pin_end, trace) end
+	function env.connect(a, b) end
 	return env
 end
 

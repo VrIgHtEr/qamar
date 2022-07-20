@@ -17,28 +17,58 @@ pub const Lua = struct {
     digisim: *Digisim,
     L: State,
 
+    fn upvalueindex(x: c_int) c_int {
+        return -10002 - x;
+    }
+
+    fn getInstance(L: ?State) *Digisim {
+        const v = c.lua_touserdata(L orelse unreachable, upvalueindex(1));
+        return @intToPtr(*Digisim, @ptrToInt(v));
+    }
+
+    pub fn lua_version(L: ?State) callconv(.C) c_int {
+        const l = &getInstance(L).lua;
+        l.pushlstring("0.1.0");
+        return 1;
+    }
+
     pub fn init(digisim: *Digisim) Error!Lua {
-        var ret: @This() = undefined;
-        ret.digisim = digisim;
-        ret.L = c.luaL_newstate() orelse return Error.CannotInitialize;
-        return ret;
+        var self: @This() = undefined;
+        self.digisim = digisim;
+        self.L = c.luaL_newstate() orelse return Error.CannotInitialize;
+        errdefer c.lua_close(self.L);
+        c.luaL_openlibs(self.L);
+        self.newtable();
+        self.pushlstring("version");
+        self.pushlightuserdata(digisim);
+        self.pushcclosure(lua_version, 1);
+        self.settable(-3);
+        self.setglobal("digisim");
+        return self;
+    }
+
+    pub fn settable(self: *@This(), index: c_int) void {
+        c.lua_settable(self.L, index);
+    }
+
+    pub fn pushlightuserdata(self: *@This(), p: *anyopaque) void {
+        c.lua_pushlightuserdata(self.L, p);
+    }
+
+    pub fn newtable(self: *@This()) void {
+        c.lua_newtable(self.L);
+    }
+
+    pub fn pushcclosure(self: *@This(), func: LuaFunc, vals: c_int) void {
+        c.lua_pushcclosure(self.L, func, vals);
     }
 
     pub fn pushcfunction(self: *@This(), func: LuaFunc) void {
         c.lua_pushcfunction(self.L, func);
     }
 
-    pub fn pushglobalcfunction(self: *@This(), name: [:0]const u8, func: LuaFunc) void {
-        self.pushcfunction(func);
-        self.setglobal(name);
-    }
-
     pub fn deinit(self: *@This()) void {
         c.lua_close(self.L);
-    }
-
-    pub fn openlibs(self: *@This()) void {
-        c.luaL_openlibs(self.L);
     }
 
     pub fn loadstring(self: *@This(), string: [:0]const u8) Error!void {
