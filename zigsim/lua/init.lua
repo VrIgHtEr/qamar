@@ -1,3 +1,5 @@
+local digisim = _G["digisim"]
+
 ---@class zigcomp
 ---@field id number
 local Component = {}
@@ -8,10 +10,10 @@ local Component_MT = {
 ---@param id number
 ---@return zigcomp
 function Component.new(id)
-	if type(id) ~= "number" or id < 0 then
+	if type(id) ~= "userdata" then
 		error("invalid id")
 	end
-	return setmetatable({ id = math.floor(id) }, Component_MT)
+	return setmetatable({ id = id }, Component_MT)
 end
 
 local base_env = {
@@ -26,10 +28,12 @@ local env_mt = { __index = base_env }
 
 local function create_env(id)
 	local env = setmetatable({}, env_mt)
-	--pub fn init(digisim: *Digisim, name: []const u8, input: bool, start: usize, end: usize, trace: bool) !@This() {
 	function env.input(name, pin_start, pin_end, trace) end
 	function env.output(name, pin_start, pin_end, trace) end
 	function env.connect(a, b) end
+	function env.createcomponent(name)
+		digisim.createcomponent(id, name)
+	end
 	return env
 end
 
@@ -46,6 +50,14 @@ function Component:construct(constructor, ...)
 	end
 end
 
-digisim.createcomponent("core")
+function Component.compile()
+	local function rootconstructor()
+		createcomponent("core")
+	end
 
+	local root = Component.new(digisim.root)
+	root:construct(rootconstructor)
+end
+
+Component.compile()
 return Component

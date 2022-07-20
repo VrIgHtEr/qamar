@@ -35,21 +35,30 @@ pub const Lua = struct {
         const digisim = getInstance(L);
         const lua = &digisim.lua;
         const args = lua.gettop();
-        if (args < 1) {
+        if (args < 2) {
             lua.pushlstring("invalid number of arguments passed to createcomponent");
             lua.err();
         }
+        if (!lua.islightuserdata(-2)) {
+            lua.pushlstring("first argument to createcomponent was not a lightuserdata");
+            lua.err();
+        }
+        const cid = @bitCast(usize, @ptrToInt(lua.touserdata(-2)));
+
         if (!lua.isstring(-1)) {
-            lua.pushlstring("first argument to createcomponent was not a string");
+            lua.pushlstring("second argument to createcomponent was not a string");
             lua.err();
         }
         const str = lua.tolstring(-1);
-        const id = digisim.addComponent(str) catch ({
-            lua.pushlstring("failed to create component");
-            lua.err();
-            return 0;
-        });
-        lua.pushnumber(@bitCast(f64, id));
+
+        if (cid == 0) {
+            const id = digisim.addComponent(str) catch ({
+                lua.pushlstring("failed to create component");
+                lua.err();
+                return 0;
+            });
+            lua.pushlightuserdata(@intToPtr(*anyopaque, id));
+        }
         return 1;
     }
 
@@ -68,6 +77,9 @@ pub const Lua = struct {
         self.pushlightuserdata(digisim);
         self.pushcclosure(lua_createcomponent, 1);
         self.settable(-3);
+        self.pushlstring("root");
+        self.pushlightuserdata(null);
+        self.settable(-3);
         self.setglobal("digisim");
         return self;
     }
@@ -84,8 +96,10 @@ pub const Lua = struct {
         c.lua_settable(self.L, index);
     }
 
-    pub fn pushlightuserdata(self: *@This(), p: *anyopaque) void {
-        c.lua_pushlightuserdata(self.L, p);
+    pub fn pushlightuserdata(self: *@This(), p: ?*anyopaque) void {
+        if (p) |x| {
+            c.lua_pushlightuserdata(self.L, x);
+        } else c.lua_pushlightuserdata(self.L, null);
     }
 
     pub fn newtable(self: *@This()) void {
@@ -153,12 +167,24 @@ pub const Lua = struct {
         c.lua_gettable(self.L, pos);
     }
 
+    pub fn islightuserdata(self: *@This(), pos: c_int) bool {
+        return c.lua_islightuserdata(self.L, pos);
+    }
+
+    pub fn isnumber(self: *@This(), pos: c_int) bool {
+        return c.lua_isnumber(self.L, pos) != 0;
+    }
+
     pub fn isstring(self: *@This(), pos: c_int) bool {
         return c.lua_isstring(self.L, pos) != 0;
     }
 
     pub fn pop(self: *@This(), pos: c_int) void {
         c.lua_pop(self.L, pos);
+    }
+
+    pub fn touserdata(self: *@This(), pos: c_int) ?*anyopaque {
+        return c.lua_touserdata(self.L, pos);
     }
 
     pub fn tolstring(self: *@This(), pos: c_int) []const u8 {
