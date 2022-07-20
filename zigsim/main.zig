@@ -23,11 +23,8 @@ pub fn main() !u8 {
     try sim.runLuaSetup();
     const comp = try sim.getComponent("core");
     if (comp) |cmp| {
-        try cmp.setHandler(components.nor_h);
-        _ = try cmp.addPort("input", true, 0, 1, true);
-        _ = try cmp.addPort("output", false, 0, 0, true);
-        try cmp.connect("output", "input[0]");
-        try cmp.connect("output", "input[1]");
+        try cmp.connect("c", "a");
+        try cmp.connect("c", "b");
         _ = try sim.step();
         return 0;
     }

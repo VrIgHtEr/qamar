@@ -34,6 +34,9 @@ local function create_env(id)
 	function env.createcomponent(name)
 		digisim.createcomponent(id, name)
 	end
+	function env.Nand(name)
+		digisim.components.Nand(id, name)
+	end
 	return env
 end
 
@@ -52,7 +55,7 @@ end
 
 function Component.compile()
 	local function rootconstructor()
-		createcomponent("core")
+		Nand("core")
 	end
 
 	local root = Component.new(digisim.root)

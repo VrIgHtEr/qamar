@@ -12,6 +12,7 @@ const c = @cImport({
 pub const State = *c.lua_State;
 const LuaFunc = fn (?State) callconv(.C) c_int;
 const Digisim = @import("digisim.zig").Digisim;
+const Component = @import("tree/component.zig").components;
 pub const Error = error{ CannotInitialize, LoadStringFailed, ScriptError };
 pub const Lua = struct {
     digisim: *Digisim,
@@ -51,14 +52,74 @@ pub const Lua = struct {
         }
         const str = lua.tolstring(-1);
 
+        var id: usize = undefined;
         if (cid == 0) {
-            const id = digisim.addComponent(str) catch ({
+            id = digisim.addComponent(str) catch ({
                 lua.pushlstring("failed to create component");
                 lua.err();
                 return 0;
             });
-            lua.pushlightuserdata(@intToPtr(*anyopaque, id));
+        } else {
+            const comp = digisim.components.getPtr(cid) orelse ({
+                lua.pushlstring("component not found");
+                lua.err();
+                return 0;
+            });
+            id = comp.addComponent(str) catch ({
+                lua.pushlstring("failed to create component");
+                lua.err();
+                return 0;
+            });
         }
+        lua.pushlightuserdata(@intToPtr(*anyopaque, id));
+        return 1;
+    }
+
+    fn lua_createnand(L: ?State) callconv(.C) c_int {
+        const digisim = getInstance(L);
+        const lua = &digisim.lua;
+        const args = lua.gettop();
+        if (args < 2) {
+            lua.pushlstring("invalid number of arguments passed to createcomponent");
+            lua.err();
+        }
+        if (!lua.islightuserdata(-2)) {
+            lua.pushlstring("first argument to createcomponent was not a lightuserdata");
+            lua.err();
+        }
+        const cid = @bitCast(usize, @ptrToInt(lua.touserdata(-2)));
+
+        if (!lua.isstring(-1)) {
+            lua.pushlstring("second argument to createcomponent was not a string");
+            lua.err();
+        }
+        const str = lua.tolstring(-1);
+
+        var id: usize = undefined;
+        if (cid == 0) {
+            id = digisim.addComponent(str) catch ({
+                lua.pushlstring("failed to create component");
+                lua.err();
+                return 0;
+            });
+        } else {
+            const comp = digisim.components.getPtr(cid) orelse ({
+                lua.pushlstring("component not found");
+                lua.err();
+                return 0;
+            });
+            id = comp.addComponent(str) catch ({
+                lua.pushlstring("failed to create component");
+                lua.err();
+                return 0;
+            });
+        }
+        const cmp = digisim.components.getPtr(id) orelse unreachable;
+        _ = cmp.addPort("a", true, 0, 0, false) catch unreachable;
+        _ = cmp.addPort("b", true, 0, 0, false) catch unreachable;
+        _ = cmp.addPort("c", false, 0, 0, false) catch unreachable;
+        cmp.setHandler(Component.nand_h) catch unreachable;
+        lua.pushlightuserdata(@intToPtr(*anyopaque, id));
         return 1;
     }
 
@@ -69,17 +130,30 @@ pub const Lua = struct {
         errdefer c.lua_close(self.L);
         c.luaL_openlibs(self.L);
         self.newtable();
+
         self.pushlstring("version");
         self.pushlightuserdata(digisim);
         self.pushcclosure(lua_version, 1);
         self.settable(-3);
+
         self.pushlstring("createcomponent");
         self.pushlightuserdata(digisim);
         self.pushcclosure(lua_createcomponent, 1);
         self.settable(-3);
+
         self.pushlstring("root");
         self.pushlightuserdata(null);
         self.settable(-3);
+
+        self.pushlstring("components");
+        self.newtable();
+        self.pushlstring("Nand");
+        self.pushlightuserdata(digisim);
+        self.pushcclosure(lua_createnand, 1);
+        self.settable(-3);
+
+        self.settable(-3);
+
         self.setglobal("digisim");
         return self;
     }
@@ -97,9 +171,7 @@ pub const Lua = struct {
     }
 
     pub fn pushlightuserdata(self: *@This(), p: ?*anyopaque) void {
-        if (p) |x| {
-            c.lua_pushlightuserdata(self.L, x);
-        } else c.lua_pushlightuserdata(self.L, null);
+        c.lua_pushlightuserdata(self.L, p);
     }
 
     pub fn newtable(self: *@This()) void {

@@ -113,8 +113,10 @@ pub const Simulation = struct {
                 value = Signal.resolve(value, d.value);
             }
             if (Signal.tovcd(value) != Signal.tovcd(net.value)) {
-                for (net.tracelist orelse unreachable) |t| {
-                    try self.traceports.put(t, .{});
+                if (net.tracelist) |tracelist| {
+                    for (tracelist) |t| {
+                        try self.traceports.put(t, .{});
+                    }
                 }
             }
             if (value != net.value) {
