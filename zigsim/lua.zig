@@ -12,7 +12,8 @@ const c = @cImport({
 pub const State = *c.lua_State;
 const LuaFunc = fn (?State) callconv(.C) c_int;
 const Digisim = @import("digisim.zig").Digisim;
-const Component = @import("tree/component.zig").components;
+const Component = @import("tree/component.zig").Component;
+const Components = @import("tree/component.zig").components;
 pub const Error = error{ CannotInitialize, LoadStringFailed, ScriptError };
 pub const Lua = struct {
     digisim: *Digisim,
@@ -32,6 +33,12 @@ pub const Lua = struct {
         return 1;
     }
 
+    fn getcomponent(digisim: *Digisim, comp: ?*anyopaque) !*Component {
+        if (comp) |cmp| {
+            return digisim.components.getPtr(@ptrToInt(cmp)) orelse return error.ComponentNotFound;
+        } else return &digisim.root;
+    }
+
     fn lua_createcomponent(L: ?State) callconv(.C) c_int {
         const digisim = getInstance(L);
         const lua = &digisim.lua;
@@ -44,7 +51,11 @@ pub const Lua = struct {
             lua.pushlstring("first argument to createcomponent was not a lightuserdata");
             lua.err();
         }
-        const cid = @bitCast(usize, @ptrToInt(lua.touserdata(-2)));
+        const comp = getcomponent(digisim, lua.touserdata(-2)) catch ({
+            lua.pushlstring("component not found");
+            lua.err();
+            return 0;
+        });
 
         if (!lua.isstring(-1)) {
             lua.pushlstring("second argument to createcomponent was not a string");
@@ -52,25 +63,11 @@ pub const Lua = struct {
         }
         const str = lua.tolstring(-1);
 
-        var id: usize = undefined;
-        if (cid == 0) {
-            id = digisim.addComponent(str) catch ({
-                lua.pushlstring("failed to create component");
-                lua.err();
-                return 0;
-            });
-        } else {
-            const comp = digisim.components.getPtr(cid) orelse ({
-                lua.pushlstring("component not found");
-                lua.err();
-                return 0;
-            });
-            id = comp.addComponent(str) catch ({
-                lua.pushlstring("failed to create component");
-                lua.err();
-                return 0;
-            });
-        }
+        const id = comp.addComponent(str) catch ({
+            lua.pushlstring("failed to create component");
+            lua.err();
+            return 0;
+        });
         lua.pushlightuserdata(@intToPtr(*anyopaque, id));
         return 1;
     }
@@ -87,7 +84,11 @@ pub const Lua = struct {
             lua.pushlstring("first argument to createcomponent was not a lightuserdata");
             lua.err();
         }
-        const cid = @bitCast(usize, @ptrToInt(lua.touserdata(-2)));
+        const comp = getcomponent(digisim, lua.touserdata(-2)) catch ({
+            lua.pushlstring("component not found");
+            lua.err();
+            return 0;
+        });
 
         if (!lua.isstring(-1)) {
             lua.pushlstring("second argument to createcomponent was not a string");
@@ -95,30 +96,16 @@ pub const Lua = struct {
         }
         const str = lua.tolstring(-1);
 
-        var id: usize = undefined;
-        if (cid == 0) {
-            id = digisim.addComponent(str) catch ({
-                lua.pushlstring("failed to create component");
-                lua.err();
-                return 0;
-            });
-        } else {
-            const comp = digisim.components.getPtr(cid) orelse ({
-                lua.pushlstring("component not found");
-                lua.err();
-                return 0;
-            });
-            id = comp.addComponent(str) catch ({
-                lua.pushlstring("failed to create component");
-                lua.err();
-                return 0;
-            });
-        }
+        const id = comp.addComponent(str) catch ({
+            lua.pushlstring("failed to create component");
+            lua.err();
+            return 0;
+        });
         const cmp = digisim.components.getPtr(id) orelse unreachable;
         _ = cmp.addPort("a", true, 0, 0, false) catch unreachable;
         _ = cmp.addPort("b", true, 0, 0, false) catch unreachable;
         _ = cmp.addPort("c", false, 0, 0, false) catch unreachable;
-        cmp.setHandler(Component.nand_h) catch unreachable;
+        cmp.setHandler(Components.nand_h) catch unreachable;
         lua.pushlightuserdata(@intToPtr(*anyopaque, id));
         return 1;
     }

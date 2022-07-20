@@ -91,7 +91,7 @@ pub const Simulation = struct {
             const outputs = self.outputs[0..component.numOutputs];
             const nextSchedule = component.handler(self.timestamp, inputs, outputs);
             if (nextSchedule != 0) {}
-            //for each output pin
+
             idx = 0;
             for (component.outports) |port| {
                 for (port.pins) |*pin| {

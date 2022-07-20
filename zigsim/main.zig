@@ -25,6 +25,7 @@ pub fn main() !u8 {
     if (comp) |cmp| {
         try cmp.connect("c", "a");
         try cmp.connect("c", "b");
+        sim.traceAllPorts();
         _ = try sim.step();
         return 0;
     }

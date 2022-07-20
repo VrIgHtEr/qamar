@@ -161,6 +161,13 @@ pub const Digisim = struct {
         return ret;
     }
 
+    pub fn traceAllPorts(self: *@This()) void {
+        var ci = self.ports.iterator();
+        while (ci.next()) |e| {
+            e.value_ptr.trace = true;
+        }
+    }
+
     pub fn checkLeafNodes(self: *@This()) !void {
         var i = self.components.iterator();
         while (i.next()) |e| {
