@@ -72,16 +72,86 @@ pub const Lua = struct {
         return 1;
     }
 
+    fn lua_createport(L: ?State) callconv(.C) c_int {
+        const digisim = getInstance(L);
+        const lua = &digisim.lua;
+        const args = lua.gettop();
+        //digisim.createport(id, name, false, pin_start, pin_end, trace)
+        if (args < 6) {
+            lua.pushlstring("invalid number of arguments passed to createport");
+            lua.err();
+            return 0;
+        }
+        if (!lua.islightuserdata(-args)) {
+            lua.pushlstring("1st arg not a userdata");
+            lua.err();
+            return 0;
+        }
+        const comp = getcomponent(digisim, lua.touserdata(-args)) catch ({
+            lua.pushlstring("component not found");
+            lua.err();
+            return 0;
+        });
+
+        if (comp == &digisim.root) {
+            lua.pushlstring("cannot add port to root context");
+            lua.err();
+            return 0;
+        }
+
+        if (!lua.isstring(-args + 1)) {
+            lua.pushlstring("2nd arg not a string");
+            lua.err();
+            return 0;
+        }
+        const name = lua.tolstring(-args + 1);
+
+        if (!lua.isboolean(-args + 2)) {
+            lua.pushlstring("3rd arg not a boolean");
+            lua.err();
+            return 0;
+        }
+        const input = lua.toboolean(-args + 2);
+
+        if (!lua.isnumber(3 - args)) {
+            lua.pushlstring("4th arg not a number");
+            lua.err();
+            return 0;
+        }
+        const start = @floatToInt(usize, lua.tonumber(3 - args));
+
+        if (!lua.isnumber(4 - args)) {
+            lua.pushlstring("5th arg not a number");
+            lua.err();
+            return 0;
+        }
+        const end = @floatToInt(usize, lua.tonumber(4 - args));
+
+        if (!lua.isboolean(5 - args)) {
+            lua.pushlstring("6th arg not a boolean");
+            lua.err();
+            return 0;
+        }
+        const trace = lua.toboolean(5 - args);
+
+        _ = comp.addPort(name, input, start, end, trace) catch ({
+            lua.pushlstring("failed to add port");
+            lua.err();
+            return 0;
+        });
+        return 0;
+    }
+
     fn lua_createnand(L: ?State) callconv(.C) c_int {
         const digisim = getInstance(L);
         const lua = &digisim.lua;
         const args = lua.gettop();
         if (args < 2) {
-            lua.pushlstring("invalid number of arguments passed to createcomponent");
+            lua.pushlstring("invalid number of arguments passed to createnand");
             lua.err();
         }
         if (!lua.islightuserdata(-2)) {
-            lua.pushlstring("first argument to createcomponent was not a lightuserdata");
+            lua.pushlstring("first argument to createnand was not a lightuserdata");
             lua.err();
         }
         const comp = getcomponent(digisim, lua.touserdata(-2)) catch ({
@@ -91,7 +161,7 @@ pub const Lua = struct {
         });
 
         if (!lua.isstring(-1)) {
-            lua.pushlstring("second argument to createcomponent was not a string");
+            lua.pushlstring("second argument to createnand was not a string");
             lua.err();
         }
         const str = lua.tolstring(-1);
@@ -102,12 +172,64 @@ pub const Lua = struct {
             return 0;
         });
         const cmp = digisim.components.getPtr(id) orelse unreachable;
-        _ = cmp.addPort("a", true, 0, 0, false) catch unreachable;
-        _ = cmp.addPort("b", true, 0, 0, false) catch unreachable;
-        _ = cmp.addPort("c", false, 0, 0, false) catch unreachable;
+        _ = cmp.addPort("a", true, 0, 0, false) catch ({
+            lua.pushlstring("failed to add nand port a");
+            lua.err();
+            return 0;
+        });
+        _ = cmp.addPort("b", true, 0, 0, false) catch ({
+            lua.pushlstring("failed to add nand port b");
+            lua.err();
+            return 0;
+        });
+        _ = cmp.addPort("c", false, 0, 0, false) catch ({
+            lua.pushlstring("failed to add nand port c");
+            lua.err();
+            return 0;
+        });
         cmp.setHandler(Components.nand_h) catch unreachable;
         lua.pushlightuserdata(@intToPtr(*anyopaque, id));
         return 1;
+    }
+
+    fn lua_connect(L: ?State) callconv(.C) c_int {
+        const digisim = getInstance(L);
+        const lua = &digisim.lua;
+        const args = lua.gettop();
+        if (args < 3) {
+            lua.pushlstring("invalid number of arguments passed to connect");
+            lua.err();
+        }
+        if (!lua.islightuserdata(-3)) {
+            lua.pushlstring("first argument to connect was not a lightuserdata");
+            lua.err();
+        }
+        const comp = getcomponent(digisim, lua.touserdata(-3)) catch ({
+            lua.pushlstring("component not found");
+            lua.err();
+            return 0;
+        });
+
+        if (!lua.isstring(-2)) {
+            lua.pushlstring("second argument to connect was not a string");
+            lua.err();
+        }
+        const stra = lua.tolstring(-2);
+
+        if (!lua.isstring(-1)) {
+            lua.pushlstring("third argument to connect was not a string");
+            lua.err();
+            return 0;
+        }
+        const strb = lua.tolstring(-1);
+
+        comp.connect(stra, strb) catch ({
+            lua.pushlstring("failed to connect ports");
+            lua.err();
+            return 0;
+        });
+
+        return 0;
     }
 
     pub fn init(digisim: *Digisim) Error!Lua {
@@ -126,6 +248,16 @@ pub const Lua = struct {
         self.pushlstring("createcomponent");
         self.pushlightuserdata(digisim);
         self.pushcclosure(lua_createcomponent, 1);
+        self.settable(-3);
+
+        self.pushlstring("createport");
+        self.pushlightuserdata(digisim);
+        self.pushcclosure(lua_createport, 1);
+        self.settable(-3);
+
+        self.pushlstring("connect");
+        self.pushlightuserdata(digisim);
+        self.pushcclosure(lua_connect, 1);
         self.settable(-3);
 
         self.pushlstring("root");
@@ -230,6 +362,14 @@ pub const Lua = struct {
         return c.lua_islightuserdata(self.L, pos);
     }
 
+    pub fn toboolean(self: *@This(), pos: c_int) bool {
+        return c.lua_toboolean(self.L, pos) != 0;
+    }
+
+    pub fn isboolean(self: *@This(), pos: c_int) bool {
+        return c.lua_isboolean(self.L, pos);
+    }
+
     pub fn isnumber(self: *@This(), pos: c_int) bool {
         return c.lua_isnumber(self.L, pos) != 0;
     }
@@ -240,6 +380,10 @@ pub const Lua = struct {
 
     pub fn pop(self: *@This(), pos: c_int) void {
         c.lua_pop(self.L, pos);
+    }
+
+    pub fn tonumber(self: *@This(), pos: c_int) f64 {
+        return c.lua_tonumber(self.L, pos);
     }
 
     pub fn touserdata(self: *@This(), pos: c_int) ?*anyopaque {
@@ -286,7 +430,7 @@ pub const Lua = struct {
             defer std.heap.c_allocator.free(str);
             try self.prependLuaPath(str);
         }
-        self.pushnil();
-        self.setglobal("package");
+        self.pushlstring(root);
+        self.setglobal("digisim_path");
     }
 };

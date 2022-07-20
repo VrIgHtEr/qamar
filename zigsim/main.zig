@@ -21,13 +21,7 @@ pub fn main() !u8 {
     var sim = try Digisim.init(allocator);
     defer sim.deinit();
     try sim.runLuaSetup();
-    const comp = try sim.getComponent("core");
-    if (comp) |cmp| {
-        try cmp.connect("c", "a");
-        try cmp.connect("c", "b");
-        sim.traceAllPorts();
-        _ = try sim.step();
-        return 0;
-    }
-    return 1;
+    sim.traceAllPorts();
+    _ = try sim.step();
+    return 0;
 }
