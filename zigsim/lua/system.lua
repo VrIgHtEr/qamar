@@ -29,12 +29,6 @@ local base_env = {
 local cache = {}
 
 local function create_env(id, opts)
-    if opts == nil then
-        opts = {}
-    end
-    if type(opts) ~= 'table' then
-        error 'opts must be a table'
-    end
     return setmetatable({}, {
         __index = setmetatable({
             opts = opts,
@@ -42,19 +36,19 @@ local function create_env(id, opts)
                 pin_start = pin_start or 0
                 pin_end = pin_end or pin_start
                 trace = trace and true or false
-                if pin_start < 0 or pin_start > 1048576 or pin_end < pin_start or pin_end > 1048576 then
+                if pin_start < 0 or pin_start >= 1048576 or pin_end < pin_start or pin_end >= 1048576 then
                     error 'pin index out of bounds'
                 end
-                digisim.createport(id, name, true, pin_start, pin_end, trace)
+                digisim.createport(id, name, true, math.floor(pin_start), math.floor(pin_end), trace)
             end,
             output = function(name, pin_start, pin_end, trace)
                 pin_start = pin_start or 0
                 pin_end = pin_end or pin_start
                 trace = trace and true or false
-                if pin_start < 0 or pin_start > 1048576 or pin_end < pin_start or pin_end > 1048576 then
+                if pin_start < 0 or pin_start >= 1048576 or pin_end < pin_start or pin_end >= 1048576 then
                     error 'pin index out of bounds'
                 end
-                digisim.createport(id, name, false, pin_start or 0, pin_end, trace)
+                digisim.createport(id, name, false, math.floor(pin_start), math.floor(pin_end), trace)
             end,
             createcomponent = function(name)
                 digisim.createcomponent(id, name)

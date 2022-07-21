@@ -164,7 +164,7 @@ pub const Digisim = struct {
     pub fn traceAllPorts(self: *@This()) void {
         var ci = self.components.iterator();
         while (ci.next()) |c| {
-            if (c.value_ptr.isLeaf()) {
+            if (c.value_ptr.isLeaf() or std.mem.eql(u8, "a1", c.value_ptr.name)) {
                 var j = c.value_ptr.ports.iterator();
                 while (j.next()) |p| {
                     const port = self.ports.getPtr(p.key_ptr.*) orelse unreachable;
@@ -511,6 +511,17 @@ pub const Digisim = struct {
                             cport.pins[idx].value = Signal.z;
                         }
                     }
+                }
+            }
+        }
+        var j = self.root.ports.iterator();
+        while (j.next()) |je| {
+            const port = self.ports.getPtr(je.key_ptr.*) orelse unreachable;
+            if (port.trace) {
+                const cport = pmap.get(port.id) orelse unreachable;
+                for (port.pins) |*pin, idx| {
+                    cport.pins[idx].net = nmap.get(pin.net) orelse unreachable;
+                    cport.pins[idx].value = Signal.z;
                 }
             }
         }
