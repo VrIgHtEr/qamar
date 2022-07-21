@@ -104,7 +104,7 @@ pub const Digisim = struct {
     pub fn runLuaSetup(self: *@This()) !void {
         errdefer self.faulted = true;
         try self.checkFaulted();
-        try self.lua.execute("require 'init'");
+        try self.lua.execute("require 'system'");
     }
 
     fn deinitRoot(self: *@This()) void {

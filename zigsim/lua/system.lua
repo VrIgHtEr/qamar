@@ -1,22 +1,6 @@
 local digisim = _G['digisim']
 local digisim_path = _G['digisim_path']
 
----@class zigcomp
----@field id number
-local Component = {}
-local Component_MT = {
-    __index = Component,
-}
-
----@param id number
----@return zigcomp
-function Component.new(id)
-    if type(id) ~= 'userdata' then
-        error 'invalid id'
-    end
-    return setmetatable({ id = id }, Component_MT)
-end
-
 ---@param file string
 ---@return string|nil
 local function read_file(file)
@@ -34,10 +18,10 @@ end
 
 local base_env = {
     math = math,
+    table = table,
     pairs = pairs,
     ipairs = ipairs,
     tostring = tostring,
-    print = print,
     type = type,
 }
 
@@ -87,12 +71,16 @@ local function create_env(id, opts)
                 if c >= ('A'):byte() and c <= ('Z'):byte() then
                     local constructor
                     if cache[index] ~= nil then
+                        if not cache[index] then
+                            return
+                        end
                         constructor = cache[index]
                     else
                         local file = read_file(digisim_path .. '/library/' .. index .. '.lua')
                         if file then
                             local success, compiled = pcall(loadstring, file, index)
                             if not success or not compiled then
+                                cache[index] = false
                                 return
                             end
                             constructor = compiled
@@ -100,6 +88,24 @@ local function create_env(id, opts)
                         end
                     end
                     return function(name, o)
+                        if o == nil then
+                            if type(name) == 'table' then
+                                o = name
+                                name = o.name
+                                if name == nil then
+                                    name = o[1]
+                                end
+                            else
+                                o = {}
+                            end
+                        end
+                        if type(o) ~= 'table' then
+                            error 'invalid opts'
+                        end
+                        if type(name) ~= 'string' then
+                            error 'invalid name'
+                        end
+                        o.name = name
                         local comp = digisim.createcomponent(id, name)
                         local old_fenv = getfenv(constructor)
                         setfenv(constructor, create_env(comp, o))
@@ -119,10 +125,25 @@ local function create_env(id, opts)
     })
 end
 
-function Component:construct(constructor, opts)
+local function compile(opts)
+    local text = read_file(digisim_path .. '/root.lua')
+    if text == nil then
+        error 'failed to load root component'
+    end
+    local constructor = loadstring(text)
+    if constructor == nil then
+        error 'failed to load root'
+    end
+    if opts == nil then
+        opts = {}
+    end
+    if type(opts) ~= 'table' then
+        error 'invalid opts'
+    end
+    opts.name = ''
     local old_env = getfenv(constructor)
-    setfenv(constructor, create_env(self.id))
-    local ret = { pcall(constructor, opts) }
+    setfenv(constructor, create_env(digisim.root, opts))
+    local ret = { pcall(constructor) }
     setfenv(constructor, old_env)
     if ret[1] then
         table.remove(ret, 1)
@@ -132,14 +153,4 @@ function Component:construct(constructor, opts)
     end
 end
 
-function Component.compile(opts)
-    local root = Component.new(digisim.root)
-    local text = read_file(digisim_path .. '/root.lua')
-    if text == nil then
-        error 'failed to load root component'
-    end
-    root:construct(loadstring(text), opts)
-end
-
-Component.compile()
-return Component
+compile()
