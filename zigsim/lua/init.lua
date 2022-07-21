@@ -1,4 +1,5 @@
 local digisim = _G['digisim']
+local digisim_path = _G['digisim_path']
 
 ---@class zigcomp
 ---@field id number
@@ -16,6 +17,8 @@ function Component.new(id)
     return setmetatable({ id = id }, Component_MT)
 end
 
+---@param file string
+---@return string|nil
 local function read_file(file)
     local osuccess, f = pcall(io.open, file, 'rb')
     if not osuccess or not f then
@@ -123,7 +126,11 @@ end
 
 function Component.compile()
     local root = Component.new(digisim.root)
-    root:construct(loadstring(read_file(digisim_path .. '/root.lua')))
+    local text = read_file(digisim_path .. '/root.lua')
+    if text == nil then
+        error 'failed to load root component'
+    end
+    root:construct(loadstring(text))
 end
 
 Component.compile()
