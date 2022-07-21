@@ -182,8 +182,8 @@ pub const Lua = struct {
             lua.err();
             return 0;
         });
-        _ = cmp.addPort("c", false, 0, 0, false) catch ({
-            lua.pushlstring("failed to add nand port c");
+        _ = cmp.addPort("q", false, 0, 0, false) catch ({
+            lua.pushlstring("failed to add nand port q");
             lua.err();
             return 0;
         });

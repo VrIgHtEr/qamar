@@ -84,13 +84,6 @@ local function create_env(id)
 							if not success or not compiled then
 								return
 							end
-							success, compiled = pcall(compiled)
-							if not success then
-								return
-							end
-							if type(compiled) ~= "function" then
-								error("library file does not return a function")
-							end
 							constructor = compiled
 							cache[index] = constructor
 						end
@@ -129,14 +122,8 @@ function Component:construct(constructor, ...)
 end
 
 function Component.compile()
-	local function rootconstructor()
-		Xor("a1")
-		connect("a1.a", "a1.b")
-		connect("a1.q", "a1.a")
-	end
-
 	local root = Component.new(digisim.root)
-	root:construct(rootconstructor)
+	root:construct(loadstring(read_file(digisim_path .. "/root.lua")))
 end
 
 Component.compile()

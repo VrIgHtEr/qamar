@@ -2,12 +2,15 @@ input("a")
 input("b")
 output("q")
 
-Not("x")
-Not("y")
-Nand("z")
-
+Or("x")
 connect("a", "x.a")
-connect("b", "y.a")
+connect("b", "x.b")
+
+Nand("y")
+connect("a", "y.a")
+connect("b", "y.b")
+
+Nand("z")
 connect("x.q", "z.a")
 connect("y.q", "z.b")
 connect("z.q", "q")

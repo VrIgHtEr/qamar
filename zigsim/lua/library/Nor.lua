@@ -2,11 +2,10 @@ input("a")
 input("b")
 output("q")
 
-Nand("x")
-Nand("y")
-
+Or("x")
 connect("a", "x.a")
 connect("b", "x.b")
+
+Not("y")
 connect("x.q", "y.a")
-connect("x.q", "y.b")
 connect("y.q", "q")
