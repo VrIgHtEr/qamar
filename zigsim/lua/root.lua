@@ -1,4 +1,4 @@
-output('out', 0, true)
+output('out', true)
 
 Xnor 'a1'
 wire('a1.a', 'a1.b')
