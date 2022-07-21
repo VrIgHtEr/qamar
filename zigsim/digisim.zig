@@ -317,7 +317,7 @@ pub const Digisim = struct {
                 }
             }
         }
-        return ret;
+        return ret + self.root.ports.count();
     }
 
     fn populatePorts(self: *@This(), ports: []CompiledPort, map: *PortMap, cmap: *ComponentMap) !void {
@@ -372,6 +372,23 @@ pub const Digisim = struct {
                         ret += 1;
                     }
                 }
+            }
+        }
+        var j = self.root.ports.iterator();
+        while (j.next()) |je| {
+            const port = self.ports.getPtr(je.key_ptr.*) orelse unreachable;
+            if (port.trace) {
+                std.debug.print("COMPILE PORT {s}.{s}\n", .{ self.root.name, port.name });
+                ports[ret].pins = try self.allocator.alloc(CompiledPin, port.pins.len);
+                errdefer self.allocator.free(ports[ret].pins);
+                ports[ret].alias = port.alias;
+                port.alias = null;
+                errdefer ({
+                    port.alias = ports[ret].alias;
+                    ports[ret].alias = null;
+                });
+                try map.put(port.id, &ports[ret]);
+                ret += 1;
             }
         }
     }
