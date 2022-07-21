@@ -96,9 +96,9 @@ local function create_env(id)
 						end
 					end
 					return function(name, opts)
-						digisim.createcomponent(id, name)
+						local comp = digisim.createcomponent(id, name)
 						local old_fenv = getfenv(constructor)
-						setfenv(constructor, env)
+						setfenv(constructor, create_env(comp))
 						local success, err = pcall(constructor, opts)
 						setfenv(constructor, old_fenv)
 						if not success then
@@ -130,10 +130,9 @@ end
 
 function Component.compile()
 	local function rootconstructor()
-		Nand("core")
-		connect("core.c", "core.a")
-		connect("core.c", "core.b")
 		And("a1")
+		connect("a1.a", "a1.b")
+		connect("a1.c", "a1.a")
 	end
 
 	local root = Component.new(digisim.root)

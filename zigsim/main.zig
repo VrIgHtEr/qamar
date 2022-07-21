@@ -22,6 +22,30 @@ pub fn main() !u8 {
     defer sim.deinit();
     try sim.runLuaSetup();
     sim.traceAllPorts();
+    {
+        const comp = sim.getComponent("a1") catch unreachable orelse unreachable;
+        var j = comp.ports.iterator();
+        while (j.next()) |e| {
+            const port = sim.ports.getPtr(e.key_ptr.*) orelse unreachable;
+            std.debug.print("PORT: {d} - {s}\n", .{ @ptrToInt(comp), port.name });
+        }
+    }
+    {
+        const comp = sim.getComponent("a1.X") catch unreachable orelse unreachable;
+        var j = comp.ports.iterator();
+        while (j.next()) |e| {
+            const port = sim.ports.getPtr(e.key_ptr.*) orelse unreachable;
+            std.debug.print("PORT: {d} - {s}\n", .{ @ptrToInt(comp), port.name });
+        }
+    }
+    {
+        const comp = sim.getComponent("a1.Y") catch unreachable orelse unreachable;
+        var j = comp.ports.iterator();
+        while (j.next()) |e| {
+            const port = sim.ports.getPtr(e.key_ptr.*) orelse unreachable;
+            std.debug.print("PORT: {d} - {s}\n", .{ @ptrToInt(comp), port.name });
+        }
+    }
     _ = try sim.step();
     return 0;
 }

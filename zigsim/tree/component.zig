@@ -215,12 +215,14 @@ pub const Component = struct {
         if (end < start) return Err.InvalidPortReference;
         if (start < port.start) return Err.PortReferenceOutOfRange;
         if (end > port.end) return Err.PortReferenceOutOfRange;
+        std.debug.print("parsed port range: {s}.{s}  {d}-{d}\n", .{ comp.name, port.name, start, end });
         const ret = .{ .port = port, .start = start, .end = end };
         return ret;
     }
 
     pub fn connect(self: *@This(), a: []const u8, b: []const u8) !void {
         if (self.digisim.locked) return Err.SimulationLocked;
+        std.debug.print("connecting: {s} to {s}\n", .{ a, b });
         const pa = try self.parsePortRange(a);
         const pb = try self.parsePortRange(b);
 
@@ -239,6 +241,7 @@ pub const Component = struct {
     }
 
     pub fn addPort(self: *@This(), name: []const u8, input: bool, start: usize, end: usize, trace: bool) !usize {
+        std.debug.print("creating port: {s}.{s}\n", .{ self.name, name });
         if (self.digisim.locked) return Err.SimulationLocked;
         if (name.len == 0) return Err.InvalidPortName;
         if (std.mem.indexOf(u8, name, ".")) |_| return Err.InvalidPortName;
@@ -258,6 +261,7 @@ pub const Component = struct {
     }
 
     pub fn addComponent(self: *@This(), name: []const u8) !usize {
+        std.debug.print("creating component: {s}\n", .{name});
         if (self.digisim.locked) return Err.SimulationLocked;
         if (name.len == 0) return Err.InvalidComponentName;
         if (std.mem.indexOf(u8, name, ".")) |_| return Err.InvalidComponentName;
