@@ -3,11 +3,13 @@ input("b")
 output("q")
 
 Not("x")
-Not("y")
-Nand("z")
-
 connect("a", "x.a")
+
+Not("y")
 connect("b", "y.a")
+
+Nand("z")
 connect("x.q", "z.a")
 connect("y.q", "z.b")
+
 connect("z.q", "q")

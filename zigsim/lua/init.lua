@@ -33,9 +33,9 @@ local base_env = {
 	math = math,
 	pairs = pairs,
 	ipairs = ipairs,
-	getfenv = getfenv,
 	tostring = tostring,
 	print = print,
+	type = type,
 }
 
 local cache = {}

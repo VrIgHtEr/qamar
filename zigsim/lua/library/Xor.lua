@@ -3,16 +3,19 @@ input("b")
 output("q")
 
 Nand("a")
-Nand("b")
-Nand("c")
-Nand("d")
-
 connect("a", "a.a")
-connect("a", "b.a")
 connect("b", "a.b")
-connect("b", "c.b")
+
+Nand("b")
+connect("a", "b.a")
 connect("a.q", "b.b")
+
+Nand("c")
 connect("a.q", "c.a")
+connect("b", "c.b")
+
+Nand("d")
 connect("b.q", "d.a")
 connect("c.q", "d.b")
+
 connect("d.q", "q")

@@ -13,4 +13,5 @@ connect("b", "y.b")
 Nand("z")
 connect("x.q", "z.a")
 connect("y.q", "z.b")
+
 connect("z.q", "q")

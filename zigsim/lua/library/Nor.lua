@@ -8,4 +8,5 @@ connect("b", "x.b")
 
 Not("y")
 connect("x.q", "y.a")
+
 connect("y.q", "q")
