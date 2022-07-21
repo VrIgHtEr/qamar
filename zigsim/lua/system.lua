@@ -35,38 +35,37 @@ local function create_env(id, opts)
     if type(opts) ~= 'table' then
         error 'opts must be a table'
     end
-    local env = {
-        opts = opts,
-        input = function(name, pin_start, pin_end, trace)
-            pin_start = pin_start or 0
-            pin_end = pin_end or pin_start
-            trace = trace and true or false
-            if pin_start < 0 or pin_start > 1048576 or pin_end < pin_start or pin_end > 1048576 then
-                error 'pin index out of bounds'
-            end
-            digisim.createport(id, name, true, pin_start, pin_end, trace)
-        end,
-        output = function(name, pin_start, pin_end, trace)
-            pin_start = pin_start or 0
-            pin_end = pin_end or pin_start
-            trace = trace and true or false
-            if pin_start < 0 or pin_start > 1048576 or pin_end < pin_start or pin_end > 1048576 then
-                error 'pin index out of bounds'
-            end
-            digisim.createport(id, name, false, pin_start or 0, pin_end, trace)
-        end,
-        createcomponent = function(name)
-            digisim.createcomponent(id, name)
-        end,
-        wire = function(a, b)
-            digisim.connect(id, a, b)
-        end,
-        Nand = function(name)
-            digisim.components.Nand(id, name)
-        end,
-    }
     return setmetatable({}, {
-        __index = setmetatable(env, {
+        __index = setmetatable({
+            opts = opts,
+            input = function(name, pin_start, pin_end, trace)
+                pin_start = pin_start or 0
+                pin_end = pin_end or pin_start
+                trace = trace and true or false
+                if pin_start < 0 or pin_start > 1048576 or pin_end < pin_start or pin_end > 1048576 then
+                    error 'pin index out of bounds'
+                end
+                digisim.createport(id, name, true, pin_start, pin_end, trace)
+            end,
+            output = function(name, pin_start, pin_end, trace)
+                pin_start = pin_start or 0
+                pin_end = pin_end or pin_start
+                trace = trace and true or false
+                if pin_start < 0 or pin_start > 1048576 or pin_end < pin_start or pin_end > 1048576 then
+                    error 'pin index out of bounds'
+                end
+                digisim.createport(id, name, false, pin_start or 0, pin_end, trace)
+            end,
+            createcomponent = function(name)
+                digisim.createcomponent(id, name)
+            end,
+            wire = function(a, b)
+                digisim.connect(id, a, b)
+            end,
+            Nand = function(name)
+                digisim.components.Nand(id, name)
+            end,
+        }, {
             __newindex = function()
                 error 'writing to global variables is not allowed'
             end,
