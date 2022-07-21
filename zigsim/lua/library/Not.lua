@@ -1,8 +1,8 @@
-input("a")
-output("q")
+input 'a'
+output 'q'
 
-Nand("x")
-wire("a", "x.a")
-wire("a", "x.b")
+Nand 'x'
+wire('a', 'x.a')
+wire('a', 'x.b')
 
-wire("x.q", "q")
+wire('x.q', 'q')
