@@ -72,6 +72,25 @@ local function create_env(id, opts)
                 digisim.createcomponent(id, name)
             end,
             wire = function(a, b)
+                if b == nil then
+                    if type(a) == 'string' then
+                        local index = 1
+                        for i = 1, a:len() do
+                            if a:sub(i, i) == '/' then
+                                break
+                            end
+                            index = index + 1
+                        end
+                        if index >= a:len() then
+                            error 'invalid wire b endpoint'
+                        end
+                        if index == 1 then
+                            error 'invalid wire a endpoint'
+                        end
+                        b = a:sub(index + 1)
+                        a = a:sub(1, index - 1)
+                    end
+                end
                 digisim.connect(id, a, b)
             end,
             Nand = function(name)

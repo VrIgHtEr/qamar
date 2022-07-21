@@ -3,19 +3,19 @@ input 'b'
 output 'q'
 
 Nand 'a'
-wire('a', 'a.a')
-wire('b', 'a.b')
+wire 'a/a.a'
+wire 'b/a.b'
 
 Nand 'b'
-wire('a', 'b.a')
-wire('a.q', 'b.b')
+wire 'a/b.a'
+wire 'a.q/b.b'
 
 Nand 'c'
-wire('a.q', 'c.a')
-wire('b', 'c.b')
+wire 'a.q/c.a'
+wire 'b/c.b'
 
 Nand 'd'
-wire('b.q', 'd.a')
-wire('c.q', 'd.b')
+wire 'b.q/d.a'
+wire 'c.q/d.b'
 
-wire('d.q', 'q')
+wire 'd.q/q'
