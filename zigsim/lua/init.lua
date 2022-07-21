@@ -63,7 +63,7 @@ local function create_env(id)
 	function env.createcomponent(name)
 		digisim.createcomponent(id, name)
 	end
-	function env.connect(a, b)
+	function env.wire(a, b)
 		digisim.connect(id, a, b)
 	end
 	function env.Nand(name)

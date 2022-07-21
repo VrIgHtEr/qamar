@@ -3,11 +3,11 @@ input("b")
 output("q")
 
 Nand("x")
-connect("a", "x.a")
-connect("b", "x.b")
+wire("a", "x.a")
+wire("b", "x.b")
 
 Nand("y")
-connect("x.q", "y.a")
-connect("x.q", "y.b")
+wire("x.q", "y.a")
+wire("x.q", "y.b")
 
-connect("y.q", "q")
+wire("y.q", "q")

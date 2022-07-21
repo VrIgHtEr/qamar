@@ -3,19 +3,19 @@ input("b")
 output("q")
 
 Nand("a")
-connect("a", "a.a")
-connect("b", "a.b")
+wire("a", "a.a")
+wire("b", "a.b")
 
 Nand("b")
-connect("a", "b.a")
-connect("a.q", "b.b")
+wire("a", "b.a")
+wire("a.q", "b.b")
 
 Nand("c")
-connect("a.q", "c.a")
-connect("b", "c.b")
+wire("a.q", "c.a")
+wire("b", "c.b")
 
 Nand("d")
-connect("b.q", "d.a")
-connect("c.q", "d.b")
+wire("b.q", "d.a")
+wire("c.q", "d.b")
 
-connect("d.q", "q")
+wire("d.q", "q")

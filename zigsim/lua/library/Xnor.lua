@@ -3,15 +3,15 @@ input("b")
 output("q")
 
 Or("x")
-connect("a", "x.a")
-connect("b", "x.b")
+wire("a", "x.a")
+wire("b", "x.b")
 
 Nand("y")
-connect("a", "y.a")
-connect("b", "y.b")
+wire("a", "y.a")
+wire("b", "y.b")
 
 Nand("z")
-connect("x.q", "z.a")
-connect("y.q", "z.b")
+wire("x.q", "z.a")
+wire("y.q", "z.b")
 
-connect("z.q", "q")
+wire("z.q", "q")

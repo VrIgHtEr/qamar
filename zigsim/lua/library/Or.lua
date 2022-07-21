@@ -3,13 +3,13 @@ input("b")
 output("q")
 
 Not("x")
-connect("a", "x.a")
+wire("a", "x.a")
 
 Not("y")
-connect("b", "y.a")
+wire("b", "y.a")
 
 Nand("z")
-connect("x.q", "z.a")
-connect("y.q", "z.b")
+wire("x.q", "z.a")
+wire("y.q", "z.b")
 
-connect("z.q", "q")
+wire("z.q", "q")

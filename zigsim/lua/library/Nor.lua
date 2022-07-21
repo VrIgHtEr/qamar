@@ -3,10 +3,10 @@ input("b")
 output("q")
 
 Or("x")
-connect("a", "x.a")
-connect("b", "x.b")
+wire("a", "x.a")
+wire("b", "x.b")
 
 Not("y")
-connect("x.q", "y.a")
+wire("x.q", "y.a")
 
-connect("y.q", "q")
+wire("y.q", "q")
