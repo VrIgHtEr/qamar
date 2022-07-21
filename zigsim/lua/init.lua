@@ -99,10 +99,10 @@ local function create_env(id, opts)
                             cache[index] = constructor
                         end
                     end
-                    return function(name, opts)
+                    return function(name, o)
                         local comp = digisim.createcomponent(id, name)
                         local old_fenv = getfenv(constructor)
-                        setfenv(constructor, create_env(comp, opts))
+                        setfenv(constructor, create_env(comp, o))
                         local success, err = pcall(constructor)
                         setfenv(constructor, old_fenv)
                         if not success then
