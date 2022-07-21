@@ -21,9 +21,7 @@ pub fn main() !u8 {
     var sim = try Digisim.init(allocator);
     defer sim.deinit();
     try sim.runLuaSetup();
-    sim.traceAllPorts();
-    _ = try sim.step();
-    _ = try sim.step();
-    _ = try sim.step();
+    while (true)
+        _ = try sim.step();
     return 0;
 }

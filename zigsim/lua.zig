@@ -76,7 +76,6 @@ pub const Lua = struct {
         const digisim = getInstance(L);
         const lua = &digisim.lua;
         const args = lua.gettop();
-        //digisim.createport(id, name, false, pin_start, pin_end, trace)
         if (args < 6) {
             lua.pushlstring("invalid number of arguments passed to createport");
             lua.err();
@@ -92,12 +91,6 @@ pub const Lua = struct {
             lua.err();
             return 0;
         });
-
-        if (comp == &digisim.root) {
-            lua.pushlstring("cannot add port to root context");
-            lua.err();
-            return 0;
-        }
 
         if (!lua.isstring(-args + 1)) {
             lua.pushlstring("2nd arg not a string");

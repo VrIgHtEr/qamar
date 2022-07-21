@@ -28,27 +28,45 @@ local base_env = {
 
 local cache = {}
 
+local function validate_createport_inputs(name, pin_end, trace)
+    if type(name) ~= 'string' then
+        error 'invalid name'
+    end
+    if pin_end == nil then
+        if trace == nil then
+            trace = false
+        elseif type(trace) ~= 'boolean' then
+            error 'invalid trace value'
+        end
+        pin_end = 0
+    elseif trace == nil then
+        if type(pin_end) == 'boolean' then
+            trace = pin_end
+            pin_end = 0
+        else
+            trace = false
+        end
+    end
+    if type(pin_end) ~= 'number' then
+        error 'invalid pin_end'
+    end
+    if pin_end < 0 or pin_end >= 1048576 then
+        error 'pin index out of bounds'
+    end
+    return name, pin_end, trace
+end
+
 local function create_env(id, opts)
     return setmetatable({}, {
         __index = setmetatable({
             opts = opts,
-            input = function(name, pin_start, pin_end, trace)
-                pin_start = pin_start or 0
-                pin_end = pin_end or pin_start
-                trace = trace and true or false
-                if pin_start < 0 or pin_start >= 1048576 or pin_end < pin_start or pin_end >= 1048576 then
-                    error 'pin index out of bounds'
-                end
-                digisim.createport(id, name, true, math.floor(pin_start), math.floor(pin_end), trace)
+            input = function(name, pin_end, trace)
+                name, pin_end, trace = validate_createport_inputs(name, pin_end, trace)
+                digisim.createport(id, name, true, 0, math.floor(pin_end), trace)
             end,
-            output = function(name, pin_start, pin_end, trace)
-                pin_start = pin_start or 0
-                pin_end = pin_end or pin_start
-                trace = trace and true or false
-                if pin_start < 0 or pin_start >= 1048576 or pin_end < pin_start or pin_end >= 1048576 then
-                    error 'pin index out of bounds'
-                end
-                digisim.createport(id, name, false, math.floor(pin_start), math.floor(pin_end), trace)
+            output = function(name, pin_end, trace)
+                name, pin_end, trace = validate_createport_inputs(name, pin_end, trace)
+                digisim.createport(id, name, false, 0, math.floor(pin_end), trace)
             end,
             createcomponent = function(name)
                 digisim.createcomponent(id, name)
