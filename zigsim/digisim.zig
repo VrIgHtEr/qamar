@@ -162,21 +162,10 @@ pub const Digisim = struct {
     }
 
     pub fn traceAllPorts(self: *@This()) void {
-        var ci = self.components.iterator();
-        while (ci.next()) |c| {
-            if (c.value_ptr.isLeaf() or std.mem.eql(u8, "a1", c.value_ptr.name)) {
-                var j = c.value_ptr.ports.iterator();
-                while (j.next()) |p| {
-                    const port = self.ports.getPtr(p.key_ptr.*) orelse unreachable;
-                    port.trace = true;
-                }
-            }
+        var pi = self.ports.iterator();
+        while (pi.next()) |e| {
+            e.value_ptr.trace = true;
         }
-
-        //        var pi = self.ports.iterator();
-        //        while (pi.next()) |e| {
-        //            e.value_ptr.trace = true;
-        //        }
     }
 
     pub fn checkLeafNodes(self: *@This()) !void {
