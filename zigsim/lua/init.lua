@@ -43,35 +43,43 @@ local base_env = {
 
 local cache = {}
 
-local function create_env(id)
-    local env = {}
-    function env.input(name, pin_start, pin_end, trace)
-        pin_start = pin_start or 0
-        pin_end = pin_end or pin_start
-        trace = trace and true or false
-        if pin_start < 0 or pin_start > 1048576 or pin_end < pin_start or pin_end > 1048576 then
-            error 'pin index out of bounds'
-        end
-        digisim.createport(id, name, true, pin_start, pin_end, trace)
+local function create_env(id, opts)
+    if opts == nil then
+        opts = {}
     end
-    function env.output(name, pin_start, pin_end, trace)
-        pin_start = pin_start or 0
-        pin_end = pin_end or pin_start
-        trace = trace and true or false
-        if pin_start < 0 or pin_start > 1048576 or pin_end < pin_start or pin_end > 1048576 then
-            error 'pin index out of bounds'
-        end
-        digisim.createport(id, name, false, pin_start or 0, pin_end, trace)
+    if type(opts) ~= 'table' then
+        error 'opts must be a table'
     end
-    function env.createcomponent(name)
-        digisim.createcomponent(id, name)
-    end
-    function env.wire(a, b)
-        digisim.connect(id, a, b)
-    end
-    function env.Nand(name)
-        digisim.components.Nand(id, name)
-    end
+    local env = {
+        opts = opts,
+        input = function(name, pin_start, pin_end, trace)
+            pin_start = pin_start or 0
+            pin_end = pin_end or pin_start
+            trace = trace and true or false
+            if pin_start < 0 or pin_start > 1048576 or pin_end < pin_start or pin_end > 1048576 then
+                error 'pin index out of bounds'
+            end
+            digisim.createport(id, name, true, pin_start, pin_end, trace)
+        end,
+        output = function(name, pin_start, pin_end, trace)
+            pin_start = pin_start or 0
+            pin_end = pin_end or pin_start
+            trace = trace and true or false
+            if pin_start < 0 or pin_start > 1048576 or pin_end < pin_start or pin_end > 1048576 then
+                error 'pin index out of bounds'
+            end
+            digisim.createport(id, name, false, pin_start or 0, pin_end, trace)
+        end,
+        createcomponent = function(name)
+            digisim.createcomponent(id, name)
+        end,
+        wire = function(a, b)
+            digisim.connect(id, a, b)
+        end,
+        Nand = function(name)
+            digisim.components.Nand(id, name)
+        end,
+    }
     return setmetatable(env, {
         __index = function(_, index)
             if type(index) == 'string' and index:len() > 0 then
@@ -94,8 +102,8 @@ local function create_env(id)
                     return function(name, opts)
                         local comp = digisim.createcomponent(id, name)
                         local old_fenv = getfenv(constructor)
-                        setfenv(constructor, create_env(comp))
-                        local success, err = pcall(constructor, opts)
+                        setfenv(constructor, create_env(comp, opts))
+                        local success, err = pcall(constructor)
                         setfenv(constructor, old_fenv)
                         if not success then
                             error(err)
@@ -111,10 +119,10 @@ local function create_env(id)
     })
 end
 
-function Component:construct(constructor, ...)
+function Component:construct(constructor, opts)
     local old_env = getfenv(constructor)
     setfenv(constructor, create_env(self.id))
-    local ret = { pcall(constructor, ...) }
+    local ret = { pcall(constructor, opts) }
     setfenv(constructor, old_env)
     if ret[1] then
         table.remove(ret, 1)
@@ -124,13 +132,13 @@ function Component:construct(constructor, ...)
     end
 end
 
-function Component.compile()
+function Component.compile(opts)
     local root = Component.new(digisim.root)
     local text = read_file(digisim_path .. '/root.lua')
     if text == nil then
         error 'failed to load root component'
     end
-    root:construct(loadstring(text))
+    root:construct(loadstring(text), opts)
 end
 
 Component.compile()
