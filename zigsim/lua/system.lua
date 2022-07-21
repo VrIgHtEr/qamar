@@ -23,6 +23,7 @@ local base_env = {
     ipairs = ipairs,
     tostring = tostring,
     type = type,
+    error = error,
 }
 
 local cache = {}
@@ -64,64 +65,67 @@ local function create_env(id, opts)
             digisim.components.Nand(id, name)
         end,
     }
-    return setmetatable(env, {
-        __index = function(_, index)
-            if type(index) == 'string' and index:len() > 0 then
-                local c = index:sub(1, 1):byte()
-                if c >= ('A'):byte() and c <= ('Z'):byte() then
-                    local constructor
-                    if cache[index] ~= nil then
-                        if not cache[index] then
-                            return
-                        end
-                        constructor = cache[index]
-                    else
-                        local file = read_file(digisim_path .. '/library/' .. index .. '.lua')
-                        if file then
-                            local success, compiled = pcall(loadstring, file, index)
-                            if not success or not compiled then
-                                cache[index] = false
+    return setmetatable({}, {
+        __index = setmetatable(env, {
+            __newindex = function()
+                error 'writing to global variables is not allowed'
+            end,
+            __metatable = function() end,
+            __index = function(_, index)
+                if type(index) == 'string' and index:len() > 0 then
+                    local c = index:sub(1, 1):byte()
+                    if c >= ('A'):byte() and c <= ('Z'):byte() then
+                        local constructor
+                        if cache[index] ~= nil then
+                            if not cache[index] then
                                 return
                             end
-                            constructor = compiled
-                            cache[index] = constructor
-                        end
-                    end
-                    return function(name, o)
-                        if o == nil then
-                            if type(name) == 'table' then
-                                o = name
-                                name = o.name
-                                if name == nil then
-                                    name = o[1]
+                            constructor = cache[index]
+                        else
+                            local file = read_file(digisim_path .. '/library/' .. index .. '.lua')
+                            if file then
+                                local success, compiled = pcall(loadstring, file, index)
+                                if not success or not compiled then
+                                    cache[index] = false
+                                    return
                                 end
-                            else
-                                o = {}
+                                constructor = compiled
+                                cache[index] = constructor
                             end
                         end
-                        if type(o) ~= 'table' then
-                            error 'invalid opts'
-                        end
-                        if type(name) ~= 'string' then
-                            error 'invalid name'
-                        end
-                        o.name = name
-                        local comp = digisim.createcomponent(id, name)
-                        local old_fenv = getfenv(constructor)
-                        setfenv(constructor, create_env(comp, o))
-                        local success, err = pcall(constructor)
-                        setfenv(constructor, old_fenv)
-                        if not success then
-                            error(err)
+                        return function(name, o)
+                            if o == nil then
+                                if type(name) == 'table' then
+                                    o = name
+                                    name = o.name
+                                    if name == nil then
+                                        name = o[1]
+                                    end
+                                else
+                                    o = {}
+                                end
+                            end
+                            if type(o) ~= 'table' then
+                                error 'invalid opts'
+                            end
+                            if type(name) ~= 'string' then
+                                error 'invalid name'
+                            end
+                            o.name = name
+                            local comp = digisim.createcomponent(id, name)
+                            local old_fenv = getfenv(constructor)
+                            setfenv(constructor, create_env(comp, o))
+                            local success, err = pcall(constructor)
+                            setfenv(constructor, old_fenv)
+                            if not success then
+                                error(err)
+                            end
                         end
                     end
                 end
-            end
-            return base_env[index]
-        end,
-        __newindex = function()
-            error 'global variables are not allowed'
-        end,
+                return base_env[index]
+            end,
+        }),
     })
 end
 
@@ -132,7 +136,7 @@ local function compile(opts)
     end
     local constructor = loadstring(text)
     if constructor == nil then
-        error 'failed to load root'
+        error 'failed to load root component'
     end
     if opts == nil then
         opts = {}
@@ -140,7 +144,7 @@ local function compile(opts)
     if type(opts) ~= 'table' then
         error 'invalid opts'
     end
-    opts.name = ''
+    opts.name = '.'
     local old_env = getfenv(constructor)
     setfenv(constructor, create_env(digisim.root, opts))
     local ret = { pcall(constructor) }
