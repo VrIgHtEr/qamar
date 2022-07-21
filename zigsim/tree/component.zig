@@ -341,10 +341,11 @@ pub const Component = struct {
 
     pub fn checkTraces(self: *@This()) bool {
         self.childTraces = false;
+        std.debug.print("CHECK TRACE: {s}\n", .{self.name});
         var ci = self.components.iterator();
         while (ci.next()) |k| {
             const comp = self.digisim.components.getPtr(k.key_ptr.*) orelse unreachable;
-            self.childTraces = self.childTraces or comp.checkTraces();
+            self.childTraces = comp.checkTraces() or self.childTraces;
         }
         if (!self.childTraces) {
             var pi = self.ports.iterator();
@@ -356,21 +357,22 @@ pub const Component = struct {
                 }
             }
         }
+        std.debug.print("CHECK TRACE {s}:{any}\n", .{ self.name, self.childTraces });
         return self.childTraces;
     }
 
     pub fn assignNames(self: *@This()) Err!void {
         if (self.childTraces) {
-            if (self.isLeaf()) {
-                var i = self.ports.iterator();
-                while (i.next()) |p| {
-                    const port = self.digisim.ports.getPtr(p.key_ptr.*) orelse unreachable;
-                    if (port.trace) {
-                        port.alias = try self.digisim.idgen.refNewId(self.digisim);
-                        stdout.print("$var wire {d} {s} {s} $end\n", .{ port.width(), port.alias orelse unreachable, port.name }) catch ({});
-                    }
+            std.debug.print("COMP ASSIGN {s}\n", .{self.name});
+            var j = self.ports.iterator();
+            while (j.next()) |p| {
+                const port = self.digisim.ports.getPtr(p.key_ptr.*) orelse unreachable;
+                if (port.trace) {
+                    port.alias = try self.digisim.idgen.refNewId(self.digisim);
+                    stdout.print("$var wire {d} {s} {s} $end\n", .{ port.width(), port.alias orelse unreachable, port.name }) catch ({});
                 }
-            } else {
+            }
+            if (!self.isLeaf()) {
                 var i = self.components.iterator();
                 while (i.next()) |c| {
                     const comp = self.digisim.components.getPtr(c.key_ptr.*) orelse unreachable;

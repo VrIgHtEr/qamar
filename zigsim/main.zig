@@ -24,26 +24,10 @@ pub fn main() !u8 {
     sim.traceAllPorts();
     {
         const comp = sim.getComponent("a1") catch unreachable orelse unreachable;
-        var j = comp.ports.iterator();
+        var j = comp.components.iterator();
         while (j.next()) |e| {
-            const port = sim.ports.getPtr(e.key_ptr.*) orelse unreachable;
-            std.debug.print("PORT: {d} - {s}\n", .{ @ptrToInt(comp), port.name });
-        }
-    }
-    {
-        const comp = sim.getComponent("a1.X") catch unreachable orelse unreachable;
-        var j = comp.ports.iterator();
-        while (j.next()) |e| {
-            const port = sim.ports.getPtr(e.key_ptr.*) orelse unreachable;
-            std.debug.print("PORT: {d} - {s}\n", .{ @ptrToInt(comp), port.name });
-        }
-    }
-    {
-        const comp = sim.getComponent("a1.Y") catch unreachable orelse unreachable;
-        var j = comp.ports.iterator();
-        while (j.next()) |e| {
-            const port = sim.ports.getPtr(e.key_ptr.*) orelse unreachable;
-            std.debug.print("PORT: {d} - {s}\n", .{ @ptrToInt(comp), port.name });
+            const port = sim.components.getPtr(e.key_ptr.*) orelse unreachable;
+            std.debug.print("PORT: {d} - {s}\n", .{ @ptrToInt(port), port.name });
         }
     }
     _ = try sim.step();
