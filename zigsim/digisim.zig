@@ -162,10 +162,21 @@ pub const Digisim = struct {
     }
 
     pub fn traceAllPorts(self: *@This()) void {
-        var ci = self.ports.iterator();
-        while (ci.next()) |e| {
-            e.value_ptr.trace = true;
+        var ci = self.components.iterator();
+        while (ci.next()) |c| {
+            if (c.value_ptr.isLeaf()) {
+                var j = c.value_ptr.ports.iterator();
+                while (j.next()) |p| {
+                    const port = self.ports.getPtr(p.key_ptr.*) orelse unreachable;
+                    port.trace = true;
+                }
+            }
         }
+
+        //        var pi = self.ports.iterator();
+        //        while (pi.next()) |e| {
+        //            e.value_ptr.trace = true;
+        //        }
     }
 
     pub fn checkLeafNodes(self: *@This()) !void {
@@ -274,7 +285,6 @@ pub const Digisim = struct {
         var i = self.components.iterator();
         while (i.next()) |v| {
             if (v.value_ptr.isLeaf()) {
-                std.debug.print("COMPILE COMP: {s}\n", .{v.value_ptr.name});
                 var numinports: usize = 0;
                 var numoutports: usize = 0;
                 components[ret].numInputs = 0;
@@ -335,7 +345,6 @@ pub const Digisim = struct {
                 const ccomp = cmap.get(v.key_ptr.*) orelse unreachable;
                 while (j.next()) |e| {
                     const port = self.ports.getPtr(e.key_ptr.*) orelse unreachable;
-                    std.debug.print("COMPILE PORT {s}.{s}\n", .{ v.value_ptr.name, port.name });
                     ports[ret].pins = try self.allocator.alloc(CompiledPin, port.pins.len);
                     errdefer self.allocator.free(ports[ret].pins);
                     ports[ret].alias = port.alias;
@@ -359,7 +368,6 @@ pub const Digisim = struct {
                 while (j.next()) |je| {
                     const port = self.ports.getPtr(je.key_ptr.*) orelse unreachable;
                     if (port.trace) {
-                        std.debug.print("COMPILE PORT {s}.{s}\n", .{ v.value_ptr.name, port.name });
                         ports[ret].pins = try self.allocator.alloc(CompiledPin, port.pins.len);
                         errdefer self.allocator.free(ports[ret].pins);
                         ports[ret].alias = port.alias;
@@ -378,7 +386,6 @@ pub const Digisim = struct {
         while (j.next()) |je| {
             const port = self.ports.getPtr(je.key_ptr.*) orelse unreachable;
             if (port.trace) {
-                std.debug.print("COMPILE PORT {s}.{s}\n", .{ self.root.name, port.name });
                 ports[ret].pins = try self.allocator.alloc(CompiledPin, port.pins.len);
                 errdefer self.allocator.free(ports[ret].pins);
                 ports[ret].alias = port.alias;
@@ -418,6 +425,15 @@ pub const Digisim = struct {
                 }
             }
         }
+        var k = self.root.ports.iterator();
+        while (k.next()) |je| {
+            const port = self.ports.getPtr(je.key_ptr.*) orelse unreachable;
+            if (port.trace) {
+                for (port.pins) |*pin| {
+                    try nets.put(pin.net, .{});
+                }
+            }
+        }
         return nets.count();
     }
 
@@ -443,6 +459,15 @@ pub const Digisim = struct {
                             try nets.put(pin.net, .{});
                         }
                     }
+                }
+            }
+        }
+        var k = self.root.ports.iterator();
+        while (k.next()) |je| {
+            const port = self.ports.getPtr(je.key_ptr.*) orelse unreachable;
+            if (port.trace) {
+                for (port.pins) |*pin| {
+                    try nets.put(pin.net, .{});
                 }
             }
         }
@@ -636,7 +661,6 @@ pub const Digisim = struct {
         try self.purgeBranches();
 
         var components = try self.allocator.alloc(CompiledComponent, self.countComponentsToCompile());
-        std.debug.print("COUNT COMP {d}\n", .{components.len});
         errdefer self.allocator.free(components);
         var componentMap = ComponentMap.init(self.allocator);
         defer componentMap.deinit();
@@ -644,7 +668,6 @@ pub const Digisim = struct {
         errdefer for (components) |*e| e.deinit(self.allocator);
 
         var ports = try self.allocator.alloc(CompiledPort, self.countPortsToCompile());
-        std.debug.print("COUNT PORT {d}\n", .{ports.len});
         errdefer self.allocator.free(ports);
         var portMap = PortMap.init(self.allocator);
         defer portMap.deinit();
@@ -652,7 +675,6 @@ pub const Digisim = struct {
         errdefer for (ports) |*e| e.deinit(self);
 
         var nets = try self.allocator.alloc(CompiledNet, try self.countNetsToCompile());
-        std.debug.print("COUNT NET  {d}\n", .{nets.len});
         errdefer self.allocator.free(nets);
         var netMap = NetMap.init(self.allocator);
         defer netMap.deinit();

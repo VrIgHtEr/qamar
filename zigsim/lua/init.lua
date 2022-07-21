@@ -130,9 +130,9 @@ end
 
 function Component.compile()
 	local function rootconstructor()
-		And("a1")
+		Xor("a1")
 		connect("a1.a", "a1.b")
-		connect("a1.c", "a1.a")
+		connect("a1.q", "a1.a")
 	end
 
 	local root = Component.new(digisim.root)
