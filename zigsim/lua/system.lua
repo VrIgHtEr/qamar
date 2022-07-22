@@ -87,7 +87,7 @@ local function validate_builtin_component_inputs(name, opts, def_pin_end)
         pin_end = def_pin_end or 0
     end
     opts.width = pin_end + 1
-    return name, opts, pin_end
+    return name, pin_end
 end
 
 local function validate_wire_inputs(a, b)
@@ -125,44 +125,32 @@ local function create_env(id, opts)
                 name, pin_end, trace = validate_createport_inputs(name, pin_end, trace)
                 digisim.createport(id, name, false, 0, math.floor(pin_end), trace)
             end,
-            createcomponent = function(name)
-                digisim.createcomponent(id, name)
-            end,
             wire = function(a, b)
-                a, b = validate_wire_inputs(a, b)
-                digisim.connect(id, a, b)
+                digisim.connect(id, validate_wire_inputs(a, b))
             end,
             Nand = function(name, o)
-                local n, _, e = validate_builtin_component_inputs(name, o, 1)
-                digisim.components.Nand(id, n, e)
+                digisim.components.Nand(id, validate_builtin_component_inputs(name, o, 1))
             end,
             Pullup = function(name, o)
-                local n, _, e = validate_builtin_component_inputs(name, o)
-                digisim.components.Pullup(id, n, e)
+                digisim.components.Pullup(id, validate_builtin_component_inputs(name, o))
             end,
             Pulldown = function(name, o)
-                local n, _, e = validate_builtin_component_inputs(name, o)
-                digisim.components.Pulldown(id, n, e)
+                digisim.components.Pulldown(id, validate_builtin_component_inputs(name, o))
             end,
             Buffer = function(name, o)
-                local n, _, e = validate_builtin_component_inputs(name, o)
-                digisim.components.Buffer(id, n, e)
+                digisim.components.Buffer(id, validate_builtin_component_inputs(name, o))
             end,
             TristateBuffer = function(name, o)
-                local n, _, e = validate_builtin_component_inputs(name, o)
-                digisim.components.TristateBuffer(id, n, e)
+                digisim.components.TristateBuffer(id, validate_builtin_component_inputs(name, o))
             end,
             Reset = function(name, o)
-                local n, _ = validate_component_inputs(name, o)
-                digisim.components.Reset(id, n)
+                digisim.components.Reset(id, validate_component_inputs(name, o))
             end,
             High = function(name, o)
-                local n, _ = validate_component_inputs(name, o)
-                digisim.components.High(id, n)
+                digisim.components.High(id, validate_component_inputs(name, o))
             end,
             Low = function(name, o)
-                local n, _ = validate_component_inputs(name, o)
-                digisim.components.Low(id, n)
+                digisim.components.Low(id, validate_component_inputs(name, o))
             end,
         }, {
             __newindex = function()
