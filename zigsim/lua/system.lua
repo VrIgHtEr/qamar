@@ -93,8 +93,35 @@ local function create_env(id, opts)
                 end
                 digisim.connect(id, a, b)
             end,
-            Nand = function(name)
-                digisim.components.Nand(id, name, 1)
+            Nand = function(name, o)
+                o = o == nil and {} or o
+                local pin_end
+                if o.width then
+                    pin_end = o.width - 1
+                else
+                    pin_end = 1
+                end
+                digisim.components.Nand(id, name, pin_end)
+            end,
+            Pullup = function(name, o)
+                o = o == nil and {} or o
+                local pin_end
+                if o.width then
+                    pin_end = o.width - 1
+                else
+                    pin_end = 0
+                end
+                digisim.components.Pullup(id, name, pin_end)
+            end,
+            Pulldown = function(name, o)
+                o = o == nil and {} or o
+                local pin_end
+                if o.width then
+                    pin_end = o.width - 1
+                else
+                    pin_end = 0
+                end
+                digisim.components.Pulldown(id, name, pin_end)
             end,
         }, {
             __newindex = function()

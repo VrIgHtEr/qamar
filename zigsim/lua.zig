@@ -130,6 +130,58 @@ pub const Lua = struct {
         return 1;
     }
 
+    fn lua_createpulldown(L: ?State) callconv(.C) c_int {
+        const digisim = getInstance(L);
+        const lua = &digisim.lua;
+        const args = lua.gettop();
+        if (args < 3) lua.err("invalid number of arguments passed to createnand");
+
+        if (!lua.islightuserdata(0 - args)) lua.err("first argument to createnand was not a lightuserdata");
+        const comp = getcomponent(digisim, lua.touserdata(0 - args)) catch lua.err("component not found");
+
+        if (!lua.isstring(1 - args)) lua.err("second argument to createnand was not a string");
+        const str = lua.tolstring(1 - args);
+
+        if (!lua.isnumber(2 - args)) lua.err("3rd arg not a number");
+        const pin_end_f = lua.tonumber(2 - args);
+        if (pin_end_f < 0 or pin_end_f >= 1048576) lua.err("pin_end out of range");
+        const pin_end = @floatToInt(usize, pin_end_f);
+
+        const id = comp.addComponent(str) catch lua.err("failed to create component");
+        const cmp = digisim.components.getPtr(id) orelse unreachable;
+
+        _ = cmp.addPort("q", false, 0, pin_end, false) catch lua.err("failed to add pulldown port q");
+        cmp.setHandler(Components.pulldown_h) catch unreachable;
+        lua.pushlightuserdata(@intToPtr(*anyopaque, id));
+        return 1;
+    }
+
+    fn lua_createpullup(L: ?State) callconv(.C) c_int {
+        const digisim = getInstance(L);
+        const lua = &digisim.lua;
+        const args = lua.gettop();
+        if (args < 3) lua.err("invalid number of arguments passed to createnand");
+
+        if (!lua.islightuserdata(0 - args)) lua.err("first argument to createnand was not a lightuserdata");
+        const comp = getcomponent(digisim, lua.touserdata(0 - args)) catch lua.err("component not found");
+
+        if (!lua.isstring(1 - args)) lua.err("second argument to createnand was not a string");
+        const str = lua.tolstring(1 - args);
+
+        if (!lua.isnumber(2 - args)) lua.err("3rd arg not a number");
+        const pin_end_f = lua.tonumber(2 - args);
+        if (pin_end_f < 0 or pin_end_f >= 1048576) lua.err("pin_end out of range");
+        const pin_end = @floatToInt(usize, pin_end_f);
+
+        const id = comp.addComponent(str) catch lua.err("failed to create component");
+        const cmp = digisim.components.getPtr(id) orelse unreachable;
+
+        _ = cmp.addPort("q", false, 0, pin_end, false) catch lua.err("failed to add pulldown port q");
+        cmp.setHandler(Components.pullup_h) catch unreachable;
+        lua.pushlightuserdata(@intToPtr(*anyopaque, id));
+        return 1;
+    }
+
     pub fn init(digisim: *Digisim) Error!Lua {
         var self: @This() = undefined;
         self.digisim = digisim;
@@ -168,7 +220,14 @@ pub const Lua = struct {
         self.pushlightuserdata(digisim);
         self.pushcclosure(lua_createnand, 1);
         self.settable(-3);
-
+        self.pushlstring("Pullup");
+        self.pushlightuserdata(digisim);
+        self.pushcclosure(lua_createpullup, 1);
+        self.settable(-3);
+        self.pushlstring("Pulldown");
+        self.pushlightuserdata(digisim);
+        self.pushcclosure(lua_createpulldown, 1);
+        self.settable(-3);
         self.settable(-3);
 
         self.setglobal("digisim");
