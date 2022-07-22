@@ -1,9 +1,7 @@
 output('out', true)
 
-Pullup 'a'
-Pullup 'b'
+Pulldown('P', { width = 2 })
 Xnor 'a1'
-wire 'a.q/a1.a[0]'
-wire 'b.q/a1.a[1]'
+wire 'P.q/a1.a'
 
 wire 'a1.q/out'

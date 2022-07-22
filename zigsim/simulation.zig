@@ -121,8 +121,10 @@ pub const Simulation = struct {
             }
             if (value != net.value) {
                 net.value = value;
-                for (net.sensitivitylist orelse unreachable) |c| {
-                    try self.nextdirty.put(c, .{});
+                if (net.sensitivitylist) |sensitivitylist| {
+                    for (sensitivitylist) |c| {
+                        try self.nextdirty.put(c, .{});
+                    }
                 }
             }
         }
