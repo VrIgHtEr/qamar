@@ -1,3 +1,4 @@
+const global_reset_length = 100;
 const std = @import("std");
 const stdout = std.io.getStdOut().writer();
 const Port = @import("port.zig").Port;
@@ -21,36 +22,64 @@ pub const components = struct {
         _ = timestamp;
         return 0;
     }
-    pub fn and_h(timestamp: usize, input: []Signal, output: []Signal) usize {
-        for (input) |x| {
-            if (x != Signal.high) {
-                output[0] = Signal.low;
-                return 0;
-            }
+
+    pub fn global_reset_h(timestamp: usize, input: []Signal, output: []Signal) usize {
+        _ = input;
+        if (timestamp < global_reset_length) {
+            output[0] = Signal.low;
+            return global_reset_length;
         }
         output[0] = Signal.high;
+        return 0;
+    }
+
+    pub fn pullup_h(timestamp: usize, input: []Signal, output: []Signal) usize {
+        _ = timestamp;
+        _ = input;
+        for (output) |_, idx| output[idx] = Signal.weakhigh;
+        return 0;
+    }
+
+    pub fn pulldown_h(timestamp: usize, input: []Signal, output: []Signal) usize {
+        _ = timestamp;
+        _ = input;
+        for (output) |_, idx| output[idx] = Signal.weaklow;
+        return 0;
+    }
+
+    pub fn high_h(timestamp: usize, input: []Signal, output: []Signal) usize {
+        _ = timestamp;
+        _ = input;
+        for (output) |_, idx| output[idx] = Signal.high;
+        return 0;
+    }
+
+    pub fn low_h(timestamp: usize, input: []Signal, output: []Signal) usize {
+        _ = timestamp;
+        _ = input;
+        for (output) |_, idx| output[idx] = Signal.low;
+        return 0;
+    }
+
+    pub fn buffer_h(timestamp: usize, input: []Signal, output: []Signal) usize {
+        for (input) |x, idx| {
+            output[idx] = x;
+        }
         _ = timestamp;
         return 0;
     }
-    pub fn or_h(timestamp: usize, input: []Signal, output: []Signal) usize {
-        for (input) |x| {
-            if (x == Signal.high) {
-                output[0] = Signal.high;
-                return 0;
+
+    pub fn tristate_buffer_h(timestamp: usize, input: []Signal, output: []Signal) usize {
+        var i = 1;
+        if (input[0] == Signal.high) {
+            while (i < input.len) : (i += 1) {
+                output[i - 1] = input[i];
+            }
+        } else {
+            while (i < input.len) : (i += 1) {
+                output[i - 1] = Signal.z;
             }
         }
-        output[0] = Signal.low;
-        _ = timestamp;
-        return 0;
-    }
-    pub fn nor_h(timestamp: usize, input: []Signal, output: []Signal) usize {
-        for (input) |x| {
-            if (x == Signal.high) {
-                output[0] = Signal.low;
-                return 0;
-            }
-        }
-        output[0] = Signal.high;
         _ = timestamp;
         return 0;
     }

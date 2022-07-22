@@ -43,31 +43,15 @@ pub const Lua = struct {
         const digisim = getInstance(L);
         const lua = &digisim.lua;
         const args = lua.gettop();
-        if (args < 2) {
-            lua.pushlstring("invalid number of arguments passed to createcomponent");
-            lua.err();
-        }
-        if (!lua.islightuserdata(-2)) {
-            lua.pushlstring("first argument to createcomponent was not a lightuserdata");
-            lua.err();
-        }
-        const comp = getcomponent(digisim, lua.touserdata(-2)) catch ({
-            lua.pushlstring("component not found");
-            lua.err();
-            return 0;
-        });
+        if (args < 2) lua.err("invalid number of arguments passed to createcomponent");
 
-        if (!lua.isstring(-1)) {
-            lua.pushlstring("second argument to createcomponent was not a string");
-            lua.err();
-        }
-        const str = lua.tolstring(-1);
+        if (!lua.islightuserdata(0 - args)) lua.err("first argument to createcomponent was not a lightuserdata");
+        const comp = getcomponent(digisim, lua.touserdata(0 - args)) catch lua.err("component not found");
 
-        const id = comp.addComponent(str) catch ({
-            lua.pushlstring("failed to create component");
-            lua.err();
-            return 0;
-        });
+        if (!lua.isstring(1 - args)) lua.err("second argument to createcomponent was not a string");
+        const str = lua.tolstring(1 - args);
+
+        const id = comp.addComponent(str) catch lua.err("failed to create component");
         lua.pushlightuserdata(@intToPtr(*anyopaque, id));
         return 1;
     }
@@ -76,62 +60,27 @@ pub const Lua = struct {
         const digisim = getInstance(L);
         const lua = &digisim.lua;
         const args = lua.gettop();
-        if (args < 6) {
-            lua.pushlstring("invalid number of arguments passed to createport");
-            lua.err();
-            return 0;
-        }
-        if (!lua.islightuserdata(-args)) {
-            lua.pushlstring("1st arg not a userdata");
-            lua.err();
-            return 0;
-        }
-        const comp = getcomponent(digisim, lua.touserdata(-args)) catch ({
-            lua.pushlstring("component not found");
-            lua.err();
-            return 0;
-        });
+        if (args < 6) lua.err("invalid number of arguments passed to createport");
 
-        if (!lua.isstring(-args + 1)) {
-            lua.pushlstring("2nd arg not a string");
-            lua.err();
-            return 0;
-        }
-        const name = lua.tolstring(-args + 1);
+        if (!lua.islightuserdata(0 - args)) lua.err("1st arg not a userdata");
+        const comp = getcomponent(digisim, lua.touserdata(0 - args)) catch lua.err("component not found");
 
-        if (!lua.isboolean(-args + 2)) {
-            lua.pushlstring("3rd arg not a boolean");
-            lua.err();
-            return 0;
-        }
-        const input = lua.toboolean(-args + 2);
+        if (!lua.isstring(1 - args)) lua.err("2nd arg not a string");
+        const name = lua.tolstring(1 - args);
 
-        if (!lua.isnumber(3 - args)) {
-            lua.pushlstring("4th arg not a number");
-            lua.err();
-            return 0;
-        }
+        if (!lua.isboolean(2 - args)) lua.err("3rd arg not a boolean");
+        const input = lua.toboolean(2 - args);
+
+        if (!lua.isnumber(3 - args)) lua.err("4th arg not a number");
         const start = @floatToInt(usize, lua.tonumber(3 - args));
 
-        if (!lua.isnumber(4 - args)) {
-            lua.pushlstring("5th arg not a number");
-            lua.err();
-            return 0;
-        }
+        if (!lua.isnumber(4 - args)) lua.err("5th arg not a number");
         const end = @floatToInt(usize, lua.tonumber(4 - args));
 
-        if (!lua.isboolean(5 - args)) {
-            lua.pushlstring("6th arg not a boolean");
-            lua.err();
-            return 0;
-        }
+        if (!lua.isboolean(5 - args)) lua.err("6th arg not a boolean");
         const trace = lua.toboolean(5 - args);
 
-        _ = comp.addPort(name, input, start, end, trace) catch ({
-            lua.pushlstring("failed to add port");
-            lua.err();
-            return 0;
-        });
+        _ = comp.addPort(name, input, start, end, trace) catch lua.err("failed to add port");
         return 0;
     }
 
@@ -139,47 +88,20 @@ pub const Lua = struct {
         const digisim = getInstance(L);
         const lua = &digisim.lua;
         const args = lua.gettop();
-        if (args < 2) {
-            lua.pushlstring("invalid number of arguments passed to createnand");
-            lua.err();
-        }
-        if (!lua.islightuserdata(-2)) {
-            lua.pushlstring("first argument to createnand was not a lightuserdata");
-            lua.err();
-        }
-        const comp = getcomponent(digisim, lua.touserdata(-2)) catch ({
-            lua.pushlstring("component not found");
-            lua.err();
-            return 0;
-        });
+        if (args < 2) lua.err("invalid number of arguments passed to createnand");
 
-        if (!lua.isstring(-1)) {
-            lua.pushlstring("second argument to createnand was not a string");
-            lua.err();
-        }
-        const str = lua.tolstring(-1);
+        if (!lua.islightuserdata(0 - args)) lua.err("first argument to createnand was not a lightuserdata");
+        const comp = getcomponent(digisim, lua.touserdata(0 - args)) catch lua.err("component not found");
 
-        const id = comp.addComponent(str) catch ({
-            lua.pushlstring("failed to create component");
-            lua.err();
-            return 0;
-        });
+        if (!lua.isstring(1 - args)) lua.err("second argument to createnand was not a string");
+        const str = lua.tolstring(1 - args);
+
+        const id = comp.addComponent(str) catch lua.err("failed to create component");
         const cmp = digisim.components.getPtr(id) orelse unreachable;
-        _ = cmp.addPort("a", true, 0, 0, false) catch ({
-            lua.pushlstring("failed to add nand port a");
-            lua.err();
-            return 0;
-        });
-        _ = cmp.addPort("b", true, 0, 0, false) catch ({
-            lua.pushlstring("failed to add nand port b");
-            lua.err();
-            return 0;
-        });
-        _ = cmp.addPort("q", false, 0, 0, false) catch ({
-            lua.pushlstring("failed to add nand port q");
-            lua.err();
-            return 0;
-        });
+
+        _ = cmp.addPort("a", true, 0, 0, false) catch lua.err("failed to add nand port a");
+        _ = cmp.addPort("b", true, 0, 0, false) catch lua.err("failed to add nand port b");
+        _ = cmp.addPort("q", false, 0, 0, false) catch lua.err("failed to add nand port q");
         cmp.setHandler(Components.nand_h) catch unreachable;
         lua.pushlightuserdata(@intToPtr(*anyopaque, id));
         return 1;
@@ -189,39 +111,18 @@ pub const Lua = struct {
         const digisim = getInstance(L);
         const lua = &digisim.lua;
         const args = lua.gettop();
-        if (args < 3) {
-            lua.pushlstring("invalid number of arguments passed to connect");
-            lua.err();
-        }
-        if (!lua.islightuserdata(-3)) {
-            lua.pushlstring("first argument to connect was not a lightuserdata");
-            lua.err();
-        }
-        const comp = getcomponent(digisim, lua.touserdata(-3)) catch ({
-            lua.pushlstring("component not found");
-            lua.err();
-            return 0;
-        });
+        if (args < 3) lua.err("invalid number of arguments passed to connect");
 
-        if (!lua.isstring(-2)) {
-            lua.pushlstring("second argument to connect was not a string");
-            lua.err();
-        }
-        const stra = lua.tolstring(-2);
+        if (!lua.islightuserdata(0 - args)) lua.err("first argument to connect was not a lightuserdata");
+        const comp = getcomponent(digisim, lua.touserdata(0 - args)) catch lua.err("component not found");
 
-        if (!lua.isstring(-1)) {
-            lua.pushlstring("third argument to connect was not a string");
-            lua.err();
-            return 0;
-        }
-        const strb = lua.tolstring(-1);
+        if (!lua.isstring(1 - args)) lua.err("second argument to connect was not a string");
+        const stra = lua.tolstring(1 - args);
 
-        comp.connect(stra, strb) catch ({
-            lua.pushlstring("failed to connect ports");
-            lua.err();
-            return 0;
-        });
+        if (!lua.isstring(2 - args)) lua.err("third argument to connect was not a string");
+        const strb = lua.tolstring(2 - args);
 
+        comp.connect(stra, strb) catch lua.err("failed to connect ports");
         return 0;
     }
 
@@ -270,8 +171,10 @@ pub const Lua = struct {
         return self;
     }
 
-    pub fn err(self: *@This()) void {
+    pub fn err(self: *@This(), message: []const u8) noreturn {
+        self.pushlstring(message);
         _ = c.lua_error(self.L);
+        unreachable;
     }
 
     pub fn gettop(self: *@This()) c_int {
