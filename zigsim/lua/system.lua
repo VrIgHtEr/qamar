@@ -90,6 +90,29 @@ local function validate_builtin_component_inputs(name, opts, def_pin_end)
     return name, opts, pin_end
 end
 
+local function validate_wire_inputs(a, b)
+    if b == nil then
+        if type(a) == 'string' then
+            local index = 1
+            for i = 1, a:len() do
+                if a:sub(i, i) == '/' then
+                    break
+                end
+                index = index + 1
+            end
+            if index >= a:len() then
+                error 'invalid wire b endpoint'
+            end
+            if index == 1 then
+                error 'invalid wire a endpoint'
+            end
+            b = a:sub(index + 1)
+            a = a:sub(1, index - 1)
+        end
+    end
+    return a, b
+end
+
 local function create_env(id, opts)
     return setmetatable({}, {
         __index = setmetatable({
@@ -106,25 +129,7 @@ local function create_env(id, opts)
                 digisim.createcomponent(id, name)
             end,
             wire = function(a, b)
-                if b == nil then
-                    if type(a) == 'string' then
-                        local index = 1
-                        for i = 1, a:len() do
-                            if a:sub(i, i) == '/' then
-                                break
-                            end
-                            index = index + 1
-                        end
-                        if index >= a:len() then
-                            error 'invalid wire b endpoint'
-                        end
-                        if index == 1 then
-                            error 'invalid wire a endpoint'
-                        end
-                        b = a:sub(index + 1)
-                        a = a:sub(1, index - 1)
-                    end
-                end
+                a, b = validate_wire_inputs(a, b)
                 digisim.connect(id, a, b)
             end,
             Nand = function(name, o)
