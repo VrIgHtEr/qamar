@@ -291,6 +291,7 @@ pub const Digisim = struct {
                         }
                     }
                 }
+                components[ret].data = v.value_ptr.data;
                 components[ret].handler = v.value_ptr.handler orelse unreachable;
                 components[ret].inports = try self.allocator.alloc(*CompiledPort, numinports);
                 errdefer self.allocator.free(components[ret].inports);

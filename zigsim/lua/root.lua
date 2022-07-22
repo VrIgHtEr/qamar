@@ -1,6 +1,6 @@
 output('out', true)
 
-Reset 'rst'
+Reset { 'rst', period = 100 }
 
 Pullup { 'p', width = 2 }
 TristateBuffer { 'tb', width = 2 }

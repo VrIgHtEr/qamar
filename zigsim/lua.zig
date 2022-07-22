@@ -107,18 +107,25 @@ pub const Lua = struct {
         const digisim = getInstance(L);
         const lua = &digisim.lua;
         const args = lua.gettop();
-        if (args < 2) lua.err("invalid number of arguments passed to createnand");
+        if (args < 3) lua.err("invalid number of arguments");
 
-        if (!lua.islightuserdata(0 - args)) lua.err("first argument to createnand was not a lightuserdata");
+        if (!lua.islightuserdata(0 - args)) lua.err("first argument was not a lightuserdata");
         const comp = getcomponent(digisim, lua.touserdata(0 - args)) catch lua.err("component not found");
 
-        if (!lua.isstring(1 - args)) lua.err("second argument to createnand was not a string");
+        if (!lua.isstring(1 - args)) lua.err("second argument was not a string");
         const str = lua.tolstring(1 - args);
+
+        if (!lua.isnumber(2 - args)) lua.err("third argument was not a number");
+        const periodf = lua.tonumber(2 - args);
+
+        if (periodf < 1 or periodf >= 16777216) lua.err("reset period out of range");
+        const period = @floatToInt(usize, periodf);
 
         const id = comp.addComponent(str) catch lua.err("failed to create component");
         const cmp = digisim.components.getPtr(id) orelse unreachable;
 
         _ = cmp.addPort("q", false, 0, 0, false) catch lua.err("failed to add port q");
+        cmp.data = period;
         cmp.setHandler(Components.global_reset_h) catch unreachable;
         lua.pushlightuserdata(@intToPtr(*anyopaque, id));
         return 1;
@@ -128,12 +135,12 @@ pub const Lua = struct {
         const digisim = getInstance(L);
         const lua = &digisim.lua;
         const args = lua.gettop();
-        if (args < 2) lua.err("invalid number of arguments passed to createnand");
+        if (args < 2) lua.err("invalid number of arguments");
 
-        if (!lua.islightuserdata(0 - args)) lua.err("first argument to createnand was not a lightuserdata");
+        if (!lua.islightuserdata(0 - args)) lua.err("first argument was not a lightuserdata");
         const comp = getcomponent(digisim, lua.touserdata(0 - args)) catch lua.err("component not found");
 
-        if (!lua.isstring(1 - args)) lua.err("second argument to createnand was not a string");
+        if (!lua.isstring(1 - args)) lua.err("second argument was not a string");
         const str = lua.tolstring(1 - args);
 
         const id = comp.addComponent(str) catch lua.err("failed to create component");
@@ -149,12 +156,12 @@ pub const Lua = struct {
         const digisim = getInstance(L);
         const lua = &digisim.lua;
         const args = lua.gettop();
-        if (args < 2) lua.err("invalid number of arguments passed to createnand");
+        if (args < 2) lua.err("invalid number of arguments");
 
-        if (!lua.islightuserdata(0 - args)) lua.err("first argument to createnand was not a lightuserdata");
+        if (!lua.islightuserdata(0 - args)) lua.err("first argument was not a lightuserdata");
         const comp = getcomponent(digisim, lua.touserdata(0 - args)) catch lua.err("component not found");
 
-        if (!lua.isstring(1 - args)) lua.err("second argument to createnand was not a string");
+        if (!lua.isstring(1 - args)) lua.err("second argument was not a string");
         const str = lua.tolstring(1 - args);
 
         const id = comp.addComponent(str) catch lua.err("failed to create component");
@@ -172,10 +179,10 @@ pub const Lua = struct {
         const args = lua.gettop();
         if (args < 3) lua.err("invalid number of arguments passed to createnand");
 
-        if (!lua.islightuserdata(0 - args)) lua.err("first argument to createnand was not a lightuserdata");
+        if (!lua.islightuserdata(0 - args)) lua.err("first argument was not a lightuserdata");
         const comp = getcomponent(digisim, lua.touserdata(0 - args)) catch lua.err("component not found");
 
-        if (!lua.isstring(1 - args)) lua.err("second argument to createnand was not a string");
+        if (!lua.isstring(1 - args)) lua.err("second argument was not a string");
         const str = lua.tolstring(1 - args);
 
         if (!lua.isnumber(2 - args)) lua.err("3rd arg not a number");
@@ -199,10 +206,10 @@ pub const Lua = struct {
         const args = lua.gettop();
         if (args < 3) lua.err("invalid number of arguments passed to createnand");
 
-        if (!lua.islightuserdata(0 - args)) lua.err("first argument to createnand was not a lightuserdata");
+        if (!lua.islightuserdata(0 - args)) lua.err("first argument was not a lightuserdata");
         const comp = getcomponent(digisim, lua.touserdata(0 - args)) catch lua.err("component not found");
 
-        if (!lua.isstring(1 - args)) lua.err("second argument to createnand was not a string");
+        if (!lua.isstring(1 - args)) lua.err("second argument was not a string");
         const str = lua.tolstring(1 - args);
 
         if (!lua.isnumber(2 - args)) lua.err("3rd arg not a number");
@@ -225,10 +232,10 @@ pub const Lua = struct {
         const args = lua.gettop();
         if (args < 3) lua.err("invalid number of arguments passed to createnand");
 
-        if (!lua.islightuserdata(0 - args)) lua.err("first argument to createnand was not a lightuserdata");
+        if (!lua.islightuserdata(0 - args)) lua.err("first argument was not a lightuserdata");
         const comp = getcomponent(digisim, lua.touserdata(0 - args)) catch lua.err("component not found");
 
-        if (!lua.isstring(1 - args)) lua.err("second argument to createnand was not a string");
+        if (!lua.isstring(1 - args)) lua.err("second argument was not a string");
         const str = lua.tolstring(1 - args);
 
         if (!lua.isnumber(2 - args)) lua.err("3rd arg not a number");
@@ -251,10 +258,10 @@ pub const Lua = struct {
         const args = lua.gettop();
         if (args < 3) lua.err("invalid number of arguments passed to createnand");
 
-        if (!lua.islightuserdata(0 - args)) lua.err("first argument to createnand was not a lightuserdata");
+        if (!lua.islightuserdata(0 - args)) lua.err("first argument was not a lightuserdata");
         const comp = getcomponent(digisim, lua.touserdata(0 - args)) catch lua.err("component not found");
 
-        if (!lua.isstring(1 - args)) lua.err("second argument to createnand was not a string");
+        if (!lua.isstring(1 - args)) lua.err("second argument was not a string");
         const str = lua.tolstring(1 - args);
 
         if (!lua.isnumber(2 - args)) lua.err("3rd arg not a number");
@@ -278,10 +285,10 @@ pub const Lua = struct {
         const args = lua.gettop();
         if (args < 3) lua.err("invalid number of arguments passed to createnand");
 
-        if (!lua.islightuserdata(0 - args)) lua.err("first argument to createnand was not a lightuserdata");
+        if (!lua.islightuserdata(0 - args)) lua.err("first argument was not a lightuserdata");
         const comp = getcomponent(digisim, lua.touserdata(0 - args)) catch lua.err("component not found");
 
-        if (!lua.isstring(1 - args)) lua.err("second argument to createnand was not a string");
+        if (!lua.isstring(1 - args)) lua.err("second argument was not a string");
         const str = lua.tolstring(1 - args);
 
         if (!lua.isnumber(2 - args)) lua.err("3rd arg not a number");

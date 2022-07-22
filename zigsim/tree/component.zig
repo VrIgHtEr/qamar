@@ -1,4 +1,3 @@
-const global_reset_length = 100;
 const std = @import("std");
 const stdout = std.io.getStdOut().writer();
 const Port = @import("port.zig").Port;
@@ -11,7 +10,7 @@ const Signal = @import("../signal.zig").Signal;
 const Handler = @import("../simulation.zig").Handler;
 
 pub const components = struct {
-    pub fn nand_h(_: usize, input: []Signal, output: []Signal, _: *anyopaque) usize {
+    pub fn nand_h(_: usize, input: []Signal, output: []Signal, _: *usize) usize {
         for (input) |x| {
             if (x != Signal.high) {
                 output[0] = Signal.high;
@@ -22,43 +21,44 @@ pub const components = struct {
         return 0;
     }
 
-    pub fn global_reset_h(timestamp: usize, _: []Signal, output: []Signal, _: *anyopaque) usize {
-        if (timestamp < global_reset_length) {
+    pub fn global_reset_h(_: usize, _: []Signal, output: []Signal, data: *usize) usize {
+        if (data.* != 0) {
+            const ret = data.*;
+            data.* = 0;
             output[0] = Signal.low;
-            return global_reset_length;
-        }
-        output[0] = Signal.high;
+            return ret;
+        } else output[0] = Signal.high;
         return 0;
     }
 
-    pub fn pullup_h(_: usize, _: []Signal, output: []Signal, _: *anyopaque) usize {
+    pub fn pullup_h(_: usize, _: []Signal, output: []Signal, _: *usize) usize {
         for (output) |_, idx| output[idx] = Signal.weakhigh;
         return 0;
     }
 
-    pub fn pulldown_h(_: usize, _: []Signal, output: []Signal, _: *anyopaque) usize {
+    pub fn pulldown_h(_: usize, _: []Signal, output: []Signal, _: *usize) usize {
         for (output) |_, idx| output[idx] = Signal.weaklow;
         return 0;
     }
 
-    pub fn high_h(_: usize, _: []Signal, output: []Signal, _: *anyopaque) usize {
+    pub fn high_h(_: usize, _: []Signal, output: []Signal, _: *usize) usize {
         for (output) |_, idx| output[idx] = Signal.high;
         return 0;
     }
 
-    pub fn low_h(_: usize, _: []Signal, output: []Signal, _: *anyopaque) usize {
+    pub fn low_h(_: usize, _: []Signal, output: []Signal, _: *usize) usize {
         for (output) |_, idx| output[idx] = Signal.low;
         return 0;
     }
 
-    pub fn buffer_h(_: usize, input: []Signal, output: []Signal, _: *anyopaque) usize {
+    pub fn buffer_h(_: usize, input: []Signal, output: []Signal, _: *usize) usize {
         for (input) |x, idx| {
             output[idx] = x;
         }
         return 0;
     }
 
-    pub fn tristate_buffer_h(_: usize, input: []Signal, output: []Signal, _: *anyopaque) usize {
+    pub fn tristate_buffer_h(_: usize, input: []Signal, output: []Signal, _: *usize) usize {
         var i: usize = 1;
         if (input[0] == Signal.high) {
             while (i < input.len) : (i += 1) {
@@ -81,9 +81,11 @@ pub const Component = struct {
     name: []const u8,
     handler: ?Handler,
     childTraces: bool,
+    data: usize,
 
     pub fn init(digisim: *Digisim, name: []const u8) !@This() {
         var self: @This() = undefined;
+        self.data = 0;
         self.digisim = digisim;
         self.id = digisim.nextId();
         self.ports = HashMap.init(digisim.allocator);
