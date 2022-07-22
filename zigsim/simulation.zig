@@ -88,6 +88,19 @@ pub const Simulation = struct {
     }
 
     pub fn step(self: *@This()) !bool {
+        if (self.dirty.count() == 0) {
+            if (self.pq.count() == 0)
+                return true;
+            const item = self.pq.remove();
+            try self.dirty.put(item.component, .{});
+            self.timestamp = item.timestamp;
+        }
+        while (self.pq.count() > 0) {
+            const item = self.pq.peek() orelse unreachable;
+            if (item.timestamp > self.timestamp) break;
+            try self.dirty.put(item.component, .{});
+            _ = self.pq.remove();
+        }
         var iter = self.dirty.keyIterator();
         while (iter.next()) |e| {
             const component = e.*;
