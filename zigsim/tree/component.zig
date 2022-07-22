@@ -70,7 +70,7 @@ pub const components = struct {
     }
 
     pub fn tristate_buffer_h(timestamp: usize, input: []Signal, output: []Signal) usize {
-        var i = 1;
+        var i: usize = 1;
         if (input[0] == Signal.high) {
             while (i < input.len) : (i += 1) {
                 output[i - 1] = input[i];

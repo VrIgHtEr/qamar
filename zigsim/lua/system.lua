@@ -139,9 +139,25 @@ local function create_env(id, opts)
                 local n, _, e = validate_builtin_component_inputs(name, o)
                 digisim.components.Pulldown(id, n, e)
             end,
+            Buffer = function(name, o)
+                local n, _, e = validate_builtin_component_inputs(name, o)
+                digisim.components.Buffer(id, n, e)
+            end,
+            TristateBuffer = function(name, o)
+                local n, _, e = validate_builtin_component_inputs(name, o)
+                digisim.components.TristateBuffer(id, n, e)
+            end,
             Reset = function(name, o)
                 local n, _ = validate_component_inputs(name, o)
                 digisim.components.Reset(id, n)
+            end,
+            High = function(name, o)
+                local n, _ = validate_component_inputs(name, o)
+                digisim.components.High(id, n)
+            end,
+            Low = function(name, o)
+                local n, _ = validate_component_inputs(name, o)
+                digisim.components.Low(id, n)
             end,
         }, {
             __newindex = function()
