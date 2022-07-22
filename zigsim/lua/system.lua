@@ -147,6 +147,10 @@ local function create_env(id, opts)
                 name, o = validate_component_inputs(name, o)
                 digisim.components.Reset(id, name, o.period == nil and 1 or o.period)
             end,
+            Clock = function(name, o)
+                name, o = validate_component_inputs(name, o)
+                digisim.components.Clock(id, name, o.period == nil and 1 or o.period)
+            end,
             High = function(name, o)
                 digisim.components.High(id, validate_component_inputs(name, o))
             end,

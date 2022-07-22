@@ -31,6 +31,19 @@ pub const components = struct {
         return 0;
     }
 
+    pub fn clock_h(_: usize, _: []Signal, output: []Signal, data: *usize) usize {
+        const mask: usize = (std.math.maxInt(usize) >> 1) + 1;
+        const period = data.* & ~mask;
+        if ((data.* & mask) != 0) {
+            output[0] = Signal.high;
+            data.* = period;
+        } else {
+            output[0] = Signal.low;
+            data.* |= mask;
+        }
+        return period;
+    }
+
     pub fn pullup_h(_: usize, _: []Signal, output: []Signal, _: *usize) usize {
         for (output) |_, idx| output[idx] = Signal.weakhigh;
         return 0;
