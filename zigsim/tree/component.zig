@@ -11,7 +11,7 @@ const Signal = @import("../signal.zig").Signal;
 const Handler = @import("../simulation.zig").Handler;
 
 pub const components = struct {
-    pub fn nand_h(timestamp: usize, input: []Signal, output: []Signal) usize {
+    pub fn nand_h(_: usize, input: []Signal, output: []Signal, _: *anyopaque) usize {
         for (input) |x| {
             if (x != Signal.high) {
                 output[0] = Signal.high;
@@ -19,12 +19,10 @@ pub const components = struct {
             }
         }
         output[0] = Signal.low;
-        _ = timestamp;
         return 0;
     }
 
-    pub fn global_reset_h(timestamp: usize, input: []Signal, output: []Signal) usize {
-        _ = input;
+    pub fn global_reset_h(timestamp: usize, _: []Signal, output: []Signal, _: *anyopaque) usize {
         if (timestamp < global_reset_length) {
             output[0] = Signal.low;
             return global_reset_length;
@@ -33,43 +31,34 @@ pub const components = struct {
         return 0;
     }
 
-    pub fn pullup_h(timestamp: usize, input: []Signal, output: []Signal) usize {
-        _ = timestamp;
-        _ = input;
+    pub fn pullup_h(_: usize, _: []Signal, output: []Signal, _: *anyopaque) usize {
         for (output) |_, idx| output[idx] = Signal.weakhigh;
         return 0;
     }
 
-    pub fn pulldown_h(timestamp: usize, input: []Signal, output: []Signal) usize {
-        _ = timestamp;
-        _ = input;
+    pub fn pulldown_h(_: usize, _: []Signal, output: []Signal, _: *anyopaque) usize {
         for (output) |_, idx| output[idx] = Signal.weaklow;
         return 0;
     }
 
-    pub fn high_h(timestamp: usize, input: []Signal, output: []Signal) usize {
-        _ = timestamp;
-        _ = input;
+    pub fn high_h(_: usize, _: []Signal, output: []Signal, _: *anyopaque) usize {
         for (output) |_, idx| output[idx] = Signal.high;
         return 0;
     }
 
-    pub fn low_h(timestamp: usize, input: []Signal, output: []Signal) usize {
-        _ = timestamp;
-        _ = input;
+    pub fn low_h(_: usize, _: []Signal, output: []Signal, _: *anyopaque) usize {
         for (output) |_, idx| output[idx] = Signal.low;
         return 0;
     }
 
-    pub fn buffer_h(timestamp: usize, input: []Signal, output: []Signal) usize {
+    pub fn buffer_h(_: usize, input: []Signal, output: []Signal, _: *anyopaque) usize {
         for (input) |x, idx| {
             output[idx] = x;
         }
-        _ = timestamp;
         return 0;
     }
 
-    pub fn tristate_buffer_h(timestamp: usize, input: []Signal, output: []Signal) usize {
+    pub fn tristate_buffer_h(_: usize, input: []Signal, output: []Signal, _: *anyopaque) usize {
         var i: usize = 1;
         if (input[0] == Signal.high) {
             while (i < input.len) : (i += 1) {
@@ -80,7 +69,6 @@ pub const components = struct {
                 output[i - 1] = Signal.z;
             }
         }
-        _ = timestamp;
         return 0;
     }
 };

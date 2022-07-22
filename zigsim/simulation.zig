@@ -8,11 +8,19 @@ const Net = @import("comp/net.zig").Net;
 const Digisim = @import("digisim.zig").Digisim;
 const Signal = @import("signal.zig").Signal;
 
-pub const Handler = fn (usize, []Signal, []Signal) usize;
+const PQEntry = struct {
+    timestamp: usize,
+    component: *Component,
+    fn compare(_: void, a: PQEntry, b: PQEntry) std.math.Order {
+        return std.math.order(a.timestamp, b.timestamp);
+    }
+};
+const Pq = std.PriorityQueue(PQEntry, void, PQEntry.compare);
+
+pub const Handler = fn (usize, []Signal, []Signal, *anyopaque) usize;
 
 pub const Simulation = struct {
     digisim: *Digisim,
-    allocator: Allocator,
     nets: []Net,
     components: []Component,
     ports: []Port,
@@ -23,6 +31,7 @@ pub const Simulation = struct {
     inputs: []Signal,
     outputs: []Signal,
     timestamp: usize,
+    pq: Pq,
 
     pub fn init(digisim: *Digisim, numNets: []Net, numComponents: []Component, numPorts: []Port) !*@This() {
         const self = try digisim.allocator.create(@This());
@@ -56,10 +65,13 @@ pub const Simulation = struct {
         for (numComponents) |*c| {
             try self.dirty.put(c, .{});
         }
+        self.pq = Pq.init(digisim.allocator, .{});
+        errdefer self.pq.deinit();
         return self;
     }
 
     pub fn deinit(self: *@This()) void {
+        self.pq.deinit();
         self.traceports.deinit();
         self.dirtynets.deinit();
         self.digisim.allocator.free(self.inputs);
@@ -89,8 +101,10 @@ pub const Simulation = struct {
             }
 
             const outputs = self.outputs[0..component.numOutputs];
-            const nextSchedule = component.handler(self.timestamp, inputs, outputs);
-            if (nextSchedule != 0) {}
+            const nextSchedule = component.handler(self.timestamp, inputs, outputs, component.data);
+            if (nextSchedule != 0) {
+                try self.pq.add(.{ .timestamp = self.timestamp + nextSchedule, .component = component });
+            }
 
             idx = 0;
             for (component.outports) |port| {

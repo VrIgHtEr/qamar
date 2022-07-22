@@ -10,6 +10,7 @@ pub const Component = struct {
     numInputs: usize,
     numOutputs: usize,
     handler: Handler,
+    data: *anyopaque,
 
     pub fn deinit(self: *@This(), allocator: Allocator) void {
         allocator.free(self.inports);
