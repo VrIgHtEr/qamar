@@ -1,8 +1,12 @@
 output('out', true)
 
 Reset 'rst'
+
+Pullup { 'p', width = 2 }
+TristateBuffer { 'tb', width = 2 }
+wire 'p.q/tb.a'
+wire 'rst.q/tb.en'
 And 'a1'
-wire 'rst.q/a1.a[0]'
-wire 'rst.q/a1.a[1]'
+wire 'tb.q/a1.a'
 
 wire 'a1.q/out'

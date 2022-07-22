@@ -265,7 +265,7 @@ pub const Lua = struct {
         const id = comp.addComponent(str) catch lua.err("failed to create component");
         const cmp = digisim.components.getPtr(id) orelse unreachable;
 
-        _ = cmp.addPort("a", false, 0, pin_end, false) catch lua.err("failed to add port a");
+        _ = cmp.addPort("a", true, 0, pin_end, false) catch lua.err("failed to add port a");
         _ = cmp.addPort("q", false, 0, pin_end, false) catch lua.err("failed to add port q");
         cmp.setHandler(Components.buffer_h) catch unreachable;
         lua.pushlightuserdata(@intToPtr(*anyopaque, id));
@@ -292,8 +292,8 @@ pub const Lua = struct {
         const id = comp.addComponent(str) catch lua.err("failed to create component");
         const cmp = digisim.components.getPtr(id) orelse unreachable;
 
-        _ = cmp.addPort("en", false, 0, 0, false) catch lua.err("failed to add port en");
-        _ = cmp.addPort("a", false, 0, pin_end, false) catch lua.err("failed to add port a");
+        _ = cmp.addPort("en", true, 0, 0, false) catch lua.err("failed to add port en");
+        _ = cmp.addPort("a", true, 0, pin_end, false) catch lua.err("failed to add port a");
         _ = cmp.addPort("q", false, 0, pin_end, false) catch lua.err("failed to add port q");
         cmp.setHandler(Components.tristate_buffer_h) catch unreachable;
         lua.pushlightuserdata(@intToPtr(*anyopaque, id));
