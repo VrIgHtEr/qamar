@@ -1,13 +1,11 @@
-input 'a'
-input 'b'
+input('a', 1)
 output 'q'
 
 Nand 'x'
 wire 'a/x.a'
-wire 'b/x.b'
 
 Nand 'y'
-wire 'x.q/y.a'
-wire 'x.q/y.b'
+wire 'x.q/y.a[0]'
+wire 'x.q/y.a[1]'
 
 wire 'y.q/q'
