@@ -94,7 +94,7 @@ local function create_env(id, opts)
                 digisim.connect(id, a, b)
             end,
             Nand = function(name)
-                digisim.components.Nand(id, name)
+                digisim.components.Nand(id, name, 1)
             end,
         }, {
             __newindex = function()

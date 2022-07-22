@@ -1,15 +1,14 @@
-input 'a'
-input 'b'
+input('a', 1)
 output 'q'
 
 Not 'x'
-wire 'a/x.a'
+wire 'a[0]/x.a'
 
 Not 'y'
-wire 'b/y.a'
+wire 'a[1]/y.a'
 
 Nand 'z'
-wire 'x.q/z.a'
-wire 'y.q/z.b'
+wire 'x.q/z.a[0]'
+wire 'y.q/z.a[1]'
 
 wire 'z.q/q'
