@@ -103,6 +103,27 @@ pub const Lua = struct {
         return 0;
     }
 
+    fn lua_createreset(L: ?State) callconv(.C) c_int {
+        const digisim = getInstance(L);
+        const lua = &digisim.lua;
+        const args = lua.gettop();
+        if (args < 2) lua.err("invalid number of arguments passed to createnand");
+
+        if (!lua.islightuserdata(0 - args)) lua.err("first argument to createnand was not a lightuserdata");
+        const comp = getcomponent(digisim, lua.touserdata(0 - args)) catch lua.err("component not found");
+
+        if (!lua.isstring(1 - args)) lua.err("second argument to createnand was not a string");
+        const str = lua.tolstring(1 - args);
+
+        const id = comp.addComponent(str) catch lua.err("failed to create component");
+        const cmp = digisim.components.getPtr(id) orelse unreachable;
+
+        _ = cmp.addPort("q", false, 0, 0, false) catch lua.err("failed to add reset port q");
+        cmp.setHandler(Components.global_reset_h) catch unreachable;
+        lua.pushlightuserdata(@intToPtr(*anyopaque, id));
+        return 1;
+    }
+
     fn lua_createnand(L: ?State) callconv(.C) c_int {
         const digisim = getInstance(L);
         const lua = &digisim.lua;
@@ -227,6 +248,10 @@ pub const Lua = struct {
         self.pushlstring("Pulldown");
         self.pushlightuserdata(digisim);
         self.pushcclosure(lua_createpulldown, 1);
+        self.settable(-3);
+        self.pushlstring("Reset");
+        self.pushlightuserdata(digisim);
+        self.pushcclosure(lua_createreset, 1);
         self.settable(-3);
         self.settable(-3);
 

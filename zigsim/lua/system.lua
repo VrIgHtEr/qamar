@@ -56,6 +56,40 @@ local function validate_createport_inputs(name, pin_end, trace)
     return name, pin_end, trace
 end
 
+local function validate_component_inputs(name, opts)
+    if opts == nil then
+        if type(name) == 'table' then
+            opts = name
+            name = opts.name
+            if name == nil then
+                name = opts[1]
+            end
+        else
+            opts = {}
+        end
+    end
+    if type(opts) ~= 'table' then
+        error 'invalid opts'
+    end
+    if type(name) ~= 'string' then
+        error 'invalid name'
+    end
+    opts.name = name
+    return name, opts
+end
+
+local function validate_builtin_component_inputs(name, opts, def_pin_end)
+    name, opts = validate_component_inputs(name, opts)
+    local pin_end
+    if opts.width then
+        pin_end = opts.width - 1
+    else
+        pin_end = def_pin_end or 0
+    end
+    opts.width = pin_end + 1
+    return name, opts, pin_end
+end
+
 local function create_env(id, opts)
     return setmetatable({}, {
         __index = setmetatable({
@@ -94,34 +128,20 @@ local function create_env(id, opts)
                 digisim.connect(id, a, b)
             end,
             Nand = function(name, o)
-                o = o == nil and {} or o
-                local pin_end
-                if o.width then
-                    pin_end = o.width - 1
-                else
-                    pin_end = 1
-                end
-                digisim.components.Nand(id, name, pin_end)
+                local n, _, e = validate_builtin_component_inputs(name, o, 1)
+                digisim.components.Nand(id, n, e)
             end,
             Pullup = function(name, o)
-                o = o == nil and {} or o
-                local pin_end
-                if o.width then
-                    pin_end = o.width - 1
-                else
-                    pin_end = 0
-                end
-                digisim.components.Pullup(id, name, pin_end)
+                local n, _, e = validate_builtin_component_inputs(name, o)
+                digisim.components.Pullup(id, n, e)
             end,
             Pulldown = function(name, o)
-                o = o == nil and {} or o
-                local pin_end
-                if o.width then
-                    pin_end = o.width - 1
-                else
-                    pin_end = 0
-                end
-                digisim.components.Pulldown(id, name, pin_end)
+                local n, _, e = validate_builtin_component_inputs(name, o)
+                digisim.components.Pulldown(id, n, e)
+            end,
+            Reset = function(name, o)
+                local n, _ = validate_component_inputs(name, o)
+                digisim.components.Reset(id, n)
             end,
         }, {
             __newindex = function()
@@ -151,24 +171,7 @@ local function create_env(id, opts)
                             end
                         end
                         return function(name, o)
-                            if o == nil then
-                                if type(name) == 'table' then
-                                    o = name
-                                    name = o.name
-                                    if name == nil then
-                                        name = o[1]
-                                    end
-                                else
-                                    o = {}
-                                end
-                            end
-                            if type(o) ~= 'table' then
-                                error 'invalid opts'
-                            end
-                            if type(name) ~= 'string' then
-                                error 'invalid name'
-                            end
-                            o.name = name
+                            name, o = validate_component_inputs(name, o)
                             local comp = digisim.createcomponent(id, name)
                             local old_fenv = getfenv(constructor)
                             setfenv(constructor, create_env(comp, o))
