@@ -2,7 +2,7 @@ const std = @import("std");
 const Pin = @import("pin.zig").Pin;
 const Digisim = @import("../digisim.zig").Digisim;
 const Signal = @import("../signal.zig").Signal;
-const stdout = std.io.getStdOut().writer();
+const stdout = &@import("../output.zig").stdout;
 
 pub const Port = struct {
     pins: []Pin,

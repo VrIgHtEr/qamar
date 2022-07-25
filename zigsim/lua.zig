@@ -1,5 +1,5 @@
 const std = @import("std");
-const stdout = std.io.getStdOut().writer();
+const stdout = &@import("output.zig").stdout;
 const c = @cImport({
     // See https://github.com/ziglang/zig/issues/515
     @cDefine("_NO_CRT_STDIO_INLINE", "1");

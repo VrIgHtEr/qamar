@@ -1,5 +1,5 @@
 const std = @import("std");
-const stdout = std.io.getStdOut().writer();
+const stdout = &@import("../output.zig").stdout;
 const Port = @import("port.zig").Port;
 const Net = @import("net.zig").Net;
 const digi = @import("../digisim.zig");

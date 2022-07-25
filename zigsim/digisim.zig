@@ -9,7 +9,7 @@ const Allocator = std.mem.Allocator;
 const stringIntern = @import("stringIntern.zig");
 const root_name: []const u8 = "__ROOT__";
 const Signal = @import("signal.zig").Signal;
-const stdout = std.io.getStdOut().writer();
+const stdout = &@import("output.zig").stdout;
 const Lua = @import("lua.zig").Lua;
 const stdlib = @cImport({
     @cInclude("stdlib.h");

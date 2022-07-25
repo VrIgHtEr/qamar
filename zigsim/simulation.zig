@@ -1,5 +1,6 @@
 const std = @import("std");
-const stdout = std.io.getStdOut().writer();
+const stdout = &@import("output.zig").stdout;
+const buffer = &@import("output.zig").buf;
 const Allocator = std.mem.Allocator;
 const Component = @import("comp/component.zig").Component;
 const Port = @import("comp/port.zig").Port;
@@ -162,6 +163,7 @@ pub const Simulation = struct {
             while (j.next()) |p| {
                 p.*.trace();
             }
+            try buffer.flush();
         }
 
         const t = self.dirty;
